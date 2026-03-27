@@ -1,0 +1,27 @@
+{
+    "app_title": "Административен Асистент",
+    "tabs": {
+        "civil_contract": "Гражданский договор",
+        "work_travel": "Командировка"
+    },
+    "names_list": ["Alice Smith", "Bob Jones", "Charlie Brown", "Diana Prince"],
+    "fields": {
+        "select_person": "Избери човек:",
+        "full_name": "Пълно име:",
+        "ssn": "SSN:",
+        "phone": "Телефон:",
+        "company": "Име на компанията:",
+        "rep": "Представител:"
+    },
+    "buttons": {
+        "select_sig": "Избери подпис",
+        "gen_contract": "Създай граждански договор",
+        "gen_work_travel": "Създай командировка",
+        "browse": "Избери..."
+    },
+    "messages": {
+        "success_title": "Успешно",
+        "error_title": "Грешка",
+        "gen_finished": "Готово!"
+    }
+}
