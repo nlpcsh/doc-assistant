@@ -3,19 +3,22 @@ import threading
 import subprocess
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
+from os import path
 
 class BaseDocTab(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
-    def __init__(self, parent, labels, base_dir, template_name):
+    def __init__(self, parent, labels, base_dir, data_mgr, template_name):
         super().__init__(parent)
         self.labels = labels
-        self.sig_path = ""
+        self.data_mgr = data_mgr
         self.template_dir = base_dir + "/templates/"
         self.template_name = template_name
 
         # Shared UI Elements
         self.container = ttk.Frame(self, padding="20")
         self.container.pack(fill="both", expand=True)
+
+        self.input_fields = []
 
         self.progress = ttk.Progressbar(self.container, orient="horizontal", length=200, mode="determinate")
         self.status_label = ttk.Label(self.container, text="")
@@ -24,11 +27,15 @@ class BaseDocTab(ttk.Frame):
         ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")
         entry = ttk.Entry(self.container, width=40)
         entry.pack(pady=5)
+        self.input_fields.append(entry)
         return entry
 
     def add_common_buttons(self, gen_label_key):
-        ttk.Button(self.container, text=self.labels["buttons"]["select_sig"], 
-                   command=self.get_signature).pack(pady=10)
+        if path.exists(self.template_dir + "sig.png"):
+            self.sig_path = self.template_dir + "sig.png"
+        else:
+            ttk.Button(self.container, text=self.labels["buttons"]["select_sig"], 
+                command=self.get_signature).pack(pady=10)
 
         self.gen_btn = ttk.Button(self.container, text=self.labels["buttons"][gen_label_key], 
                                   command=self.start_generation)
@@ -50,6 +57,7 @@ class BaseDocTab(ttk.Frame):
         combo.pack(pady=5)
         if options:
             combo.current(0) # Set default to the first name
+        self.input_fields.append(combo)
         return combo
 
     def process_doc(self):

@@ -6,6 +6,7 @@
     },
     "names_list": ["Alice Smith", "Bob Jones", "Charlie Brown", "Diana Prince"],
     "fields": {
+        "projects": "Проект:",
         "select_person": "Избери човек:",
         "full_name": "Пълно име:",
         "ssn": "SSN:",
