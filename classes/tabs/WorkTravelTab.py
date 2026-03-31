@@ -1,15 +1,12 @@
 from tkinter import ttk
 
-from classes.tabs.BaseDocTab import BaseDocTab
+from classes.docs.work_travel.WorkTravelOrder import WorkTravelOrder
+from classes.docs.work_travel.WorkTravelReport import WorkTravelReport
 
-class WorkTravelTab(BaseDocTab):
-    def __init__(self, parent, labels, base_dir):
-        super().__init__(parent, labels, base_dir, "work_travel.docx")
-        ttk.Label(self.container, text=labels["tabs"]["work_travel"], font=("Arial", 12, "bold")).pack(pady=10)
-
-        self.ent_company = self.add_field("company")
-        self.ent_rep = self.add_field("rep")
-        self.add_common_buttons("gen_work_travel")
-
-    def get_context(self):
-        return {'company': self.ent_company.get(), 'rep': self.ent_rep.get()}
+class WorkTravelTab(ttk.Frame):
+    def __init__(self, parent, labels, base_dir, data_mgr):
+        super().__init__(parent)
+        sub_nb = ttk.Notebook(self)
+        sub_nb.pack(expand=True, fill="both")
+        sub_nb.add(WorkTravelReport(sub_nb, labels, base_dir, data_mgr), text="Отчет за командировка")
+        sub_nb.add(WorkTravelOrder(sub_nb, labels, base_dir, data_mgr), text="Поръчка за командировка")
