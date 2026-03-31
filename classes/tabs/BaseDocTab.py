@@ -1,9 +1,12 @@
 from tkinter import ttk, messagebox, filedialog
+from tkinter import Frame
+import tkinter as tk
 import threading
 import subprocess
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
 from os import path
+from tkcalendar import Calendar
 
 class BaseDocTab(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
@@ -29,6 +32,47 @@ class BaseDocTab(ttk.Frame):
         entry.pack(pady=5)
         self.input_fields.append(entry)
         return entry
+
+    def add_date_field(self, label_key):
+        ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")
+        
+        # Create a frame to hold the date entry and button
+        date_frame = Frame(self.container)
+        date_frame.pack(pady=5, padx=5, fill="x")
+        
+        # Create entry field for the date
+        date_entry = ttk.Entry(date_frame, width=30)
+        date_entry.pack(side="left", padx=5)
+        
+        # Create button to open calendar
+        def open_calendar():
+            # Create toplevel window for calendar
+            cal_window = tk.Toplevel(self.winfo_toplevel())
+            cal_window.title(self.labels["fields"][label_key])
+            
+            def select_date():
+                selected_date = calendar.get_date()
+                date_entry.delete(0, tk.END)
+                date_entry.insert(0, selected_date)
+                cal_window.destroy()
+            
+            # Create calendar widget
+            calendar = Calendar(cal_window, selectmode='day', year=2026, month=3, day=31,
+                              background='darkblue', foreground='white', date_pattern='dd/mm/yyyy')
+            calendar.pack(pady=10, padx=10)
+            
+            # Create button to confirm selection
+            ttk.Button(cal_window, text="Select", command=select_date).pack(pady=5)
+            
+            # Make window modal and on top
+            cal_window.transient(self.winfo_toplevel())
+            cal_window.grab_set()
+        
+        # Add button to open calendar
+        ttk.Button(date_frame, text="📅", command=open_calendar, width=3).pack(side="left", padx=2)
+        
+        self.input_fields.append(date_entry)
+        return date_entry
 
     def add_common_buttons(self, gen_label_key):
         if path.exists(self.template_dir + "sig.png"):
@@ -57,7 +101,7 @@ class BaseDocTab(ttk.Frame):
         combo.pack(pady=5)
         if options:
             combo.current(0) # Set default to the first name
-        self.input_fields.append(combo)
+        #self.input_fields.append(combo)
         return combo
 
     def process_doc(self):
