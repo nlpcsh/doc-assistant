@@ -2,7 +2,9 @@
     "app_title": "Административен Асистент",
     "tabs": {
         "civil_contract": "Гражданский договор",
-        "work_travel": "Командировка"
+        "work_travel": "Командировка",
+        "wt_report": "Отчет на командировка",
+        "wt_order": "Заповед за командировка"
     },
     "names_list": ["Alice Smith", "Bob Jones", "Charlie Brown", "Diana Prince"],
     "fields": {
