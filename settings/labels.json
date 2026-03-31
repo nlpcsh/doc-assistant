@@ -6,15 +6,19 @@
         "wt_report": "Отчет на командировка",
         "wt_order": "Заповед за командировка"
     },
-    "names_list": ["Alice Smith", "Bob Jones", "Charlie Brown", "Diana Prince"],
     "fields": {
         "projects": "Проект:",
         "select_person": "Избери човек:",
         "full_name": "Пълно име:",
-        "ssn": "SSN:",
-        "phone": "Телефон:",
-        "company": "Име на компанията:",
-        "rep": "Представител:"
+        "wt_purpose": "Цел на командировката:",
+        "wt_destination": "Направление:",
+        "wt_from": "От:",
+        "wt_to": "До:",
+        "wt_euro_per_day": "Евро на ден:",
+        "wt_day_money_from": "Дневни от:",
+        "wt_nights_money_from": "Нощувки от:",
+        "wt_travel_money_from": "Пътни от:",
+        "wt_other_expences": "Други разходи:"
     },
     "buttons": {
         "select_sig": "Избери подпис",

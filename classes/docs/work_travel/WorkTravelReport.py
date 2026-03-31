@@ -9,13 +9,10 @@ class WorkTravelReport(BaseDocTab):
 
         self.add_dropdown("projects", list(self.data_mgr.data['projects'].keys()))
 
-        self.ent_company = self.add_field("company")
-        self.ent_rep = self.add_field("rep")
+        # self.ent_company = self.add_field("company")
+        # self.ent_rep = self.add_field("rep")
         self.add_common_buttons("gen_work_travel")
 
     def get_context(self):
 
-        return {
-            'company': self.ent_company.get(),
-            'rep': self.ent_rep.get()
-        }
+        return {}

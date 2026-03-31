@@ -5,18 +5,18 @@ class CivilContractTab(BaseDocTab):
         super().__init__(parent, labels, base_dir, data_mgr, "contract_template.docx")
 
         # 1. Add the dropdown using the list 'names_list' from your JSON
-        self.combo_name = self.add_dropdown("select_person", self.labels["names_list"])
+        # self.combo_name = self.add_dropdown("select_person", self.labels["names_list"])
 
         # 2. Add other fields as usual
-        self.ent_ssn = self.add_field("ssn")
-        self.ent_phone = self.add_field("phone")
+        #self.ent_ssn = self.add_field("ssn")
+        #self.ent_phone = self.add_field("phone")
 
         self.add_common_buttons("gen_contract")
 
     def get_context(self):
         # IMPORTANT: Use .get() on the combo box to grab the selected name
         return {
-            'name': self.combo_name.get(), 
-            'ssn': self.ent_ssn.get(),
-            'phone': self.ent_phone.get()
+            # 'name': self.combo_name.get(), 
+            # 'ssn': self.ent_ssn.get(),
+            # 'phone': self.ent_phone.get()
         }
