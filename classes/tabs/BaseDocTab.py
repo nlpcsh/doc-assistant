@@ -35,6 +35,43 @@ class BaseDocTab(ttk.Frame):
         self.input_fields.append((label_key, entry))
         return entry
 
+    def add_checkbox_field(self, label_key, checkbox_text, default_value="", show_by_default=False):
+        """Add a checkbox that controls the visibility of a field with a predefined value."""
+        # Create a frame to hold the checkbox and the field
+        field_frame = Frame(self.container)
+        
+        # Create checkbox variable (default unchecked)
+        checkbox_var = tk.BooleanVar(value=show_by_default)
+        
+        # Create checkbox
+        checkbox = ttk.Checkbutton(field_frame, text=checkbox_text, variable=checkbox_var)
+        checkbox.pack(side="left", padx=(0, 10))
+        
+        # Create the field
+        entry = ttk.Entry(field_frame, width=20)
+        entry.insert(0, default_value)
+        
+        # Function to toggle field visibility
+        def toggle_visibility():
+            if checkbox_var.get():
+                entry.pack(side="left", padx=(5, 0))
+            else:
+                entry.pack_forget()
+        
+        # Bind checkbox to toggle function
+        checkbox_var.trace_add("write", lambda *args: toggle_visibility())
+        
+        # Pack the frame and initially show/hide based on default
+        field_frame.pack(fill="x", padx=10, pady=5)
+        if show_by_default:
+            entry.pack(side="left", padx=(5, 0))
+        else:
+            entry.pack_forget()
+        
+        # Add to input fields for context generation
+        self.input_fields.append((label_key, entry))
+        return entry
+
     def add_date_field(self, label_key, preselect_today=False, min_date_from=None):
         ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")
         
