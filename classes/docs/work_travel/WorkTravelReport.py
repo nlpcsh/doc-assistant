@@ -4,7 +4,7 @@ from classes.tabs.BaseDocTab import BaseDocTab
 
 class WorkTravelReport(BaseDocTab):
     def __init__(self, parent, labels, base_dir, data_mgr):
-        super().__init__(parent, labels, base_dir, data_mgr, "work_travel_report.docx")
+        super().__init__(parent, labels, base_dir, data_mgr, "work_travel", "work_travel_report.docx")
         ttk.Label(self.container, text=labels["tabs"]["wt_report"], font=("Arial", 12, "bold")).pack(pady=10)
 
         self.add_dropdown("projects", list(self.data_mgr.data['projects'].keys()))
