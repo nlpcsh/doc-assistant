@@ -1,5 +1,4 @@
-from tkinter import ttk, messagebox, filedialog
-from tkinter import Frame
+from tkinter import ttk, messagebox, filedialog, Frame
 import tkinter as tk
 import threading
 import subprocess
@@ -28,11 +27,28 @@ class BaseDocTab(ttk.Frame):
         self.progress = ttk.Progressbar(self.container, orient="horizontal", length=200, mode="determinate")
         self.status_label = ttk.Label(self.container, text="")
 
-    def add_field(self, label_key):
-        ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")
-        entry = ttk.Entry(self.container, width=40)
-        entry.pack(pady=5)
-        self.input_fields.append((label_key, entry))
+    def add_field(self, label_key, show_by_default=True, initial_value=""):
+        # Create a frame to hold the label and entry
+        field_frame = Frame(self.container)
+        
+        # Create label and entry
+        label = ttk.Label(field_frame, text=self.labels["fields"][label_key])
+        label.pack(side="left", padx=(0, 10))
+        entry = ttk.Entry(field_frame, width=30)
+        entry.pack(side="left")
+        
+        # Set initial value if provided
+        if initial_value:
+            entry.insert(0, initial_value)
+        
+        # Pack the frame initially based on show_by_default
+        if show_by_default:
+            field_frame.pack(fill="x", padx=10, pady=5)
+        else:
+            field_frame.pack_forget()
+        
+        # Add to input fields with frame for visibility control
+        self.input_fields.append((label_key, field_frame, entry))
         return entry
 
     def add_checkbox_field(self, label_key, checkbox_text, default_value="", show_by_default=False):
@@ -68,8 +84,8 @@ class BaseDocTab(ttk.Frame):
         else:
             entry.pack_forget()
         
-        # Add to input fields for context generation
-        self.input_fields.append((label_key, entry))
+        # Add to input fields with frame for visibility control
+        self.input_fields.append((label_key, field_frame, entry))
         return entry
 
     def add_date_field(self, label_key, preselect_today=False, min_date_from=None):

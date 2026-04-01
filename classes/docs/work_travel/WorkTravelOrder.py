@@ -17,11 +17,11 @@ class WorkTravelOrder(BaseDocTab):
         self.date_from = self.add_date_field("wt_from", preselect_today=True)
         self.date_to = self.add_date_field("wt_to", min_date_from=self.date_from)
         self.add_checkbox_field("wt_euro_per_day", labels["fields"]["wt_euro_per_day"])
-        self.add_field("wt_day_money_from")
+        self.add_field("wt_day_money_from", show_by_default=False)
         self.add_checkbox_field("wt_nights_max_value", labels["fields"]["wt_night_money"])
-        self.add_field("wt_nights_money_from")
+        self.add_field("wt_nights_money_from", show_by_default=False)
         self.add_checkbox_field("wt_travel_with", labels["fields"]["wt_travel_money"])
-        self.add_field("wt_travel_money_from")
+        self.add_field("wt_travel_money_from", show_by_default=False)
         self.add_checkbox_field("wt_other_expences", labels["fields"]["wt_other_expences"])
         self.add_common_buttons("gen_work_travel")
 
@@ -67,7 +67,7 @@ class WorkTravelOrder(BaseDocTab):
             self.wt_context["wt_nights_count"] = ""
 
         # after date / total_days block
-        for field_key, widget in self.input_fields:
+        for field_key, _, widget in self.input_fields:
             self.wt_context[field_key] = widget.get().strip()
 
         return self.wt_context
