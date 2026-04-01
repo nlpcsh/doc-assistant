@@ -35,6 +35,8 @@ class BaseDocTab(ttk.Frame):
         label = ttk.Label(field_frame, text=self.labels["fields"][label_key])
         label.pack(side="left", padx=(0, 10))
         entry = ttk.Entry(field_frame, width=30)
+        # Configure entry for Unicode/Cyrillic support
+        entry.configure(font=('Arial', 10))  # Ensure font supports Cyrillic
         entry.pack(side="left")
         
         # Set initial value if provided
@@ -65,6 +67,8 @@ class BaseDocTab(ttk.Frame):
         
         # Create the field
         entry = ttk.Entry(field_frame, width=20)
+        # Configure entry for Unicode/Cyrillic support
+        entry.configure(font=('Arial', 10))  # Ensure font supports Cyrillic
         entry.insert(0, default_value)
         
         # Function to toggle field visibility
