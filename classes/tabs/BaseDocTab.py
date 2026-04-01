@@ -7,14 +7,16 @@ from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
 from os import path
 from tkcalendar import Calendar
+from datetime import datetime
 
 class BaseDocTab(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
-    def __init__(self, parent, labels, base_dir, data_mgr, template_name):
+    def __init__(self, parent, labels, base_dir, data_mgr, template_dir, template_name):
         super().__init__(parent)
         self.labels = labels
         self.data_mgr = data_mgr
-        self.template_dir = base_dir + "/templates/"
+        self.signature_path = base_dir + "/templates/"
+        self.template_dir = base_dir + "/templates/" + template_dir + "/"
         self.template_name = template_name
 
         # Shared UI Elements
@@ -30,10 +32,10 @@ class BaseDocTab(ttk.Frame):
         ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")
         entry = ttk.Entry(self.container, width=40)
         entry.pack(pady=5)
-        self.input_fields.append(entry)
+        self.input_fields.append((label_key, entry))
         return entry
 
-    def add_date_field(self, label_key):
+    def add_date_field(self, label_key, preselect_today=False, min_date_from=None):
         ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")
         
         # Create a frame to hold the date entry and button
@@ -44,11 +46,26 @@ class BaseDocTab(ttk.Frame):
         date_entry = ttk.Entry(date_frame, width=30)
         date_entry.pack(side="left", padx=5)
         
+        # Preselect today's date if requested
+        if preselect_today:
+            today = datetime.today()
+            date_entry.insert(0, today.strftime('%d/%m/%Y'))
+        
         # Create button to open calendar
         def open_calendar():
             # Create toplevel window for calendar
             cal_window = tk.Toplevel(self.winfo_toplevel())
             cal_window.title(self.labels["fields"][label_key])
+            
+            # Set minimum date if linked to another date field
+            mindate = None
+            if min_date_from:
+                try:
+                    min_date_str = min_date_from.get()
+                    if min_date_str:
+                        mindate = datetime.strptime(min_date_str, '%d/%m/%Y').date()
+                except (ValueError, AttributeError):
+                    pass
             
             def select_date():
                 selected_date = calendar.get_date()
@@ -57,8 +74,9 @@ class BaseDocTab(ttk.Frame):
                 cal_window.destroy()
             
             # Create calendar widget
-            calendar = Calendar(cal_window, selectmode='day', year=2026, month=3, day=31,
-                              background='darkblue', foreground='white', date_pattern='dd/mm/yyyy')
+            today = datetime.today()
+            calendar = Calendar(cal_window, selectmode='day', year=today.year, month=today.month, day=today.day,
+                              background='darkblue', foreground='white', date_pattern='dd/mm/yyyy', mindate=mindate)
             calendar.pack(pady=10, padx=10)
             
             # Create button to confirm selection
@@ -71,12 +89,12 @@ class BaseDocTab(ttk.Frame):
         # Add button to open calendar
         ttk.Button(date_frame, text="📅", command=open_calendar, width=3).pack(side="left", padx=2)
         
-        self.input_fields.append(date_entry)
+        #self.input_fields.append(date_entry)
         return date_entry
 
     def add_common_buttons(self, gen_label_key):
-        if path.exists(self.template_dir + "sig.png"):
-            self.sig_path = self.template_dir + "sig.png"
+        if path.exists(self.signature_path + "sig.png"):
+            self.sig_path = self.signature_path + "sig.png"
         else:
             ttk.Button(self.container, text=self.labels["buttons"]["select_sig"], 
                 command=self.get_signature).pack(pady=10)
