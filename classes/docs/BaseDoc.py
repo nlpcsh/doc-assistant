@@ -1,4 +1,4 @@
-from tkinter import ttk, messagebox, filedialog, Frame
+from tkinter import END, ttk, messagebox, filedialog, Frame
 import tkinter as tk
 import threading
 import subprocess
@@ -74,6 +74,7 @@ class BaseDoc(ttk.Frame):
         def toggle_visibility():
             if checkbox_var.get():
                 entry.pack(side="left", padx=(5, 0))
+                entry.delete(0, END)
                 entry.insert(0, default_value)
             else:
                 entry.pack_forget()

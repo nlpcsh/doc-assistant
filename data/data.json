@@ -70,5 +70,9 @@
             "team": ["IPS", "MSD", "MIG"],
             "project_lead": "FLS"
         }
+    },
+    "common": {
+        "euro_per_day": 45,
+        "other_expences": "медицинска застраховка "
     }
 }

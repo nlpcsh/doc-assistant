@@ -16,10 +16,10 @@ class WorkTravelOrder(BaseDoc):
         self.add_field("wt_destination")
         self.date_from = self.add_date_field("wt_from", preselect_today=True)
         self.date_to = self.add_date_field("wt_to", min_date_from=self.date_from)
-        self.add_checkbox_field("wt_euro_per_day", labels["fields"]["wt_euro_per_day"])
+        self.add_checkbox_field("wt_euro_per_day", labels["fields"]["wt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")))
         self.add_checkbox_field("wt_nights_max_value", labels["fields"]["wt_night_money"])
         self.wt_travel_with_var, self.travel_multiselect = self.add_checkbox_multi(labels["fields"]["wt_travel_money"], self.labels["multiselect"])
-        self.add_checkbox_field("wt_other_expences", labels["fields"]["wt_other_expences"])
+        self.add_checkbox_field("wt_other_expences", labels["fields"]["wt_other_expences"], default_value=self.data_mgr.data['common'].get("other_expences", ""))
         self.add_common_buttons("gen_work_travel")
 
     def on_project_selected(self, event):
