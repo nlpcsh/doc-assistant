@@ -17,11 +17,8 @@
         "wt_day_money": "Дневни",
         "wt_night_money": "Нощувки",
         "wt_travel_money": "Пътни",
-        "wt_euro_per_day": "Евро на ден:",
-        "wt_day_money_from": "Дневни от:",
-        "wt_nights_money_from": "Нощувки от:",
-        "wt_travel_money_from": "Пътни от:",
-        "wt_other_expences": "Други разходи:"
+        "wt_euro_per_day": "Евро на ден",
+        "wt_other_expences": "Други разходи"
     },
     "multiselect": ["кола", "самолет", "влак", "автобус", "такси", "друго"],
     "buttons": {

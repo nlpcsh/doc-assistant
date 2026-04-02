@@ -1,9 +1,9 @@
 from tkinter import ttk
 
-from classes.tabs.BaseDocTab import BaseDocTab
+from classes.docs.BaseDoc import BaseDoc
 from datetime import datetime
 
-class WorkTravelOrder(BaseDocTab):
+class WorkTravelOrder(BaseDoc):
     def __init__(self, parent, labels, base_dir, data_mgr):
         super().__init__(parent, labels, base_dir, data_mgr, "work_travel", "work_travel_order.docx")
         ttk.Label(self.container, text=labels["tabs"]["wt_order"], font=("Arial", 12, "bold")).pack(pady=10)
@@ -17,11 +17,8 @@ class WorkTravelOrder(BaseDocTab):
         self.date_from = self.add_date_field("wt_from", preselect_today=True)
         self.date_to = self.add_date_field("wt_to", min_date_from=self.date_from)
         self.add_checkbox_field("wt_euro_per_day", labels["fields"]["wt_euro_per_day"])
-        #self.add_field("wt_day_money_from", show_by_default=False)
         self.add_checkbox_field("wt_nights_max_value", labels["fields"]["wt_night_money"])
-        #self.add_field("wt_nights_money_from", show_by_default=False)
-        self.add_checkbox_field("wt_travel_with", labels["fields"]["wt_travel_money"])
-        #self.add_field("wt_travel_money_from", show_by_default=False)
+        self.wt_travel_with_var, self.travel_multiselect = self.add_checkbox_multi(labels["fields"]["wt_travel_money"], self.labels["multiselect"])
         self.add_checkbox_field("wt_other_expences", labels["fields"]["wt_other_expences"])
         self.add_common_buttons("gen_work_travel")
 
@@ -29,7 +26,6 @@ class WorkTravelOrder(BaseDocTab):
         selected_project = self.all_projects.get()
         if selected_project in self.data_mgr.data['projects']:
             team = self.data_mgr.data['projects'][selected_project]['team']
-            #person_names = [self.data_mgr.data['co_workers'][pid]["full_name"] for pid in team if pid in self.data_mgr.data['co_workers']]
             self.persons_dropdown['values'] = team # person_names
             if team: # person_names:
                 self.persons_dropdown.current(0)
@@ -78,5 +74,15 @@ class WorkTravelOrder(BaseDocTab):
                     self.wt_context["wt_nights_money_from"] = self.labels["messages"]["account_on"] + wt_contract_info
                 else:
                     self.wt_context["wt_nights_money_from"] = self.labels["messages"]["account_on"] + self.labels["messages"]["third_party"]
+
+        # Add travel with options
+        if self.wt_travel_with_var.get():
+            self.wt_context["wt_travel_money_from"] = self.labels["messages"]["account_on"] + wt_contract_info
+            selected_indices = self.travel_multiselect.curselection()
+            selected_options = [self.labels["multiselect"][i] for i in selected_indices]
+            self.wt_context["wt_travel_with"] = ", ".join(selected_options)
+        else:
+            self.wt_context["wt_travel_money_from"] = self.labels["messages"]["account_on"] + self.labels["messages"]["third_party"]
+            self.wt_context["wt_travel_with"] = ""
 
         return self.wt_context
