@@ -1,110 +1,110 @@
 {
-    "co_workers" : {
-        "FLS" : {
-            "full_name" : "Филип Ламбов Стаматов",
-            "titles": "гл. ас. д-р",
-            "names": "Филип Стаматов",
-            "position" : "изследовател",
-            "department" : "АФ",
-            "work_place" : "ИУ - БАН",
-            "email" : "fifi@example.com",
-            "ssn": "123456789",
-            "address": "ул. Карамфил 123, Бургас",
-            "id_number": "AB1234567",
-            "iban": "BG80BNBG96611020345678",
-            "car": {
-                "make": "Тойота",
-                "model": "Корола",
-                "year": "2015",
-                "license_plate": "CA1234AB",
-                "liters_per_100km": "6.5",
-                "fuel_type": "бензин"
-            }
-        },
-        "MIG" : {
-            "full_name" : "Мария Иванова Георгиева",
-            "titles": "доц. д-р",
-            "names": "Мария Георгиева",
-            "position" : "изследовател",
-            "department" : "АФ",
-            "work_place" : "Физически факултет",
-            "email" : "maria@example.com",
-            "ssn": "987654321",
-            "address": "ул. Кокиче 456, София",
-            "id_number": "CD7890123",
-            "iban": "BG80BNBG96611020345679",
-            "car": {
-                "make": "Мерцедес",
-                "model": "Е200",
-                "year": "2018",
-                "license_plate": "CВ0007AА",
-                "liters_per_100km": "5.5",
-                "fuel_type": "дизел"
-            }
-        },
-        "IPS" : {
-            "full_name" : "Иван Петров Симеонов",
-            "titles": "гл. ас. д-р",
-            "names": "Иван Симеонов",
-            "position" : "изследовател",
-            "department" : "АФ",
-            "work_place" : "ИУ - БАН",
-            "email" : "ivan@example.com",
-            "ssn": "456789123",
-            "address": "ул. Пример 789, София",
-            "id_number": "EF4567890",
-            "iban": "BG80BNBG96611020345680",
-            "car": {
-                "make": "Нисан",
-                "model": "Кашкай",
-                "year": "2015",
-                "license_plate": "CA3331AB",
-                "liters_per_100km": "7.5",
-                "fuel_type": "бензин"
-            }
-        },
-        "MSD" : {
-            "full_name" : "Минка Стоянова Димитрова",
-            "titles": "доц. д-р",
-            "names": "Минка Димитрова",
-            "position" : "изследовател",
-            "department" : "АФ",
-            "work_place" : "Физически факултет",
-            "email" : "elena@example.com",
-            "ssn": "321654987",
-            "address": "ул. Пример 012, Пловдив",
-            "id_number": "GH7890123",
-            "iban": "BG80BNBG96611020345681",
-            "car": {
-                "make": "Форд",
-                "model": "Фокус",
-                "year": "2025",
-                "license_plate": "CВ1234XX",
-                "liters_per_100km": "6.5",
-                "fuel_type": "дизел"
-            }
-        }
+  "co_workers": {
+    "FLS": {
+      "full_name": "Филип Ламбов Стаматов",
+      "titles": "гл. ас. д-р",
+      "names": "Филип Стаматов",
+      "position": "изследовател",
+      "department": "АФ",
+      "work_place": "ИУ - БАН",
+      "email": "fifi@example.com",
+      "ssn": "123456789",
+      "address": "ул. Карамфил 123, Бургас",
+      "id_number": "AB1234567",
+      "iban": "BG80BNBG96611020345678",
+      "car": {
+        "brand": "Тойота",
+        "model": "Корола",
+        "year": "2015",
+        "plate": "CA1234AB",
+        "liters_per_100km": "6.5",
+        "fuel_type": "бензин"
+      }
     },
-    "projects": {
-        "P001": {
-            "name": "Проект 1",
-            "description": "Описание на проект 1",
-            "start_date": "2024-01-01",
-            "end_date": "2028-12-31",
-            "team": ["FLS", "MIG"],
-            "project_lead": "FLS"
-        },
-        "P002": {
-            "name": "Проект 2",
-            "description": "Описание на проект 2",
-            "start_date": "2024-02-01",
-            "end_date": "2028-11-30",
-            "team": ["IPS", "MSD", "MIG"],
-            "project_lead": "FLS"
-        }
+    "MIG": {
+      "full_name": "Мария Иванова Георгиева",
+      "titles": "доц. д-р",
+      "names": "Мария Георгиева",
+      "position": "изследовател",
+      "department": "АФ",
+      "work_place": "Физически факултет",
+      "email": "maria@example.com",
+      "ssn": "987654321",
+      "address": "ул. Кокиче 456, София",
+      "id_number": "CD7890123",
+      "iban": "BG80BNBG96611020345679",
+      "car": {
+        "brand": "Мерцедес",
+        "model": "Е200",
+        "year": "2018",
+        "plate": "CВ0007AА",
+        "liters_per_100km": "5.5",
+        "fuel_type": "дизел"
+      }
     },
-    "common": {
-        "euro_per_day": 45,
-        "other_expences": "медицинска застраховка "
+    "IPS": {
+      "full_name": "Иван Петров Симеонов",
+      "titles": "гл. ас. д-р",
+      "names": "Иван Симеонов",
+      "position": "изследовател",
+      "department": "АФ",
+      "work_place": "ИУ - БАН",
+      "email": "ivan@example.com",
+      "ssn": "456789123",
+      "address": "ул. Пример 789, София",
+      "id_number": "EF4567890",
+      "iban": "BG80BNBG96611020345680",
+      "car": {
+        "brand": "Нисан",
+        "model": "Кашкай",
+        "year": "2015",
+        "plate": "CA3331AB",
+        "liters_per_100km": "7.5",
+        "fuel_type": "бензин"
+      }
+    },
+    "MSD": {
+      "full_name": "Минка Стоянова Димитрова",
+      "titles": "доц. д-р",
+      "names": "Минка Димитрова",
+      "position": "изследовател",
+      "department": "АФ",
+      "work_place": "Физически факултет",
+      "email": "elena@example.com",
+      "ssn": "321654987",
+      "address": "ул. Пример 012, Пловдив",
+      "id_number": "GH7890123",
+      "iban": "BG80BNBG96611020345681",
+      "car": {
+        "brand": "Форд",
+        "model": "Фокус",
+        "year": "2025",
+        "plate": "CВ1234XX",
+        "liters_per_100km": "6.5",
+        "fuel_type": "дизел"
+      }
     }
+  },
+  "projects": {
+    "P001": {
+      "name": "Проект 1",
+      "description": "Описание на проект 1",
+      "start_date": "2024-01-01",
+      "end_date": "2028-12-31",
+      "team": ["FLS", "MIG"],
+      "project_lead": "FLS"
+    },
+    "P002": {
+      "name": "Проект 2",
+      "description": "Описание на проект 2",
+      "start_date": "2024-02-01",
+      "end_date": "2028-11-30",
+      "team": ["IPS", "MSD", "MIG"],
+      "project_lead": "FLS"
+    }
+  },
+  "common": {
+    "euro_per_day": 45,
+    "other_expences": "медицинска застраховка "
+  }
 }

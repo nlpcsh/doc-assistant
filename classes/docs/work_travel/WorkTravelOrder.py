@@ -85,5 +85,10 @@ class WorkTravelOrder(BaseDoc):
         else:
             self.wt_context["wt_travel_money_from"] = self.labels["messages"]["account_on"] + self.labels["messages"]["third_party"]
             self.wt_context["wt_travel_with"] = ""
+        
+        for option in selected_options:
+            if option == "кола":
+                personal_car = wt_person["car"]
+                self.wt_context["wt_travel_money_from"] = f"Лично МПС {personal_car['brand']} {personal_car['model']} {personal_car['year']}г. с рег. номер {personal_car['plate']}, разход {personal_car['liters_per_100km']} л/100км, {personal_car['fuel_type']}."
 
         return self.wt_context
