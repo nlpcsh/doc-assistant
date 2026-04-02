@@ -18,7 +18,7 @@ class WorkTravelOrder(BaseDoc):
         self.date_to = self.add_date_field("wt_to", min_date_from=self.date_from)
         self.add_checkbox_field("wt_euro_per_day", labels["fields"]["wt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")))
         self.add_checkbox_field("wt_nights_max_value", labels["fields"]["wt_night_money"])
-        self.wt_travel_with_var, self.travel_multiselect = self.add_checkbox_multi(labels["fields"]["wt_travel_money"], self.labels["multiselect"])
+        self.wt_travel_with_var, self.travel_multiselect = self.add_checkbox_multi(labels["fields"]["wt_travel_money"], self.labels["multiselect"]["travel_with"])
         self.add_checkbox_field("wt_other_expences", labels["fields"]["wt_other_expences"], default_value=self.data_mgr.data['common'].get("other_expences", ""))
         self.add_common_buttons("gen_work_travel")
 
@@ -62,6 +62,7 @@ class WorkTravelOrder(BaseDoc):
             self.wt_context["wt_total_days"] = ""
             self.wt_context["wt_nights_count"] = ""
 
+        # Get values from input fields
         for field_key, _, widget in self.input_fields:
             self.wt_context[field_key] = widget.get().strip()
             if field_key == "wt_euro_per_day":
@@ -79,7 +80,7 @@ class WorkTravelOrder(BaseDoc):
         if self.wt_travel_with_var.get():
             self.wt_context["wt_travel_money_from"] = self.labels["messages"]["account_on"] + wt_contract_info
             selected_indices = self.travel_multiselect.curselection()
-            selected_options = [self.labels["multiselect"][i] for i in selected_indices]
+            selected_options = [self.labels["multiselect"]["travel_with"][i] for i in selected_indices]
             self.wt_context["wt_travel_with"] = ", ".join(selected_options)
         else:
             self.wt_context["wt_travel_money_from"] = self.labels["messages"]["account_on"] + self.labels["messages"]["third_party"]
