@@ -3,7 +3,7 @@ import json
 class DataMgr:
     """Manages data from data.json file."""
     def __init__(self, data_file):
-        with open(data_file, 'r') as f:
+        with open(data_file, 'r', encoding="utf-8") as f:
             self.data = json.load(f)
     
     def get_project_by_id(self, project_id):

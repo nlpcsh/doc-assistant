@@ -10,7 +10,7 @@ from classes.DataMgr import DataMgr
 class MainApp:
     def __init__(self, root, base_dir):
         labels_path = path.join(base_dir, "settings/labels.json")
-        with open(labels_path, "r") as f:
+        with open(labels_path, "r", encoding="utf-8") as f:
             self.labels = json.load(f)
 
         self.data_mgr = DataMgr("data/data.json")
