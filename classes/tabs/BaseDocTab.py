@@ -69,14 +69,15 @@ class BaseDocTab(ttk.Frame):
         entry = ttk.Entry(field_frame, width=20)
         # Configure entry for Unicode/Cyrillic support
         entry.configure(font=('Arial', 10))  # Ensure font supports Cyrillic
-        entry.insert(0, default_value)
         
         # Function to toggle field visibility
         def toggle_visibility():
             if checkbox_var.get():
                 entry.pack(side="left", padx=(5, 0))
+                entry.insert(0, default_value)
             else:
                 entry.pack_forget()
+                entry.insert(0, "")  # Clear the field when hiding
         
         # Bind checkbox to toggle function
         checkbox_var.trace_add("write", lambda *args: toggle_visibility())

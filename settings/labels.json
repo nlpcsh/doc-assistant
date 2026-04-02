@@ -32,6 +32,8 @@
     "messages": {
         "success_title": "Успешно",
         "error_title": "Грешка",
-        "gen_finished": "Готово!"
+        "gen_finished": "Готово!",
+        "account_on": "За сметка на ",
+        "third_party": "приемащата страна."
     }
 }
