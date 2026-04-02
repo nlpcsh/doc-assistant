@@ -11,7 +11,15 @@
             "ssn": "123456789",
             "address": "ул. Карамфил 123, Бургас",
             "id_number": "AB1234567",
-            "iban": "BG80BNBG96611020345678"
+            "iban": "BG80BNBG96611020345678",
+            "car": {
+                "make": "Тойота",
+                "model": "Корола",
+                "year": "2015",
+                "license_plate": "CA1234AB",
+                "liters_per_100km": "6.5",
+                "fuel_type": "бензин"
+            }
         },
         "MIG" : {
             "full_name" : "Мария Иванова Георгиева",
@@ -24,7 +32,15 @@
             "ssn": "987654321",
             "address": "ул. Кокиче 456, София",
             "id_number": "CD7890123",
-            "iban": "BG80BNBG96611020345679"
+            "iban": "BG80BNBG96611020345679",
+            "car": {
+                "make": "Мерцедес",
+                "model": "Е200",
+                "year": "2018",
+                "license_plate": "CВ0007AА",
+                "liters_per_100km": "5.5",
+                "fuel_type": "дизел"
+            }
         },
         "IPS" : {
             "full_name" : "Иван Петров Симеонов",
@@ -37,7 +53,15 @@
             "ssn": "456789123",
             "address": "ул. Пример 789, София",
             "id_number": "EF4567890",
-            "iban": "BG80BNBG96611020345680"
+            "iban": "BG80BNBG96611020345680",
+            "car": {
+                "make": "Нисан",
+                "model": "Кашкай",
+                "year": "2015",
+                "license_plate": "CA3331AB",
+                "liters_per_100km": "7.5",
+                "fuel_type": "бензин"
+            }
         },
         "MSD" : {
             "full_name" : "Минка Стоянова Димитрова",
@@ -50,7 +74,15 @@
             "ssn": "321654987",
             "address": "ул. Пример 012, Пловдив",
             "id_number": "GH7890123",
-            "iban": "BG80BNBG96611020345681"
+            "iban": "BG80BNBG96611020345681",
+            "car": {
+                "make": "Форд",
+                "model": "Фокус",
+                "year": "2025",
+                "license_plate": "CВ1234XX",
+                "liters_per_100km": "6.5",
+                "fuel_type": "дизел"
+            }
         }
     },
     "projects": {
