@@ -8,7 +8,7 @@ from os import path
 from tkcalendar import Calendar
 from datetime import datetime
 
-class BaseDocTab(ttk.Frame):
+class BaseDoc(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
     def __init__(self, parent, labels, base_dir, data_mgr, template_dir, template_name):
         super().__init__(parent)
@@ -92,6 +92,33 @@ class BaseDocTab(ttk.Frame):
         # Add to input fields with frame for visibility control
         self.input_fields.append((label_key, field_frame, entry))
         return entry
+
+    def add_checkbox_multi(self, checkbox_text, options):
+        """Add a checkbox that controls the visibility of a multiselect listbox."""
+        # Create checkbox variable
+        var = tk.BooleanVar()
+        
+        # Create checkbox
+        checkbox = ttk.Checkbutton(self.container, text=checkbox_text, variable=var)
+        checkbox.pack(anchor="w", padx=10, pady=5)
+        
+        # Create listbox
+        listbox = tk.Listbox(self.container, selectmode=tk.MULTIPLE, height=4, exportselection=0)
+        for option in options:
+            listbox.insert(tk.END, option)
+        listbox.pack_forget()
+        
+        # Function to toggle listbox visibility
+        def toggle():
+            if var.get():
+                listbox.pack(after=checkbox, padx=10, pady=5)
+            else:
+                listbox.pack_forget()
+        
+        # Bind checkbox to toggle function
+        var.trace_add("write", lambda *args: toggle())
+        
+        return var, listbox
 
     def add_date_field(self, label_key, preselect_today=False, min_date_from=None):
         ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")

@@ -23,6 +23,7 @@
         "wt_travel_money_from": "Пътни от:",
         "wt_other_expences": "Други разходи:"
     },
+    "multiselect": ["кола", "самолет", "влак", "автобус", "такси", "друго"],
     "buttons": {
         "select_sig": "Избери подпис",
         "gen_contract": "Създай граждански договор",

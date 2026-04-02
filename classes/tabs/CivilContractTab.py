@@ -1,6 +1,6 @@
-from classes.tabs.BaseDocTab import BaseDocTab
+from classes.docs.BaseDoc import BaseDoc
 
-class CivilContractTab(BaseDocTab):
+class CivilContractTab(BaseDoc):
     def __init__(self, parent, labels, base_dir, data_mgr):
         super().__init__(parent, labels, base_dir, data_mgr, "civil_contracts", "contract_template.docx")
 
