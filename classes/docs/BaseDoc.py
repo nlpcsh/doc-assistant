@@ -27,14 +27,14 @@ class BaseDoc(ttk.Frame):
         self.progress = ttk.Progressbar(self.container, orient="horizontal", length=200, mode="determinate")
         self.status_label = ttk.Label(self.container, text="")
 
-    def add_field(self, label_key, show_by_default=True, initial_value=""):
+    def add_field(self, label_key, show_by_default=True, initial_value="", width=30):
         # Create a frame to hold the label and entry
         field_frame = Frame(self.container)
         
         # Create label and entry
         label = ttk.Label(field_frame, text=self.labels["fields"][label_key])
         label.pack(side="left", padx=(0, 10))
-        entry = ttk.Entry(field_frame, width=30)
+        entry = ttk.Entry(field_frame, width=width)
         # Configure entry for Unicode/Cyrillic support
         entry.configure(font=('Arial', 10))  # Ensure font supports Cyrillic
         entry.pack(side="left")
@@ -53,7 +53,23 @@ class BaseDoc(ttk.Frame):
         self.input_fields.append((label_key, field_frame, entry))
         return entry
 
-    def add_checkbox_field(self, label_key, checkbox_text, default_value="", show_by_default=False):
+    def add_text_field(self, label_key, height=4, width=40):
+        # Create a frame to hold the label and text widget
+        field_frame = Frame(self.container)
+
+        label = ttk.Label(field_frame, text=self.labels["fields"][label_key])
+        label.pack(anchor="w")
+
+        text_widget = tk.Text(field_frame, height=height, width=width, wrap="word")
+        text_widget.configure(font=("Arial", 10))
+        text_widget.pack(fill="x")
+
+        field_frame.pack(fill="x", padx=10, pady=5)
+
+        self.input_fields.append((label_key, field_frame, text_widget))
+        return text_widget
+
+    def add_checkbox_field(self, label_key, checkbox_text, default_value="", show_by_default=False, width=20):
         """Add a checkbox that controls the visibility of a field with a predefined value."""
         # Create a frame to hold the checkbox and the field
         field_frame = Frame(self.container)
@@ -66,7 +82,7 @@ class BaseDoc(ttk.Frame):
         checkbox.pack(side="left", padx=(0, 10))
         
         # Create the field
-        entry = ttk.Entry(field_frame, width=20)
+        entry = ttk.Entry(field_frame, width=width)
         # Configure entry for Unicode/Cyrillic support
         entry.configure(font=('Arial', 10))  # Ensure font supports Cyrillic
         
@@ -103,8 +119,9 @@ class BaseDoc(ttk.Frame):
         checkbox = ttk.Checkbutton(self.container, text=checkbox_text, variable=var)
         checkbox.pack(anchor="w", padx=10, pady=5)
         
-        # Create listbox
-        listbox = tk.Listbox(self.container, selectmode=tk.MULTIPLE, height=4, exportselection=0)
+        # Create listbox with height based on number of options (max 10)
+        height = min(len(options), 10)
+        listbox = tk.Listbox(self.container, selectmode=tk.MULTIPLE, height=height, exportselection=0)
         for option in options:
             listbox.insert(tk.END, option)
         listbox.pack_forget()
@@ -121,7 +138,7 @@ class BaseDoc(ttk.Frame):
         
         return var, listbox
 
-    def add_date_field(self, label_key, preselect_today=False, min_date_from=None):
+    def add_date_field(self, label_key, preselect_today=False, min_date_from=None, width=30):
         ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")
         
         # Create a frame to hold the date entry and button
@@ -129,7 +146,7 @@ class BaseDoc(ttk.Frame):
         date_frame.pack(pady=5, padx=5, fill="x")
         
         # Create entry field for the date
-        date_entry = ttk.Entry(date_frame, width=30)
+        date_entry = ttk.Entry(date_frame, width=width)
         date_entry.pack(side="left", padx=5)
         
         # Preselect today's date if requested

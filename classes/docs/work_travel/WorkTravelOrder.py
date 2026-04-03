@@ -25,14 +25,14 @@ class WorkTravelOrder(BaseDoc):
             self.all_projects.set(latest_project_id)
             self.on_project_selected(None)
 
-        self.add_field("wt_purpose")
+        self.add_text_field("wt_purpose", height=5, width=50)
         self.add_field("wt_destination")
-        self.date_from = self.add_date_field("wt_from", preselect_today=True)
-        self.date_to = self.add_date_field("wt_to", min_date_from=self.date_from)
-        self.add_checkbox_field("wt_euro_per_day", labels["fields"]["wt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")))
-        self.add_checkbox_field("wt_nights_max_value", labels["fields"]["wt_night_money"])
+        self.date_from = self.add_date_field("wt_from", preselect_today=True, width=11)
+        self.date_to = self.add_date_field("wt_to", min_date_from=self.date_from, width=11)
+        self.add_checkbox_field("wt_euro_per_day", labels["fields"]["wt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")), width=5)
+        self.add_checkbox_field("wt_nights_max_value", labels["fields"]["wt_night_money"], width=5)
         self.wt_travel_with_var, self.travel_multiselect = self.add_checkbox_multi(labels["fields"]["wt_travel_money"], self.labels["multiselect"]["travel_with"])
-        self.add_checkbox_field("wt_other_expences", labels["fields"]["wt_other_expences"], default_value=self.data_mgr.data['common'].get("other_expences", ""))
+        self.add_checkbox_field("wt_other_expences", labels["fields"]["wt_other_expences"], default_value=self.data_mgr.data['common'].get("other_expences", ""), width=30)
         self.add_common_buttons("gen_work_travel")
 
     def on_project_selected(self, event):
@@ -77,7 +77,12 @@ class WorkTravelOrder(BaseDoc):
 
         # Get values from input fields
         for field_key, _, widget in self.input_fields:
-            self.wt_context[field_key] = widget.get().strip()
+            try:
+                # Text widget: get by range; Entry/Combobox: no args
+                value = widget.get("1.0", "end-1c").strip()
+            except TypeError:
+                value = widget.get().strip()
+            self.wt_context[field_key] = value
             if field_key == "wt_euro_per_day":
                 if self.wt_context[field_key]:
                     self.wt_context["wt_day_money_from"] = self.labels["messages"]["account_on"] + wt_contract_info
