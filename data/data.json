@@ -98,7 +98,7 @@
       "name": "Проект 2",
       "description": "Описание на проект 2",
       "start_date": "2024-02-01",
-      "end_date": "2028-11-30",
+      "end_date": "2029-11-30",
       "team": ["IPS", "MSD", "MIG"],
       "project_lead": "FLS"
     }
@@ -106,5 +106,12 @@
   "common": {
     "euro_per_day": 45,
     "other_expences": "медицинска застраховка "
-  }
+  },
+  "output_folders": {
+      "common": "/home/../Docs/",
+      "contracts": "contracts/",
+      "work_travels": "work_travels/",
+      "reports": "reports/",
+      "orders": "orders/"
+    }
 }

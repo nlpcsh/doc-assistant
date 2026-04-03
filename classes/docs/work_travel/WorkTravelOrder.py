@@ -54,15 +54,16 @@ class WorkTravelOrder(BaseDoc):
     def add_project_and_person_data(self):
         project = self.data_mgr.get_project_by_id(self.all_projects.get())
         project_leader = self.data_mgr.get_coworker_by_id(project["project_lead"])
-        wt_person = self.data_mgr.get_coworker_by_id(self.persons_dropdown.get())
+        self.person = self.data_mgr.get_coworker_by_id(self.persons_dropdown.get())
         wt_contract_info = project["description"]
         self.wt_context.update({
             "leader_titles": project_leader["titles"],
             "leader_names": project_leader["names"],
-            "wt_person_titles": wt_person["titles"],
-            "wt_person_names": wt_person["full_name"],
-            "wt_person_work_place": wt_person["department"] + ", " + wt_person["work_place"],
+            "wt_person_titles": self.person["titles"],
+            "wt_person_names": self.person["full_name"],
+            "wt_person_work_place": self.person["department"] + ", " + self.person["work_place"],
             "wt_contract_info": wt_contract_info,
+            "person_id": self.persons_dropdown.get()
         })
         return wt_contract_info
 
@@ -78,17 +79,20 @@ class WorkTravelOrder(BaseDoc):
                     "wt_from": wt_from_str,
                     "wt_to": wt_to_str,
                     "wt_total_days": str(total_days),
-                    "wt_nights_count": str(max(0, total_days - 1))
+                    "wt_nights_count": str(max(0, total_days - 1)),
+                    "wt_date": wt_from.strftime('%Y%m%d'),
                 })
             except ValueError:
                 self.wt_context.update({
                     "wt_total_days": "Invalid dates",
-                    "wt_nights_count": ""
+                    "wt_nights_count": "",
+                    "wt_date": "date_error"
                 })
         else:
             self.wt_context.update({
                 "wt_total_days": "",
-                "wt_nights_count": ""
+                "wt_nights_count": "",
+                "wt_date": "no_date"
             })
 
     def process_field_values(self):
@@ -125,7 +129,7 @@ class WorkTravelOrder(BaseDoc):
         
         for option in selected_options:
             if option == "кола":
-                personal_car = wt_person["car"]
+                personal_car = self.person["car"]
                 self.wt_context["wt_travel_money_from"] = f"Лично МПС {personal_car['brand']} {personal_car['model']} {personal_car['year']}г. с рег. номер {personal_car['plate']}, разход {personal_car['liters_per_100km']} л/100км, {personal_car['fuel_type']}."
 
     def get_context(self):

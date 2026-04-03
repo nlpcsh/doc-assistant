@@ -2,9 +2,10 @@ from tkinter import END, ttk, messagebox, filedialog, Frame
 import tkinter as tk
 import threading
 import subprocess
+import shutil
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
-from os import path
+from os import path, makedirs
 from tkcalendar import Calendar
 from datetime import datetime
 
@@ -234,14 +235,22 @@ class BaseDoc(ttk.Frame):
                 context['signature'] = InlineImage(doc, self.sig_path, width=Inches(1.5))
 
             doc.render(context)
-            out_docx = f"Generated_{self.template_name}"
+            out_docx = f"{context['wt_date']}_{context['person_id']}_{self.template_name}"
             doc.save(out_docx)
 
             # PDF Conversion
             subprocess.run(['lowriter', '--headless', '--convert-to', 'pdf', out_docx])
 
-            # Auto-open PDF
+            # Move files to output folder
+            move_path = f"{self.data_mgr.data['output_folders']['common']}{self.data_mgr.data['output_folders']['work_travels']}{context['wt_date']}"
+            if not path.exists(move_path):
+                makedirs(move_path, exist_ok=True)
+            shutil.move(out_docx, path.join(move_path, path.basename(out_docx)))
             pdf_path = out_docx.replace(".docx", ".pdf")
+            shutil.move(pdf_path, path.join(move_path, path.basename(pdf_path)))
+            pdf_path = path.join(move_path, path.basename(pdf_path))
+
+            # Auto-open PDF
             subprocess.run(['xdg-open', pdf_path])
 
             messagebox.showinfo(self.labels["messages"]["success_title"], "Done!")
