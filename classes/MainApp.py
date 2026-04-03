@@ -19,5 +19,5 @@ class MainApp:
         nb = ttk.Notebook(root)
         nb.pack(expand=True, fill="both")
 
-        nb.add(CivilContractTab(nb, self.labels, base_dir, self.data_mgr), text=self.labels["tabs"]["civil_contract"])
         nb.add(WorkTravelTab(nb, self.labels, base_dir, self.data_mgr), text=self.labels["tabs"]["work_travel"])
+        nb.add(CivilContractTab(nb, self.labels, base_dir, self.data_mgr), text=self.labels["tabs"]["civil_contract"])

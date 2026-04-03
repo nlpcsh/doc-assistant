@@ -8,5 +8,5 @@ class WorkTravelTab(ttk.Frame):
         super().__init__(parent)
         sub_nb = ttk.Notebook(self)
         sub_nb.pack(expand=True, fill="both")
-        sub_nb.add(WorkTravelReport(sub_nb, labels, base_dir, data_mgr), text=labels["tabs"]["wt_report"])
         sub_nb.add(WorkTravelOrder(sub_nb, labels, base_dir, data_mgr), text=labels["tabs"]["wt_order"])
+        sub_nb.add(WorkTravelReport(sub_nb, labels, base_dir, data_mgr), text=labels["tabs"]["wt_report"])
