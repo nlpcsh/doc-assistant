@@ -8,9 +8,22 @@ class WorkTravelOrder(BaseDoc):
         super().__init__(parent, labels, base_dir, data_mgr, "work_travel", "work_travel_order.docx")
         ttk.Label(self.container, text=labels["tabs"]["wt_order"], font=("Arial", 12, "bold")).pack(pady=10)
         self.wt_context = {}
-        self.all_projects = self.add_dropdown("projects", list(self.data_mgr.data['projects'].keys()))
+        projects_list = list(self.data_mgr.data['projects'].keys())
+        self.all_projects = self.add_dropdown("projects", projects_list)
         self.all_projects.bind("<<ComboboxSelected>>", self.on_project_selected)
         self.persons_dropdown = self.add_dropdown("select_person", [])
+
+        # Pre-select project with the latest end_date and update persons dropdown
+        if projects_list:
+            latest_project_id = max(
+                projects_list,
+                key=lambda pid: datetime.strptime(
+                    self.data_mgr.data['projects'][pid].get('end_date', '1900-01-01'),
+                    '%Y-%m-%d'
+                )
+            )
+            self.all_projects.set(latest_project_id)
+            self.on_project_selected(None)
 
         self.add_field("wt_purpose")
         self.add_field("wt_destination")

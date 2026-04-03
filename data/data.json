@@ -98,7 +98,7 @@
             "name": "Проект 2",
             "description": "Описание на проект 2",
             "start_date": "2024-02-01",
-            "end_date": "2028-11-30",
+            "end_date": "2029-11-30",
             "team": ["IPS", "MSD", "MIG"],
             "project_lead": "FLS"
         }
