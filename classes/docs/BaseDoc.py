@@ -11,13 +11,13 @@ from datetime import datetime
 
 class BaseDoc(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
-    def __init__(self, parent, labels, base_dir, data_mgr, template_dir, template_name):
+    def __init__(self, parent, labels, base_dir, data_mgr, template_dir, template_names):
         super().__init__(parent)
         self.labels = labels
         self.data_mgr = data_mgr
         self.signature_path = base_dir + "/templates/"
         self.template_dir = base_dir + "/templates/" + template_dir + "/"
-        self.template_name = template_name
+        self.template_names = template_names if isinstance(template_names, list) else [template_names]
 
         # Shared UI Elements
         self.container = ttk.Frame(self, padding="20")
@@ -228,30 +228,32 @@ class BaseDoc(ttk.Frame):
 
     def process_doc(self):
         try:
-            doc = DocxTemplate(self.template_dir + self.template_name)
             context = self.get_context() # Defined in subclasses
 
-            if self.sig_path:
-                context['signature'] = InlineImage(doc, self.sig_path, width=Inches(1.5))
+            for template in self.template_names:
+                doc = DocxTemplate(self.template_dir + template)
 
-            doc.render(context)
-            out_docx = f"{context['wt_date']}_{context['person_id']}_{self.template_name}"
-            doc.save(out_docx)
+                if self.sig_path:
+                    context['signature'] = InlineImage(doc, self.sig_path, width=Inches(1.5))
 
-            # PDF Conversion
-            subprocess.run(['lowriter', '--headless', '--convert-to', 'pdf', out_docx])
+                doc.render(context)
+                out_docx = f"{context['wt_date']}_{context['person_id']}_{template}"
+                doc.save(out_docx)
 
-            # Move files to output folder
-            move_path = f"{self.data_mgr.data['output_folders']['common']}{self.data_mgr.data['output_folders']['work_travels']}{context['wt_date']}"
-            if not path.exists(move_path):
-                makedirs(move_path, exist_ok=True)
-            shutil.move(out_docx, path.join(move_path, path.basename(out_docx)))
-            pdf_path = out_docx.replace(".docx", ".pdf")
-            shutil.move(pdf_path, path.join(move_path, path.basename(pdf_path)))
-            pdf_path = path.join(move_path, path.basename(pdf_path))
+                # PDF Conversion
+                subprocess.run(['lowriter', '--headless', '--convert-to', 'pdf', out_docx])
 
-            # Auto-open PDF
-            subprocess.run(['xdg-open', pdf_path])
+                # Move files to output folder
+                move_path = f"{self.data_mgr.data['output_folders']['common']}{self.data_mgr.data['output_folders']['work_travels']}{context['wt_date']}"
+                if not path.exists(move_path):
+                    makedirs(move_path, exist_ok=True)
+                shutil.move(out_docx, path.join(move_path, path.basename(out_docx)))
+                pdf_path = out_docx.replace(".docx", ".pdf")
+                shutil.move(pdf_path, path.join(move_path, path.basename(pdf_path)))
+                pdf_path = path.join(move_path, path.basename(pdf_path))
+
+                # Auto-open PDF
+                subprocess.run(['xdg-open', pdf_path])
 
             messagebox.showinfo(self.labels["messages"]["success_title"], "Done!")
         except Exception as e:

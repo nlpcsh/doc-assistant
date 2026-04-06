@@ -5,7 +5,7 @@ from datetime import datetime
 
 class WorkTravelOrder(BaseDoc):
     def __init__(self, parent, labels, base_dir, data_mgr):
-        super().__init__(parent, labels, base_dir, data_mgr, "work_travel", "work_travel_order.docx")
+        super().__init__(parent, labels, base_dir, data_mgr, "work_travel", ["work_travel_order.docx", "work_travel_report.docx"])
         self.setup_ui_components()
         self.preselect_latest_project()
 
@@ -59,6 +59,8 @@ class WorkTravelOrder(BaseDoc):
         self.wt_context.update({
             "leader_titles": project_leader["titles"],
             "leader_names": project_leader["names"],
+            "leader_full_name": project_leader["full_name"],
+            "leader_work_place": project_leader["department"] + ", " + project_leader["work_place"],
             "wt_person_titles": self.person["titles"],
             "wt_person_names": self.person["full_name"],
             "wt_person_work_place": self.person["department"] + ", " + self.person["work_place"],
