@@ -244,7 +244,8 @@ class BaseDoc(ttk.Frame):
                 subprocess.run(['lowriter', '--headless', '--convert-to', 'pdf', out_docx])
 
                 # Move files to output folder
-                move_path = f"{self.data_mgr.data['output_folders']['common']}{self.data_mgr.data['output_folders']['work_travels']}{context['wt_date']}"
+                otput_folders = self.data_mgr.get_output_folders()
+                move_path = f"{otput_folders['common']}{otput_folders['work_travels']}{context['wt_date']}"
                 if not path.exists(move_path):
                     makedirs(move_path, exist_ok=True)
                 shutil.move(out_docx, path.join(move_path, path.basename(out_docx)))
