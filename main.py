@@ -1,5 +1,5 @@
 from os import path
-import tkinter as tk
+from tkinter import Tk
 import locale
 
 from classes.MainApp import MainApp
@@ -15,7 +15,7 @@ if __name__ == "__main__":
         except locale.Error:
             pass  # Use system default
 
-    root = tk.Tk()
+    root = Tk()
 
     # Configure Tkinter for Unicode support
     root.option_add('*font', ('Arial', 10))  # Set default font that supports Cyrillic

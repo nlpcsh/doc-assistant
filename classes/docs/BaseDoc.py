@@ -1,5 +1,4 @@
-from tkinter import END, ttk, messagebox, filedialog, Frame
-import tkinter as tk
+from tkinter import END, ttk, messagebox, filedialog, Frame, Text, BooleanVar, Listbox, MULTIPLE, Toplevel
 import threading
 import subprocess
 import shutil
@@ -61,7 +60,7 @@ class BaseDoc(ttk.Frame):
         label = ttk.Label(field_frame, text=self.labels["fields"][label_key])
         label.pack(anchor="w")
 
-        text_widget = tk.Text(field_frame, height=height, width=width, wrap="word")
+        text_widget = Text(field_frame, height=height, width=width, wrap="word")
         text_widget.configure(font=("Arial", 10))
         text_widget.pack(fill="x")
 
@@ -76,7 +75,7 @@ class BaseDoc(ttk.Frame):
         field_frame = Frame(self.container)
         
         # Create checkbox variable (default unchecked)
-        checkbox_var = tk.BooleanVar(value=show_by_default)
+        checkbox_var = BooleanVar(value=show_by_default)
         
         # Create checkbox
         checkbox = ttk.Checkbutton(field_frame, text=checkbox_text, variable=checkbox_var)
@@ -114,7 +113,7 @@ class BaseDoc(ttk.Frame):
     def add_checkbox_multi(self, checkbox_text, options):
         """Add a checkbox that controls the visibility of a multiselect listbox."""
         # Create checkbox variable
-        var = tk.BooleanVar()
+        var = BooleanVar()
         
         # Create checkbox
         checkbox = ttk.Checkbutton(self.container, text=checkbox_text, variable=var)
@@ -122,9 +121,9 @@ class BaseDoc(ttk.Frame):
         
         # Create listbox with height based on number of options (max 10)
         height = min(len(options), 10)
-        listbox = tk.Listbox(self.container, selectmode=tk.MULTIPLE, height=height, exportselection=0)
+        listbox = Listbox(self.container, selectmode=MULTIPLE, height=height, exportselection=0)
         for option in options:
-            listbox.insert(tk.END, option)
+            listbox.insert(END, option)
         listbox.pack_forget()
         
         # Function to toggle listbox visibility
@@ -158,7 +157,7 @@ class BaseDoc(ttk.Frame):
         # Create button to open calendar
         def open_calendar():
             # Create toplevel window for calendar
-            cal_window = tk.Toplevel(self.winfo_toplevel())
+            cal_window = Toplevel(self.winfo_toplevel())
             cal_window.title(self.labels["fields"][label_key])
             
             # Set minimum date if linked to another date field
@@ -173,7 +172,7 @@ class BaseDoc(ttk.Frame):
             
             def select_date():
                 selected_date = calendar.get_date()
-                date_entry.delete(0, tk.END)
+                date_entry.delete(0, END)
                 date_entry.insert(0, selected_date)
                 cal_window.destroy()
             
