@@ -1,10 +1,22 @@
 import json
+from os import path
 
 class DataMgr:
     """Manages data from data.json file."""
-    def __init__(self, data_file):
+    def __init__(self, base_dir):
+        self.base_dir = base_dir
+
+        data_file = path.join(self.base_dir, "data/data.json")
         with open(data_file, 'r', encoding="utf-8") as f:
             self.data = json.load(f)
+
+        labels_path = path.join(self.base_dir, "settings/labels.json")
+        self.labels = {}
+        with open(labels_path, "r", encoding="utf-8") as f:
+            self.labels = json.load(f)
+
+    def get_labels(self):
+        return self.labels
     
     def get_project_by_id(self, project_id):
         for p_id in self.data['projects']:

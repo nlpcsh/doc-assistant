@@ -10,10 +10,11 @@ from datetime import datetime
 
 class BaseDoc(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
-    def __init__(self, parent, labels, base_dir, data_mgr, template_dir, template_names):
+    def __init__(self, parent, data_mgr, template_dir, template_names):
         super().__init__(parent)
-        self.labels = labels
         self.data_mgr = data_mgr
+        self.labels = self.data_mgr.get_labels()
+        base_dir = self.data_mgr.base_dir
         self.signature_path = base_dir + "/templates/"
         self.template_dir = base_dir + "/templates/" + template_dir + "/"
         self.template_names = template_names if isinstance(template_names, list) else [template_names]

@@ -3,8 +3,10 @@ from tkinter import ttk
 from classes.docs.BaseDoc import BaseDoc
 
 class WorkTravelReport(BaseDoc):
-    def __init__(self, parent, labels, base_dir, data_mgr):
-        super().__init__(parent, labels, base_dir, data_mgr, "work_travel", ["work_travel_report.docx"])
+    def __init__(self, parent, data_mgr):
+        super().__init__(parent, data_mgr, "work_travel", ["work_travel_report.docx"])
+
+        labels = data_mgr.get_labels()
         ttk.Label(self.container, text=labels["tabs"]["wt_report"], font=("Arial", 12, "bold")).pack(pady=10)
 
         self.add_dropdown("projects", list(self.data_mgr.data['projects'].keys()))

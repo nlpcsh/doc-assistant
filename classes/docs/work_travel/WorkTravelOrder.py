@@ -4,8 +4,8 @@ from classes.docs.BaseDoc import BaseDoc
 from datetime import datetime
 
 class WorkTravelOrder(BaseDoc):
-    def __init__(self, parent, labels, base_dir, data_mgr):
-        super().__init__(parent, labels, base_dir, data_mgr, "work_travel", ["work_travel_order.docx", "work_travel_report.docx"])
+    def __init__(self, parent, data_mgr):
+        super().__init__(parent, data_mgr, "work_travel", ["work_travel_order.docx", "work_travel_report.docx"])
         self.setup_ui_components()
         self.preselect_latest_project()
 
