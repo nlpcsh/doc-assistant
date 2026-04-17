@@ -4,7 +4,7 @@ import subprocess
 import shutil
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
-from os import path, makedirs
+from os import path, makedirs, unlink
 from tkcalendar import Calendar
 from datetime import datetime
 
@@ -248,10 +248,14 @@ class BaseDoc(ttk.Frame):
                 move_path = f"{otput_folders['common']}{otput_folders['work_travels']}{context['wt_date']}"
                 if not path.exists(move_path):
                     makedirs(move_path, exist_ok=True)
-                shutil.move(out_docx, path.join(move_path, path.basename(out_docx)))
+                # Only move PDF file
                 pdf_path = out_docx.replace(".docx", ".pdf")
                 shutil.move(pdf_path, path.join(move_path, path.basename(pdf_path)))
                 pdf_path = path.join(move_path, path.basename(pdf_path))
+
+                # Delete the temporary DOCX file
+                if path.exists(out_docx):
+                    unlink(out_docx)
 
                 # Auto-open PDF
                 subprocess.run(['xdg-open', pdf_path])
