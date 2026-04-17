@@ -122,6 +122,7 @@ class WorkTravelOrder(BaseDoc):
         if self.wt_travel_with_var.get():
             self.wt_context["wt_travel_money_from"] = self.labels["messages"]["account_on"] + wt_contract_info
             selected_indices = self.travel_multiselect.curselection()
+            # TODO: Handle case when no options are selected
             selected_options = [self.labels["multiselect"]["travel_with"][i] for i in selected_indices]
             self.wt_context["wt_travel_with"] = ", ".join(selected_options)
         else:

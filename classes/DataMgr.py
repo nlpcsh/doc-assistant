@@ -36,6 +36,18 @@ class DataMgr:
     def get_output_folders(self):
         return self.data['output_folders']
 
+    def get_signature_settings(self, group, template_name):
+        signatures = self.data.get('signatures', {})
+        group_signatures = signatures.get(group, {})
+        if not group_signatures:
+            return None
+
+        name_no_ext = path.splitext(template_name.lower())[0]
+        for key, value in group_signatures.items():
+            if key == name_no_ext or key in name_no_ext or name_no_ext in key:
+                return value
+        return None
+
     def save_work_travel(self, wt_date, person_id, project_id):
         if 'work_travel' not in self.data:
             self.data['work_travel'] = {}
