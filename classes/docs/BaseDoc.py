@@ -1,13 +1,17 @@
-from tkinter import END, ttk, messagebox, filedialog, Frame
+from tkinter import END, ttk, messagebox, filedialog, Frame, simpledialog
 import tkinter as tk
 import threading
 import subprocess
 import shutil
+from os import path, makedirs
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
-from os import path, makedirs
+from PIL import Image
 from tkcalendar import Calendar
 from datetime import datetime
+
+from classes.CertificateManager import CertificateManager
+from classes.signing_utils import add_visible_signature_to_pdf, build_signature_rect, render_pdf_page_to_photoimage
 
 class BaseDoc(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
@@ -27,6 +31,15 @@ class BaseDoc(ttk.Frame):
 
         self.progress = ttk.Progressbar(self.container, orient="horizontal", length=200, mode="determinate")
         self.status_label = ttk.Label(self.container, text="")
+        self.preview_window = None
+        self.preview_canvas = None
+        self.preview_photo = None
+        self.preview_pdf_path = None
+        self.preview_page_width = None
+        self.preview_page_height = None
+        self.preview_scale = 1.0
+        self.preview_rect = None
+        self.selected_signature_rect = None
 
     def add_field(self, label_key, show_by_default=True, initial_value="", width=30):
         # Create a frame to hold the label and entry
@@ -214,7 +227,7 @@ class BaseDoc(ttk.Frame):
         self.gen_btn.config(state="disabled")
         self.progress.pack(pady=5)
         self.status_label.pack()
-        threading.Thread(target=self.process_doc).start()
+        threading.Thread(target=self.process_doc, daemon=True).start()
 
     def add_dropdown(self, label_key, options):
         ttk.Label(self.container, text=self.labels["fields"][label_key]).pack(anchor="w")
@@ -228,7 +241,8 @@ class BaseDoc(ttk.Frame):
 
     def process_doc(self):
         try:
-            context = self.get_context() # Defined in subclasses
+            context = self.get_context()  # Defined in subclasses
+            generated_pdfs = []
 
             for template in self.template_names:
                 doc = DocxTemplate(self.template_dir + template)
@@ -240,24 +254,157 @@ class BaseDoc(ttk.Frame):
                 out_docx = f"{context['wt_date']}_{context['person_id']}_{template}"
                 doc.save(out_docx)
 
-                # PDF Conversion
-                subprocess.run(['lowriter', '--headless', '--convert-to', 'pdf', out_docx])
+                subprocess.run(['lowriter', '--headless', '--convert-to', 'pdf', out_docx], check=True)
 
-                # Move files to output folder
                 move_path = f"{self.data_mgr.data['output_folders']['common']}{self.data_mgr.data['output_folders']['work_travels']}{context['wt_date']}"
                 if not path.exists(move_path):
                     makedirs(move_path, exist_ok=True)
                 shutil.move(out_docx, path.join(move_path, path.basename(out_docx)))
                 pdf_path = out_docx.replace(".docx", ".pdf")
                 shutil.move(pdf_path, path.join(move_path, path.basename(pdf_path)))
-                pdf_path = path.join(move_path, path.basename(pdf_path))
+                generated_pdfs.append(path.join(move_path, path.basename(pdf_path)))
 
-                # Auto-open PDF
-                subprocess.run(['xdg-open', pdf_path])
-
-            messagebox.showinfo(self.labels["messages"]["success_title"], "Done!")
+            if generated_pdfs:
+                self.after(0, lambda: self.show_signature_preview(generated_pdfs[-1]))
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            error_message = str(e)
+            self.after(0, lambda error_message=error_message: messagebox.showerror("Error", error_message))
         finally:
-            self.gen_btn.config(state="normal")
-            self.progress.pack_forget()
+            self.after(0, self.reset_generation_ui)
+
+    def reset_generation_ui(self):
+        self.gen_btn.config(state="normal")
+        self.progress.pack_forget()
+        self.status_label.config(text="")
+
+    def show_signature_preview(self, pdf_path):
+        self.preview_pdf_path = pdf_path
+        self.selected_signature_rect = None
+
+        if self.preview_window and self.preview_window.winfo_exists():
+            self.preview_window.destroy()
+
+        self.preview_window = tk.Toplevel(self.winfo_toplevel())
+        self.preview_window.title("Place signature")
+        self.preview_window.geometry("1000x900")
+
+        toolbar = ttk.Frame(self.preview_window)
+        toolbar.pack(fill="x", padx=8, pady=6)
+        ttk.Label(toolbar, text="Click inside the document to place the visible signature. Then sign the PDF.").pack(side="left")
+        ttk.Button(toolbar, text="Sign PDF", command=self.sign_current_document).pack(side="right")
+
+        self.preview_canvas = tk.Canvas(self.preview_window, bg="white")
+        self.preview_canvas.pack(fill="both", expand=True, padx=8, pady=8)
+        self.preview_canvas.bind("<Button-1>", self.on_signature_click)
+
+        self.load_preview_pdf(pdf_path)
+
+    def load_preview_pdf(self, pdf_path):
+        self.preview_photo, self.preview_page_width, self.preview_page_height, self.preview_scale = render_pdf_page_to_photoimage(
+            pdf_path,
+            max_width=900,
+            max_height=1100,
+        )
+        self.preview_canvas.config(width=self.preview_photo.width(), height=self.preview_photo.height())
+        self.preview_canvas.delete("all")
+        self.preview_canvas.create_image(0, 0, anchor="nw", image=self.preview_photo)
+
+    def on_signature_click(self, event):
+        if not self.preview_page_width or not self.preview_page_height:
+            return
+
+        pdf_click_x = event.x / self.preview_scale
+        pdf_click_y = event.y / self.preview_scale
+        width = 140
+        height = 60
+        self.selected_signature_rect = build_signature_rect(
+            page_width=self.preview_page_width,
+            page_height=self.preview_page_height,
+            click_x=pdf_click_x,
+            click_y=pdf_click_y,
+            signature_width=width,
+            signature_height=height,
+        )
+
+        self.preview_canvas.delete("preview_marker")
+        self.preview_canvas.create_rectangle(
+            event.x - 30,
+            event.y - 20,
+            event.x + 30,
+            event.y + 20,
+            outline="red",
+            width=2,
+            tags="preview_marker",
+        )
+        self.preview_canvas.create_text(event.x, event.y, text="Signature", fill="red", tags="preview_marker")
+
+    def sign_current_document(self):
+        if not self.preview_pdf_path:
+            return
+        if not self.selected_signature_rect:
+            messagebox.showwarning("Signature placement", "Please click inside the preview to place the visible signature first.")
+            return
+
+        signature_image_path = self.sig_path
+        if not signature_image_path:
+            signature_image_path = filedialog.askopenfilename(filetypes=[("Images", "*.png *.jpg *.jpeg")])
+            if not signature_image_path:
+                return
+            self.sig_path = signature_image_path
+
+        cert_path, password, signer_name = self.select_certificate_for_signing()
+        if not cert_path:
+            return
+
+        if not path.exists(signature_image_path):
+            messagebox.showerror("Signature image", "The selected signature image could not be found.")
+            return
+
+        temp_pdf_path = self.preview_pdf_path.replace(".pdf", "_with_signature.pdf")
+        signed_pdf_path = self.preview_pdf_path.replace(".pdf", "_signed.pdf")
+
+        try:
+            add_visible_signature_to_pdf(self.preview_pdf_path, temp_pdf_path, signature_image_path, self.selected_signature_rect)
+            success = CertificateManager.sign_pdf_with_certificate(
+                temp_pdf_path,
+                cert_path,
+                signed_pdf_path,
+                password=password,
+                signer_name=signer_name,
+            )
+            if success:
+                if self.preview_window and self.preview_window.winfo_exists():
+                    self.preview_window.destroy()
+                messagebox.showinfo("Signed PDF", f"The signed PDF was created successfully:\n{signed_pdf_path}")
+                subprocess.run(['xdg-open', signed_pdf_path], check=False)
+            else:
+                messagebox.showerror("Signed PDF", "The chosen certificate could not sign the document.")
+        except Exception as exc:
+            messagebox.showerror("Signed PDF", str(exc))
+
+    def select_certificate_for_signing(self):
+        cert_path = filedialog.askopenfilename(
+            title="Select certificate for signing",
+            filetypes=[
+                ("PKCS#12 files", "*.pfx;*.p12"),
+                ("Certificate files", "*.pem;*.crt;*.cer"),
+                ("All files", "*.*"),
+            ],
+        )
+        if not cert_path:
+            return None, None, None
+
+        password = None
+        if cert_path.lower().endswith(('.pfx', '.p12')):
+            password = simpledialog.askstring(
+                "Certificate Password",
+                "Enter the password for the certificate file (leave blank if none):",
+                show="*",
+            )
+
+        cert_info = CertificateManager.load_certificate_file(cert_path, password=password)
+        if not cert_info:
+            messagebox.showerror("Certificate", "The selected certificate could not be loaded.")
+            return None, None, None
+
+        return cert_path, password, cert_info.friendly_name or path.basename(cert_path)
