@@ -225,6 +225,13 @@ class BaseDoc(ttk.Frame):
                                   command=self.start_generation)
         self.gen_btn.pack(pady=20)
 
+    def _find_office_converter(self):
+        for cmd in ('lowriter', 'soffice', 'libreoffice'):
+            path = shutil.which(cmd)
+            if path:
+                return path
+        return None
+
     def get_signature(self):
         self.sig_path = filedialog.askopenfilename(filetypes=[("Images", "*.png *.jpg *.jpeg")])
 
@@ -315,15 +322,20 @@ class BaseDoc(ttk.Frame):
                 out_docx = f"{context['wt_date']}_{context['person_id']}_{template}"
                 doc.save(out_docx)
 
-                subprocess.run(['lowriter', '--headless', '--convert-to', 'pdf', out_docx], check=True)
+                office_converter = self._find_office_converter()
+                if not office_converter:
+                    raise FileNotFoundError(
+                        "LibreOffice converter not found. Install LibreOffice and ensure 'lowriter', 'soffice', or 'libreoffice' is available in PATH."
+                    )
+                subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx], check=True)
 
                 # Stamp signature onto the generated PDF if available
                 pdf_path = out_docx.replace(".docx", ".pdf")
                 self.stamp_signature_pdf(pdf_path, template)
 
                 # Move files to output folder
-                otput_folders = self.data_mgr.get_output_folders()
-                move_path = f"{otput_folders['common']}{otput_folders['work_travels']}{context['wt_date']}"
+                output_folders = self.data_mgr.get_output_folders()
+                move_path = f"{output_folders['common']}{output_folders['work_travels']}{context['wt_date']}"
                 if not path.exists(move_path):
                     makedirs(move_path, exist_ok=True)
                 # Only move PDF file
