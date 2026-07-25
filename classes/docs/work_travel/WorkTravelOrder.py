@@ -4,16 +4,16 @@ from classes.docs.BaseDoc import BaseDoc
 from datetime import datetime
 
 class WorkTravelOrder(BaseDoc):
-    def __init__(self, parent, labels, base_dir, data_mgr):
-        super().__init__(parent, labels, base_dir, data_mgr, "work_travel", ["work_travel_order.docx", "work_travel_report.docx"])
+    def __init__(self, parent, data_mgr):
+        super().__init__(parent, data_mgr, "work_travel", ["work_travel_order.docx", "work_travel_report.docx"])
         self.setup_ui_components()
         self.preselect_latest_project()
 
     def setup_ui_components(self):
         ttk.Label(self.container, text=self.labels["tabs"]["wt_order"], font=("Arial", 12, "bold")).pack(pady=10)
         self.wt_context = {}
-        projects_list = list(self.data_mgr.data['projects'].keys())
-        self.all_projects = self.add_dropdown("projects", projects_list)
+        self.projects_list = self.data_mgr.get_all_projects()
+        self.all_projects = self.add_dropdown("projects", self.projects_list)
         self.all_projects.bind("<<ComboboxSelected>>", self.on_project_selected)
         self.persons_dropdown = self.add_dropdown("select_person", [])
 
@@ -28,25 +28,24 @@ class WorkTravelOrder(BaseDoc):
         self.add_common_buttons("gen_work_travel")
 
     def preselect_latest_project(self):
-        projects_list = list(self.data_mgr.data['projects'].keys())
-        if projects_list:
-            latest_project_id = self.get_latest_project_id(projects_list)
+        if self.projects_list:
+            latest_project_id = self.get_latest_project_id()
             self.all_projects.set(latest_project_id)
             self.on_project_selected(None)
 
-    def get_latest_project_id(self, projects_list):
+    def get_latest_project_id(self):
         return max(
-            projects_list,
+            self.projects_list,
             key=lambda pid: datetime.strptime(
-                self.data_mgr.data['projects'][pid].get('end_date', '1900-01-01'),
+                self.data_mgr.get_project_by_id(pid).get('end_date', '1900-01-01'),
                 '%Y-%m-%d'
             )
         )
 
     def on_project_selected(self, event):
         selected_project = self.all_projects.get()
-        if selected_project in self.data_mgr.data['projects']:
-            team = self.data_mgr.data['projects'][selected_project]['team']
+        if selected_project in self.data_mgr.get_all_projects():
+            team = self.data_mgr.get_project_by_id(selected_project)['team']
             self.persons_dropdown['values'] = team
             if team:
                 self.persons_dropdown.current(0)
@@ -123,6 +122,7 @@ class WorkTravelOrder(BaseDoc):
         if self.wt_travel_with_var.get():
             self.wt_context["wt_travel_money_from"] = self.labels["messages"]["account_on"] + wt_contract_info
             selected_indices = self.travel_multiselect.curselection()
+            # TODO: Handle case when no options are selected
             selected_options = [self.labels["multiselect"]["travel_with"][i] for i in selected_indices]
             self.wt_context["wt_travel_with"] = ", ".join(selected_options)
         else:

@@ -1,8 +1,8 @@
 from classes.docs.BaseDoc import BaseDoc
 
 class CivilContractTab(BaseDoc):
-    def __init__(self, parent, labels, base_dir, data_mgr):
-        super().__init__(parent, labels, base_dir, data_mgr, "civil_contracts", "contract_template.docx")
+    def __init__(self, parent, data_mgr):
+        super().__init__(parent, data_mgr, "civil_contracts", "contract_template.docx")
 
         # 1. Add the dropdown using the list 'names_list' from your JSON
         # self.combo_name = self.add_dropdown("select_person", self.labels["names_list"])
