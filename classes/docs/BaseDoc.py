@@ -235,62 +235,6 @@ class BaseDoc(ttk.Frame):
     def get_signature(self):
         self.sig_path = filedialog.askopenfilename(filetypes=[("Images", "*.png *.jpg *.jpeg")])
 
-    def get_signature_settings(self, template_name):
-        return self.data_mgr.get_signature_settings(self.template_group, template_name)
-
-    def get_signature_coordinates(self, template_name):
-        """Return the PDF coordinates where the signature should be placed.
-
-        Coordinates are in PDF points from the bottom-left corner.
-        If template-specific settings exist in data.json, use them.
-        """
-        settings = self.get_signature_settings(template_name)
-        if settings is None or 'coords' not in settings:
-            messagebox.showerror("Error", f"Невалидни координати на подписа за {template_name}!")
-            return (0, 0)
-        return settings.get('coords')
-
-    def get_signature_size(self, template_name):
-        """Return the width and height for the signature in PDF points."""
-        settings = self.get_signature_settings(template_name)
-        if settings is None or 'size' not in settings:
-            messagebox.showerror("Error", f"Невалиден размер на подписа за {template_name}!")
-            return (0, 0)
-        return settings.get('size')
-
-    def stamp_signature_pdf(self, pdf_path, template_name):
-        if not getattr(self, 'sig_path', None) or not path.exists(self.sig_path):
-            return
-
-        # Read the generated PDF to determine page size
-        pdf = PdfReader(pdf_path)
-        if not pdf.pages:
-            return
-
-        page = pdf.pages[0]
-        media_box = page.MediaBox
-        page_width = float(media_box[2]) - float(media_box[0])
-        page_height = float(media_box[3]) - float(media_box[1])
-
-        # Create a temporary overlay PDF with the signature image at the desired position
-        overlay_path = f"{pdf_path}.sig-overlay.pdf"
-        x, y = self.get_signature_coordinates(template_name)
-        sig_width, sig_height = self.get_signature_size(template_name)
-
-        c = canvas.Canvas(overlay_path, pagesize=(page_width, page_height))
-        c.drawImage(self.sig_path, x, y, width=sig_width, height=sig_height, mask='auto')
-        c.save()
-
-        overlay = PdfReader(overlay_path)
-        overlay_page = overlay.pages[0]
-
-        # Stamp the overlay onto the first page of the generated PDF
-        PageMerge(page).add(overlay_page).render()
-        PdfWriter(pdf_path, trailer=pdf).write()
-
-        if path.exists(overlay_path):
-            unlink(overlay_path)
-
     def start_generation(self):
         self.gen_btn.config(state="disabled")
         self.progress.pack(pady=5)
@@ -328,10 +272,6 @@ class BaseDoc(ttk.Frame):
                         "LibreOffice converter not found. Install LibreOffice and ensure 'lowriter', 'soffice', or 'libreoffice' is available in PATH."
                     )
                 subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx], check=True)
-
-                # Stamp signature onto the generated PDF if available
-                #pdf_path = out_docx.replace(".docx", ".pdf")
-                #self.stamp_signature_pdf(pdf_path, template)
 
                 # Move files to output folder
                 output_folders = self.data_mgr.get_output_folders()
