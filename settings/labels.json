@@ -1,39 +1,39 @@
 {
-    "app_title": "Административен Асистент",
-    "tabs": {
-        "civil_contract": "Граждански договор",
-        "work_travel": "Командировка",
-        "wt_report": "Отчет на командировка",
-        "wt_order": "Kомандировка"
-    },
-    "fields": {
-        "projects": "Проект:",
-        "select_person": "Избери човек:",
-        "full_name": "Пълно име:",
-        "wt_purpose": "Цел на командировката:",
-        "wt_destination": "Направление:",
-        "wt_from": "От:",
-        "wt_to": "До:",
-        "wt_day_money": "Дневни",
-        "wt_night_money": "Нощувки",
-        "wt_travel_money": "Пътни",
-        "wt_euro_per_day": "Евро на ден",
-        "wt_other_expences": "Други разходи"
-    },
-    "multiselect": {
-        "travel_with": ["кола", "самолет", "влак", "автобус", "такси", "друго"]
-    } ,
-    "buttons": {
-        "select_sig": "Избери подпис",
-        "gen_contract": "Създай граждански договор",
-        "gen_work_travel": "Създай командировка",
-        "browse": "Избери..."
-    },
-    "messages": {
-        "success_title": "Успешно",
-        "error_title": "Грешка",
-        "gen_finished": "Готово!",
-        "account_on": "За сметка на ",
-        "third_party": "приемащата страна."
-    }
+  "app_title": "Административен Асистент",
+  "tabs": {
+    "civil_contract": "Граждански договор",
+    "business_trip": "Командировка",
+    "bt_report": "Отчет на командировка",
+    "bt_order": "Kомандировка"
+  },
+  "fields": {
+    "projects": "Проект:",
+    "select_person": "Избери човек:",
+    "full_name": "Пълно име:",
+    "bt_purpose": "Цел на командировката:",
+    "bt_destination": "Направление:",
+    "bt_from": "От:",
+    "bt_to": "До:",
+    "bt_day_money": "Дневни",
+    "bt_night_money": "Нощувки",
+    "bt_travel_money": "Пътни",
+    "bt_euro_per_day": "Евро на ден",
+    "bt_other_expences": "Други разходи"
+  },
+  "multiselect": {
+    "travel_with": ["кола", "самолет", "влак", "автобус", "такси", "друго"]
+  },
+  "buttons": {
+    "select_sig": "Избери подпис",
+    "gen_contract": "Създай граждански договор",
+    "gen_business_trip": "Създай командировка",
+    "browse": "Избери..."
+  },
+  "messages": {
+    "success_title": "Успешно",
+    "error_title": "Грешка",
+    "gen_finished": "Готово!",
+    "account_on": "За сметка на ",
+    "third_party": "приемащата страна."
+  }
 }

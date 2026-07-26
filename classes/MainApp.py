@@ -1,7 +1,7 @@
 from tkinter import ttk
 
 from classes.tabs.CivilContractTab import CivilContractTab
-from classes.tabs.WorkTravelTab import WorkTravelTab
+from classes.tabs.BusinessTripTab import BusinessTripTab
 from classes.DataMgr import DataMgr
 
 class MainApp:
@@ -13,5 +13,5 @@ class MainApp:
         nb = ttk.Notebook(root)
         nb.pack(expand=True, fill="both")
 
-        nb.add(WorkTravelTab(nb, data_mgr), text=labels["tabs"]["work_travel"])
+        nb.add(BusinessTripTab(nb, data_mgr), text=labels["tabs"]["business_trip"])
         nb.add(CivilContractTab(nb, data_mgr), text=labels["tabs"]["civil_contract"])

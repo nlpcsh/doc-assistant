@@ -319,7 +319,7 @@ class BaseDoc(ttk.Frame):
                     context['signature'] = InlineImage(doc, self.sig_path, width=Inches(1.5))
 
                 doc.render(context)
-                out_docx = f"{context['wt_date']}_{context['person_id']}_{template}"
+                out_docx = f"{context['bt_date']}_{context['person_id']}_{template}"
                 doc.save(out_docx)
 
                 office_converter = self._find_office_converter()
@@ -330,12 +330,12 @@ class BaseDoc(ttk.Frame):
                 subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx], check=True)
 
                 # Stamp signature onto the generated PDF if available
-                pdf_path = out_docx.replace(".docx", ".pdf")
-                self.stamp_signature_pdf(pdf_path, template)
+                #pdf_path = out_docx.replace(".docx", ".pdf")
+                #self.stamp_signature_pdf(pdf_path, template)
 
                 # Move files to output folder
                 output_folders = self.data_mgr.get_output_folders()
-                move_path = f"{output_folders['common']}{output_folders['work_travels']}{context['wt_date']}"
+                move_path = f"{output_folders['common']}{output_folders['business_trip']}{context['bt_date']}"
                 if not path.exists(move_path):
                     makedirs(move_path, exist_ok=True)
                 # Only move PDF file

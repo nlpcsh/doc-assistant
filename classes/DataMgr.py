@@ -48,14 +48,14 @@ class DataMgr:
                 return value
         return None
 
-    def save_work_travel(self, wt_date, person_id, project_id):
-        if 'work_travel' not in self.data:
-            self.data['work_travel'] = {}
-        if wt_date not in self.data['work_travel']:
-            self.data['work_travel'][wt_date] = {"persons": [], "project": None}
+    def save_business_trip(self, bt_date, person_id, project_id):
+        if 'business_trip' not in self.data:
+            self.data['business_trip'] = {}
+        if bt_date not in self.data['business_trip']:
+            self.data['business_trip'][bt_date] = {"persons": [], "project": None}
 
-        self.data['work_travel'][wt_date]["persons"].append(person_id)
-        self.data['work_travel'][wt_date]["project"] = project_id
+        self.data['business_trip'][bt_date]["persons"].append(person_id)
+        self.data['business_trip'][bt_date]["project"] = project_id
 
         with open('data/data.json', 'w', encoding="utf-8") as f:
             json.dump(self.data, f, indent=4)
