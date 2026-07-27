@@ -7,7 +7,6 @@ from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
 
 from classes.digisign.CertificateManager import CertificateManager
-from classes.digisign.signing_utils import add_visible_signature_to_pdf
 from classes.UIMgr import UIMgr
 
 class BaseDoc(ttk.Frame):
@@ -86,74 +85,3 @@ class BaseDoc(ttk.Frame):
             self.after(0, lambda error_message=error_message: messagebox.showerror("Error", error_message))
         finally:
             self.after(0, lambda: self.ui_mgr.reset_generation_ui(self))
-
-    def sign_current_document(self):
-        if not self.preview_pdf_path:
-            return
-        if not self.selected_signature_rect:
-            messagebox.showwarning("Signature placement", "Please click inside the preview to place the visible signature first.")
-            return
-
-        signature_image_path = self.sig_path
-        if not signature_image_path:
-            signature_image_path = filedialog.askopenfilename(filetypes=[("Images", "*.png *.jpg *.jpeg")])
-            if not signature_image_path:
-                return
-            self.sig_path = signature_image_path
-
-        cert_path, password, signer_name = self.select_certificate_for_signing()
-        if not cert_path:
-            return
-
-        if not path.exists(signature_image_path):
-            messagebox.showerror("Signature image", "The selected signature image could not be found.")
-            return
-
-        temp_pdf_path = self.preview_pdf_path.replace(".pdf", "_with_signature.pdf")
-        signed_pdf_path = self.preview_pdf_path.replace(".pdf", "_signed.pdf")
-
-        try:
-            add_visible_signature_to_pdf(self.preview_pdf_path, temp_pdf_path, signature_image_path, self.selected_signature_rect)
-            success = CertificateManager.sign_pdf_with_certificate(
-                temp_pdf_path,
-                cert_path,
-                signed_pdf_path,
-                password=password,
-                signer_name=signer_name,
-            )
-            if success:
-                if self.preview_window and self.preview_window.winfo_exists():
-                    self.preview_window.destroy()
-                messagebox.showinfo("Signed PDF", f"The signed PDF was created successfully:\n{signed_pdf_path}")
-                subprocess.run(['xdg-open', signed_pdf_path], check=False)
-            else:
-                messagebox.showerror("Signed PDF", "The chosen certificate could not sign the document.")
-        except Exception as exc:
-            messagebox.showerror("Signed PDF", str(exc))
-
-    def select_certificate_for_signing(self):
-        cert_path = filedialog.askopenfilename(
-            title="Select certificate for signing",
-            filetypes=[
-                ("PKCS#12 files", "*.pfx;*.p12"),
-                ("Certificate files", "*.pem;*.crt;*.cer"),
-                ("All files", "*.*"),
-            ],
-        )
-        if not cert_path:
-            return None, None, None
-
-        password = None
-        if cert_path.lower().endswith(('.pfx', '.p12')):
-            password = simpledialog.askstring(
-                "Certificate Password",
-                "Enter the password for the certificate file (leave blank if none):",
-                show="*",
-            )
-
-        cert_info = CertificateManager.load_certificate_file(cert_path, password=password)
-        if not cert_info:
-            messagebox.showerror("Certificate", "The selected certificate could not be loaded.")
-            return None, None, None
-
-        return cert_path, password, cert_info.friendly_name or path.basename(cert_path)
