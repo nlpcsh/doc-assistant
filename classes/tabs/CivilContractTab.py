@@ -11,7 +11,7 @@ class CivilContractTab(BaseDoc):
         #self.ent_ssn = self.add_field("ssn")
         #self.ent_phone = self.add_field("phone")
 
-        self.add_common_buttons("gen_contract")
+        self.ui_mgr.add_common_buttons(self, "gen_contract")
 
     def get_context(self):
         # IMPORTANT: Use .get() on the combo box to grab the selected name

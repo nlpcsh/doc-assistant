@@ -1,5 +1,3 @@
-from tkinter import ttk
-
 from classes.docs.BaseDoc import BaseDoc
 from datetime import datetime
 
@@ -10,22 +8,22 @@ class BusinessTripOrder(BaseDoc):
         self.preselect_latest_project()
 
     def setup_ui_components(self):
-        ttk.Label(self.container, text=self.labels["tabs"]["bt_order"], font=("Arial", 12, "bold")).pack(pady=10)
+        self.ui_mgr.add_tab_title(self, "bt_order")
         self.bt_context = {}
         self.projects_list = self.data_mgr.get_all_projects()
-        self.all_projects = self.add_dropdown("projects", self.projects_list)
+        self.all_projects = self.ui_mgr.add_dropdown(self, "projects", self.projects_list)
         self.all_projects.bind("<<ComboboxSelected>>", self.on_project_selected)
-        self.persons_dropdown = self.add_dropdown("select_person", [])
+        self.persons_dropdown = self.ui_mgr.add_dropdown(self, "select_person", [])
 
-        self.add_text_field("bt_purpose", height=5, width=50)
-        self.add_field("bt_destination")
-        self.date_from = self.add_date_field("bt_from", preselect_today=True, width=11)
-        self.date_to = self.add_date_field("bt_to", min_date_from=self.date_from, width=11)
-        self.add_checkbox_field("bt_euro_per_day", self.labels["fields"]["bt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")), width=5)
-        self.add_checkbox_field("bt_nights_max_value", self.labels["fields"]["bt_night_money"], width=5)
-        self.bt_travel_with_var, self.travel_multiselect = self.add_checkbox_multi(self.labels["fields"]["bt_travel_money"], self.labels["multiselect"]["travel_with"])
-        self.add_checkbox_field("bt_other_expences", self.labels["fields"]["bt_other_expences"], default_value=self.data_mgr.data['common'].get("other_expences", ""), width=30)
-        self.add_common_buttons("gen_business_trip")
+        self.ui_mgr.add_text_field(self, "bt_purpose", height=5, width=50)
+        self.ui_mgr.add_field(self, "bt_destination")
+        self.date_from = self.ui_mgr.add_date_field(self, "bt_from", preselect_today=True, width=11)
+        self.date_to = self.ui_mgr.add_date_field(self, "bt_to", min_date_from=self.date_from, width=11)
+        self.ui_mgr.add_checkbox_field(self, "bt_euro_per_day", self.labels["fields"]["bt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")), width=5)
+        self.ui_mgr.add_checkbox_field(self, "bt_nights_max_value", self.labels["fields"]["bt_night_money"], width=5)
+        self.bt_travel_with_var, self.travel_multiselect = self.ui_mgr.add_checkbox_multi(self, self.labels["fields"]["bt_travel_money"], self.labels["multiselect"]["travel_with"])
+        self.ui_mgr.add_checkbox_field(self, "bt_other_expences", self.labels["fields"]["bt_other_expences"], default_value=self.data_mgr.data['common'].get("other_expences", ""), width=30)
+        self.ui_mgr.add_common_buttons(self, "gen_business_trip")
 
     def preselect_latest_project(self):
         if self.projects_list:
