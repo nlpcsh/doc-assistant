@@ -12,7 +12,6 @@ from cryptography.hazmat.backends import default_backend
 
 from classes.digisign.DataClasses import CertificateInfo
 
-
 class CertificateManager:
     """Manages X.509 certificates from local files and the Windows certificate store."""
 
