@@ -78,7 +78,7 @@ class BaseDoc(ttk.Frame):
                 # Auto-open PDF
                 subprocess.run(['xdg-open', pdf_path])
 
-            self.ui_mgr.show_info(self.labels["messages"]["success_title"], "Done!")
+            #self.ui_mgr.show_info(self.labels["messages"]["success_title"], "Done!")
         except Exception as e:
             error_message = str(e)
             self.after(0, lambda error_message=error_message: self.ui_mgr.show_error("Error", error_message))
