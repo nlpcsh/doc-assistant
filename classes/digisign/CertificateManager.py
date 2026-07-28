@@ -20,9 +20,11 @@ class CertificateManager:
 
     @staticmethod
     def list_certificates() -> List[CertificateInfo]:
+        """List available signing certificates from the local certificate directory and Windows certificate store."""
         certificates: List[CertificateInfo] = []
         certificates.extend(CertificateManager._get_windows_certificates())
         certificates.extend(CertificateManager._get_file_certificates(certificates))
+
         return certificates
 
     @staticmethod
@@ -74,6 +76,7 @@ $result | ConvertTo-Json -Depth 2
             thumbprint = item.get("Thumbprint")
             if not thumbprint:
                 continue
+
             friendly_name = item.get("FriendlyName", "").strip() or item.get("Subject", "Unknown")
             certs.append(
                 CertificateInfo(
@@ -84,6 +87,7 @@ $result | ConvertTo-Json -Depth 2
                     friendly_name=friendly_name,
                 )
             )
+
         return certs
 
     @staticmethod
@@ -94,11 +98,13 @@ $result | ConvertTo-Json -Depth 2
             return []
 
         certs: List[CertificateInfo] = []
-        existing_thumbprints = {c.thumbprint for c in existing}
+        existing_thumbprints = { c.thumbprint for c in existing }
+
         for path in paths:
             cert = CertificateManager._load_single_certificate(path)
             if cert and cert.thumbprint not in existing_thumbprints:
                 certs.append(cert)
+
         return certs
 
     @staticmethod
