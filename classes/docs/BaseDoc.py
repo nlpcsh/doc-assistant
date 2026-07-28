@@ -1,4 +1,4 @@
-from tkinter import ttk, messagebox, filedialog, simpledialog
+from tkinter import ttk
 import threading
 import subprocess
 import shutil
@@ -6,7 +6,6 @@ from os import path, makedirs, unlink
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import Inches
 
-from classes.digisign.CertificateManager import CertificateManager
 from classes.UIMgr import UIMgr
 
 class BaseDoc(ttk.Frame):
@@ -32,7 +31,7 @@ class BaseDoc(ttk.Frame):
         return None
 
     def get_signature(self):
-        self.sig_path = filedialog.askopenfilename(filetypes=[("Images", "*.png *.jpg *.jpeg")])
+        self.sig_path = self.ui_mgr.ask_open_filename(filetypes=[("Images", "*.png *.jpg *.jpeg")])
 
     def start_generation(self):
         self.ui_mgr.start_generation(self)
@@ -79,9 +78,9 @@ class BaseDoc(ttk.Frame):
                 # Auto-open PDF
                 subprocess.run(['xdg-open', pdf_path])
 
-            messagebox.showinfo(self.labels["messages"]["success_title"], "Done!")
+            self.ui_mgr.show_info(self.labels["messages"]["success_title"], "Done!")
         except Exception as e:
             error_message = str(e)
-            self.after(0, lambda error_message=error_message: messagebox.showerror("Error", error_message))
+            self.after(0, lambda error_message=error_message: self.ui_mgr.show_error("Error", error_message))
         finally:
             self.after(0, lambda: self.ui_mgr.reset_generation_ui(self))

@@ -2,8 +2,7 @@ import os
 import tempfile
 from typing import List, Optional, Tuple
 
-import tkinter as tk
-from tkinter import filedialog, messagebox, simpledialog
+from tkinter import Tk, Event, IntVar, Frame, BooleanVar, StringVar
 
 from PIL import Image, ImageTk
 import fitz
@@ -28,9 +27,9 @@ class PdfSigner:
     Handles UI interactions, certificate management, and PDF operations.
     """
 
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root: Tk):
         self.root = root
-        root.title("DigiSign PDF Signer")
+        # Window title is managed by UIMgr
 
         # Initialize state
         self._initialize_state()
@@ -70,7 +69,7 @@ class PdfSigner:
         self.selected_certificate_password: Optional[str] = None
 
         # Page navigation variables
-        self.page_var = tk.IntVar(value=1)
+        self.page_var = IntVar(value=1)
 
     def _build_ui(self) -> None:
         """Build the user interface."""
@@ -87,7 +86,7 @@ class PdfSigner:
         self.page_spin.config(command=self.on_page_change)
 
         # Main content area
-        content = tk.Frame(self.root)
+        content = Frame(self.root)
         content.pack(fill="both", expand=True, padx=8, pady=8)
 
         # Canvas with dimensions from instance variables
@@ -109,12 +108,12 @@ class PdfSigner:
         self.certificate_validity_label = components.get("cert_validity_label")
 
         # Signature UI components
-        self.visual_only_var = components.get("visual_only_var", tk.BooleanVar(value=False))
+        self.visual_only_var = components.get("visual_only_var", BooleanVar(value=False))
         self.signature_image_label = components.get("signature_image_label")
         self.selection_label = components.get("selection_label")
 
         # Signature declaration
-        self.signature_declaration_var = components.get("signature_declaration_var", tk.StringVar(value="I'm the author"))
+        self.signature_declaration_var = components.get("signature_declaration_var", StringVar(value="I'm the author"))
         self.signature_declaration_combo = components.get("signature_declaration_combo")
 
     def _setup_event_handlers(self) -> None:
@@ -158,7 +157,7 @@ class PdfSigner:
 
     def load_certificate_file(self) -> None:
         """Allow the user to select a local certificate file for signing."""
-        path = filedialog.askopenfilename(
+        path = UIMgr.ask_open_filename(
             title="Load certificate file",
             filetypes=[
                 ("PKCS#12 files", "*.pfx;*.p12"),
@@ -171,7 +170,7 @@ class PdfSigner:
 
         password = None
         if path.lower().endswith(('.pfx', '.p12')):
-            password = simpledialog.askstring(
+            password = UIMgr.ask_string(
                 "Certificate Password",
                 "Enter the password for the certificate file (leave blank if none):",
                 show="*"
@@ -179,7 +178,7 @@ class PdfSigner:
 
         cert_info = CertificateManager.load_certificate_file(path, password=password)
         if not cert_info:
-            messagebox.showerror(
+            UIMgr.show_error(
                 "Load certificate",
                 f"Unable to load certificate file:\n{path}\n\n"
                 f"Check:\n"
@@ -384,7 +383,7 @@ class PdfSigner:
 
     def _prompt_for_certificate_password(self, path: str) -> Optional[CertificateInfo]:
         while True:
-            password = simpledialog.askstring(
+            password = UIMgr.ask_string(
                 "Certificate Password",
                 "Enter the password for the saved certificate file:",
                 show="*"
@@ -398,7 +397,7 @@ class PdfSigner:
                 self.selected_certificate_password = None
                 return cert
 
-            messagebox.showerror(
+            UIMgr.show_error(
                 "Certificate Password",
                 "Invalid password for the saved certificate file. Please try again."
             )
@@ -426,13 +425,13 @@ class PdfSigner:
         if declaration in ["I'm the author", "I reviewed this document"]:
             self.signature_declaration_var.set(declaration)
 
-    def on_signature_declaration_selected(self, event: Optional[tk.Event] = None) -> None:
+    def on_signature_declaration_selected(self, event: Optional[Event] = None) -> None:
         """Handle signature statement selection."""
         declaration = self.signature_declaration_var.get()
         Preferences.set_signature_declaration(declaration)
 
     def load_signature_image(self) -> None:
-        path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp;*.gif"), ("All files", "*.*")])
+        path = UIMgr.ask_open_filename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp;*.gif"), ("All files", "*.*")])
         if not path:
             return
         self.signature_image_path = path
@@ -447,13 +446,13 @@ class PdfSigner:
             self.signature_image_label.config(text="No signature image loaded")
 
     def open_pdf(self) -> None:
-        path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+        path = UIMgr.ask_open_filename(filetypes=[("PDF files", "*.pdf")])
         if not path:
             return
         try:
             reader = PdfReader(path)
         except Exception as exc:
-            messagebox.showerror("Open PDF", f"Failed to open PDF:\n{exc}")
+            UIMgr.show_error("Open PDF", f"Failed to open PDF:\n{exc}")
             return
 
         self.pdf_path = path
@@ -470,7 +469,7 @@ class PdfSigner:
             self.fitz_doc = fitz.open(path)
         except Exception as exc:
             self.fitz_doc = None
-            messagebox.showwarning("Open PDF", f"Preview unavailable:\n{exc}")
+            UIMgr.show_warning("Open PDF", f"Preview unavailable:\n{exc}")
 
         self.load_page(0)
 
@@ -478,7 +477,7 @@ class PdfSigner:
         try:
             reader = PdfReader(pdf_path)
         except Exception as exc:
-            messagebox.showerror("Preview PDF", f"Unable to load signed PDF preview:\n{exc}")
+            UIMgr.show_error("Preview PDF", f"Unable to load signed PDF preview:\n{exc}")
             return
 
         self.pdf_path = pdf_path
@@ -495,7 +494,7 @@ class PdfSigner:
             self.fitz_doc = fitz.open(pdf_path)
         except Exception as exc:
             self.fitz_doc = None
-            messagebox.showwarning("Preview PDF", f"Signed PDF preview unavailable:\n{exc}")
+            UIMgr.show_warning("Preview PDF", f"Signed PDF preview unavailable:\n{exc}")
 
         self.load_page(0)
 
@@ -613,7 +612,7 @@ class PdfSigner:
             sel_x1, sel_y1 = self.pdf_to_canvas_coords(self.selection.x + self.selection.width, self.selection.y, self.page_size)
             self.canvas.create_rectangle(sel_x0, sel_y0, sel_x1, sel_y1, outline="#007bff", width=2)
 
-    def on_mouse_down(self, event: tk.Event) -> None:
+    def on_mouse_down(self, event: Event) -> None:
         if not self.pdf_path:
             return
         self.drag_start = (event.x, event.y)
@@ -621,7 +620,7 @@ class PdfSigner:
             self.canvas.delete(self.selection_rect_id)
             self.selection_rect_id = None
 
-    def on_mouse_drag(self, event: tk.Event) -> None:
+    def on_mouse_drag(self, event: Event) -> None:
         if not self.drag_start:
             return
         x0, y0 = self.drag_start
@@ -630,7 +629,7 @@ class PdfSigner:
             self.canvas.delete(self.selection_rect_id)
         self.selection_rect_id = self.canvas.create_rectangle(x0, y0, x1, y1, outline="#007bff", width=2)
 
-    def on_mouse_up(self, event: tk.Event) -> None:
+    def on_mouse_up(self, event: Event) -> None:
         if not self.drag_start or not self.reader:
             return
         x0, y0 = self.drag_start
@@ -663,13 +662,13 @@ class PdfSigner:
 
     def complete_signing(self) -> None:
         if not self.pdf_path or not self.reader:
-            messagebox.showwarning("Sign PDF", "No PDF is loaded.")
+            UIMgr.show_warning("Sign PDF", "No PDF is loaded.")
             return
         if not self.selection:
-            messagebox.showwarning("Sign PDF", "Draw a signature box on the page first.")
+            UIMgr.show_warning("Sign PDF", "Draw a signature box on the page first.")
             return
         if not self.selected_certificate and not self.visual_only_var.get():
-            messagebox.showwarning("Sign PDF", "Please select a digital certificate first or enable 'Visual signature only'.")
+            UIMgr.show_warning("Sign PDF", "Please select a digital certificate first or enable 'Visual signature only'.")
             return
 
         is_visual_only = self.visual_only_var.get()
@@ -678,13 +677,13 @@ class PdfSigner:
         certificate_to_use = None if is_visual_only else self.selected_certificate
 
         if not is_visual_only and self.selected_certificate and self.selected_certificate.cert_path and self.selected_certificate.cert_path.lower().endswith(('.pfx', '.p12')):
-            cert_password = simpledialog.askstring(
+            cert_password = UIMgr.ask_string(
                 "Certificate Password",
                 "Enter the password for the certificate file:",
                 show="*"
             )
             if cert_password is None:
-                messagebox.showwarning("Sign PDF", "Digital signing cancelled.")
+                UIMgr.show_warning("Sign PDF", "Digital signing cancelled.")
                 return
 
         page = self.reader.pages[self.selection.page_number]
@@ -722,17 +721,16 @@ class PdfSigner:
             if not self.visual_only_var.get() and not signing_succeeded:
                 if os.path.exists(output_pdf):
                     os.remove(output_pdf)
-                messagebox.showerror("Sign PDF", "Digital signature failed. Please check your certificate or enable 'Visual signature only'.")
+                UIMgr.show_error("Sign PDF", "Digital signature failed. Please check your certificate or enable 'Visual signature only'.")
                 return
-
             if is_visual_only:
-                messagebox.showinfo(
+                UIMgr.show_info(
                     "Sign PDF",
                     f"PDF signed with visual signature and saved:\n{output_pdf}\n\n"
                     f"Type: Visual Signature Only"
                 )
             else:
-                messagebox.showinfo(
+                UIMgr.show_info(
                     "Sign PDF",
                     f"PDF digitally signed and saved:\n{output_pdf}\n\n"
                     f"Certificate: {self.selected_certificate.friendly_name}\n"
@@ -740,7 +738,7 @@ class PdfSigner:
                 )
             self.preview_pdf_file(output_pdf)
         except Exception as exc:
-            messagebox.showerror("Sign PDF", f"Failed to sign PDF:\n{exc}")
+            UIMgr.show_error("Sign PDF", f"Failed to sign PDF:\n{exc}")
         finally:
             try:
                 os.remove(overlay_path)

@@ -1,7 +1,7 @@
 import tkinter as tk
 import platform
 from os import path
-from tkinter import END, ttk, messagebox, filedialog, Frame, Text, BooleanVar, Listbox, MULTIPLE, Toplevel, simpledialog
+from tkinter import END, ttk, messagebox, filedialog, MULTIPLE, simpledialog
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 
@@ -52,7 +52,7 @@ class UIMgr:
         ttk.Label(owner.container, text=self.labels["tabs"][label_key], font=font).pack(pady=10)
 
     def add_field(self, owner, label_key, show_by_default=True, initial_value="", width=30):
-        field_frame = Frame(owner.container)
+        field_frame = tk.Frame(owner.container)
 
         ttk.Label(field_frame, text=self.labels["fields"][label_key]).pack(side="left", padx=(0, 10))
         entry = ttk.Entry(field_frame, width=width)
@@ -71,10 +71,10 @@ class UIMgr:
         return entry
 
     def add_text_field(self, owner, label_key, height=4, width=40):
-        field_frame = Frame(owner.container)
+        field_frame = tk.Frame(owner.container)
 
         ttk.Label(field_frame, text=self.labels["fields"][label_key]).pack(anchor="w")
-        text_widget = Text(field_frame, height=height, width=width, wrap="word")
+        text_widget = tk.Text(field_frame, height=height, width=width, wrap="word")
         text_widget.configure(font=("Arial", 10))
         text_widget.pack(fill="x")
 
@@ -84,9 +84,9 @@ class UIMgr:
         return text_widget
 
     def add_checkbox_field(self, owner, label_key, checkbox_text, default_value="", show_by_default=False, width=20):
-        field_frame = Frame(owner.container)
+        field_frame = tk.Frame(owner.container)
 
-        checkbox_var = BooleanVar(value=show_by_default)
+        checkbox_var = tk.BooleanVar(value=show_by_default)
         ttk.Checkbutton(field_frame, text=checkbox_text, variable=checkbox_var).pack(side="left", padx=(0, 10))
 
         entry = ttk.Entry(field_frame, width=width)
@@ -113,12 +113,12 @@ class UIMgr:
         return entry
 
     def add_checkbox_multi(self, owner, checkbox_text, options):
-        var = BooleanVar()
+        var = tk.BooleanVar()
         checkbox = ttk.Checkbutton(owner.container, text=checkbox_text, variable=var)
         checkbox.pack(anchor="w", padx=10, pady=5)
 
         height = min(len(options), 10)
-        listbox = Listbox(owner.container, selectmode=MULTIPLE, height=height, exportselection=0)
+        listbox = tk.Listbox(owner.container, selectmode=MULTIPLE, height=height, exportselection=0)
         for option in options:
             listbox.insert(END, option)
         listbox.pack_forget()
@@ -135,7 +135,7 @@ class UIMgr:
     def add_date_field(self, owner, label_key, preselect_today=False, min_date_from=None, width=30):
         ttk.Label(owner.container, text=self.labels["fields"][label_key]).pack(anchor="w")
 
-        date_frame = Frame(owner.container)
+        date_frame = tk.Frame(owner.container)
         date_frame.pack(pady=5, padx=5, fill="x")
 
         date_entry = ttk.Entry(date_frame, width=width)
@@ -146,8 +146,7 @@ class UIMgr:
             date_entry.insert(0, today.strftime("%d/%m/%Y"))
 
         def open_calendar():
-            cal_window = Toplevel(owner.winfo_toplevel())
-            cal_window.title(self.labels["fields"][label_key])
+            cal_window = self.create_toplevel(owner.winfo_toplevel(), title=self.labels["fields"][label_key])
 
             mindate = None
             if min_date_from:
@@ -178,7 +177,6 @@ class UIMgr:
             )
             calendar.pack(pady=10, padx=10)
             ttk.Button(cal_window, text="Select", command=select_date).pack(pady=5)
-            cal_window.transient(owner.winfo_toplevel())
             cal_window.grab_set()
 
         ttk.Button(date_frame, text="📅", command=open_calendar, width=3).pack(side="left", padx=2)
@@ -220,15 +218,29 @@ class UIMgr:
         if owner.preview_window and owner.preview_window.winfo_exists():
             owner.preview_window.destroy()
 
-        owner.preview_window = tk.Toplevel(owner.winfo_toplevel())
-        owner.preview_window.title("Sign PDF")
-        owner.preview_window.geometry("1100x900")
+        owner.preview_window = self.create_toplevel(owner.winfo_toplevel(), title="Sign PDF", geometry="1100x900")
 
         signer = PdfSigner(owner.preview_window)
         signer.preview_pdf_file(pdf_path)
 
-        owner.preview_window.transient(owner.winfo_toplevel())
         owner.preview_window.grab_set()
+
+    def create_toplevel(self, parent, title: str = "", geometry: Optional[str] = None):
+        """Create a configured Toplevel window."""
+        top = tk.Toplevel(parent)
+        if title:
+            top.title(title)
+        if geometry:
+            top.geometry(geometry)
+        top.transient(parent)
+        return top
+
+    @staticmethod
+    def set_window_title(window, title: str):
+        try:
+            window.title(title)
+        except Exception:
+            pass
 
     @staticmethod
     def build_page_frame(root: tk.Tk) -> Tuple[tk.Frame, tk.Label, tk.Spinbox, tk.IntVar, tk.Label]:
@@ -252,6 +264,29 @@ class UIMgr:
 
         return page_frame, page_spin, page_var, info_label
 
+    # Dialog wrappers to centralize UI interactions
+    @staticmethod
+    def ask_open_filename(title: str = "Open File", filetypes=None, initialdir: Optional[str] = None) -> str:
+        if filetypes is None:
+            filetypes = [("All files", "*")]
+        return filedialog.askopenfilename(title=title, filetypes=filetypes, initialdir=initialdir)
+
+    @staticmethod
+    def ask_string(title: str, prompt: str, show: Optional[str] = None) -> Optional[str]:
+        return simpledialog.askstring(title, prompt, show=show)
+
+    @staticmethod
+    def show_error(title: str, message: str) -> None:
+        messagebox.showerror(title, message)
+
+    @staticmethod
+    def show_warning(title: str, message: str) -> None:
+        messagebox.showwarning(title, message)
+
+    @staticmethod
+    def show_info(title: str, message: str) -> None:
+        messagebox.showinfo(title, message)
+
     @staticmethod
     def build_toolbar(root: tk.Tk) -> tk.Frame:
         """Create the top toolbar with PDF and certificate buttons."""
@@ -264,7 +299,7 @@ class UIMgr:
         """Create toolbar buttons with provided callbacks."""
         buttons = {}
 
-        tk.Button(toolbar, text="Open PDF", command=callbacks["open_pdf"]).pack(side="left")
+        #tk.Button(toolbar, text="Open PDF", command=callbacks["open_pdf"]).pack(side="left")
 
         if platform.system() != "Linux":
             buttons["refresh_certs"] = tk.Button(
