@@ -122,7 +122,7 @@ class PdfSigner:
             self.certificate_combo.bind("<<ComboboxSelected>>", self._update_certificate_display)
 
         if self.signature_declaration_combo:
-            self.signature_declaration_combo.bind("<<ComboboxSelected>>", self.on_signature_declaration_selected)
+            self.signature_declaration_combo.bind("<<ComboboxSelected>>", self._on_signature_declaration_selected)
 
         # Canvas events
         self.canvas.bind("<ButtonPress-1>", self.on_mouse_down)
@@ -177,6 +177,8 @@ class PdfSigner:
             )
 
         cert_info = CertificateManager.load_certificate_file(path, password=password)
+        # TODO: check if necessary:
+        #self._update_certificate_display(cert_info)
         if not cert_info:
             UIMgr.show_error(
                 "Load certificate",
@@ -255,11 +257,13 @@ class PdfSigner:
         Preferences.set_selected_certificate_thumbprint(cert.thumbprint)
         Preferences.set_selected_certificate_friendly_name(cert.friendly_name)
         Preferences.set_selected_certificate_path(cert.cert_path)
+        Preferences.set_valid_to(cert.valid_to)
 
     def _clear_certificate_preferences(self) -> None:
         Preferences.set_selected_certificate_thumbprint(None)
         Preferences.set_selected_certificate_friendly_name(None)
         Preferences.set_selected_certificate_path(None)
+        Preferences.set_valid_to(None)
 
     def _extract_signer_name_from_cert(self, cert: Optional[CertificateInfo]) -> str:
         """Extract signer name from certificate subject"""
@@ -362,23 +366,28 @@ class PdfSigner:
         if cert:
             self._add_certificate_if_missing(cert)
 
-    @staticmethod
-    def _build_certificate_info_from_path(path: str) -> Optional[CertificateInfo]:
+    def _build_certificate_info_from_path(self, path: str) -> Optional[CertificateInfo]:
         try:
             ext = os.path.splitext(path)[1].lower()
+            # TODO: return information from preference instead
             if ext in {'.pfx', '.p12'}:
+                if Preferences.PREFS_FILE.exists():
+                    cert_info = CertificateManager._load_certificate_info_from_preferences(path)
+                    self._update_certificate_labels(cert_info)
+                    return cert_info
                 return CertificateInfo(
                     subject="",
                     issuer="",
                     thumbprint="",
-                    valid_to="",
-                    friendly_name=os.path.splitext(os.path.basename(path))[0],
+                    valid_to="N/A",
+                    friendly_name="N/A",
                     cert_path=path,
                     password=None,
                 )
 
             return CertificateManager.load_certificate_file(path)
-        except Exception:
+        except Exception as exc:
+            UIMgr.show_error("Error", f"Failed to get digital signature data:\n{exc}")
             return None
 
     def _prompt_for_certificate_password(self, path: str) -> Optional[CertificateInfo]:
@@ -413,19 +422,12 @@ class PdfSigner:
                 c.friendly_name for c in self.available_certificates
             ]
 
-    def _show_certificate_load_error(self) -> None:
-        if self.certificate_status_label:
-            self.certificate_status_label.config(
-                text="Saved certificate file could not be loaded. Load again manually.",
-                fg="#d9534f"
-            )
-
     def _load_signature_declaration(self) -> None:
         declaration = Preferences.get_signature_declaration()
         if declaration in ["I'm the author", "I reviewed this document"]:
             self.signature_declaration_var.set(declaration)
 
-    def on_signature_declaration_selected(self, event: Optional[Event] = None) -> None:
+    def _on_signature_declaration_selected(self, event: Optional[Event] = None) -> None:
         """Handle signature statement selection."""
         declaration = self.signature_declaration_var.get()
         Preferences.set_signature_declaration(declaration)
@@ -672,6 +674,7 @@ class PdfSigner:
             return
 
         is_visual_only = self.visual_only_var.get()
+        # TODO: get real certificate data
         signer_name = "Visual Signature" if is_visual_only else self._extract_signer_name_from_cert(self.selected_certificate)
         cert_password = None
         certificate_to_use = None if is_visual_only else self.selected_certificate
@@ -723,6 +726,9 @@ class PdfSigner:
                     os.remove(output_pdf)
                 UIMgr.show_error("Sign PDF", "Digital signature failed. Please check your certificate or enable 'Visual signature only'.")
                 return
+
+            self.preview_pdf_file(output_pdf)
+
             if is_visual_only:
                 UIMgr.show_info(
                     "Sign PDF",
@@ -736,7 +742,7 @@ class PdfSigner:
                     f"Certificate: {self.selected_certificate.friendly_name}\n"
                     f"Signer: {signer_name}"
                 )
-            self.preview_pdf_file(output_pdf)
+            # TODO: update Preferences with real certificate data used for signing
         except Exception as exc:
             UIMgr.show_error("Sign PDF", f"Failed to sign PDF:\n{exc}")
         finally:

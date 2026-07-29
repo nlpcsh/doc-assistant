@@ -81,6 +81,19 @@ class Preferences:
         cls.save(prefs)
 
     @classmethod
+    def get_valid_to(cls) -> Optional[str]:
+        """Get the last selected certificate valid to date."""
+        prefs = cls.load()
+        return prefs.get("selected_certificate_valid_to")
+
+    @classmethod
+    def set_valid_to(cls, valid_to: Optional[str]) -> None:
+        """Save the selected certificate valid to date."""
+        prefs = cls.load()
+        prefs["selected_certificate_valid_to"] = valid_to
+        cls.save(prefs)
+    
+    @classmethod
     def get_selected_certificate_path(cls) -> Optional[str]:
         """Get the last selected certificate file path."""
         prefs = cls.load()

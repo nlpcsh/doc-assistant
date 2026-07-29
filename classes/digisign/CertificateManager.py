@@ -11,6 +11,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
 from classes.digisign.DataClasses import CertificateInfo
+from classes.digisign.Preferences import Preferences
 
 class CertificateManager:
     """Manages X.509 certificates from local files and the Windows certificate store."""
@@ -169,12 +170,15 @@ $result | ConvertTo-Json -Depth 2
             ext = os.path.splitext(cert_path)[1].lower()
             if ext in {'.pfx', '.p12'}:
                 if password is None:
+                    if Preferences.PREFS_FILE.exists():
+                        cert_info = CertificateManager._load_certificate_info_from_preferences(cert_path)
+                        return cert_info
                     return CertificateInfo(
                         subject="",
                         issuer="",
                         thumbprint="",
                         valid_to="",
-                        friendly_name=os.path.splitext(os.path.basename(cert_path))[0],
+                        friendly_name="",
                         cert_path=cert_path,
                         password=None,
                     )
@@ -185,6 +189,20 @@ $result | ConvertTo-Json -Depth 2
             import traceback
             traceback.print_exc()
             return None
+
+    @staticmethod
+    def _load_certificate_info_from_preferences(cert_path: str) -> CertificateInfo:
+        """Build a CertificateInfo from saved preferences when a password is not provided."""
+        prefs = Preferences.load()
+        return CertificateInfo(
+            subject=prefs.get("selected_certificate_subject", ""),
+            issuer=prefs.get("selected_certificate_issuer", ""),
+            thumbprint=prefs.get("selected_certificate_thumbprint", ""),
+            valid_to=prefs.get("selected_certificate_valid_to", ""),
+            friendly_name=prefs.get("selected_certificate_friendly_name", ""),
+            cert_path=cert_path,
+            password=None,
+        )
 
     @staticmethod
     def _load_pkcs12_certificate(cert_path: str, password: Optional[str] = None) -> Optional[CertificateInfo]:
