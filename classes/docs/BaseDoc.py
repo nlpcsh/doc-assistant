@@ -73,7 +73,7 @@ class BaseDoc(ttk.Frame):
                 generated_pdfs.append(new_path)
 
             if generated_pdfs:
-                self.after(0, lambda: self.ui_mgr.show_signature_preview(self, generated_pdfs[-1]))
+                self.after(0, lambda: self.ui_mgr.show_signature_preview(self, generated_pdfs))
                 # Delete the temporary DOCX file
                 for out_docx in generated_docx:
                     if path.exists(out_docx):

@@ -209,21 +209,37 @@ class UIMgr:
         owner.progress.pack_forget()
         owner.status_label.config(text="")
 
-    def show_signature_preview(self, owner, pdf_path):
+    def show_signature_preview(self, owner, pdf_paths):
         from classes.digisign.PdfSigner import PdfSigner
 
-        owner.preview_pdf_path = pdf_path
-        owner.selected_signature_rect = None
+        # Open a separate signer window for each PDF path.
+        x_offset = 30
+        y_offset = 30
+        next_x = 100
+        next_y = 100
 
         if owner.preview_window and owner.preview_window.winfo_exists():
+            try:
+                next_x = owner.preview_window.winfo_rootx() + x_offset
+                next_y = owner.preview_window.winfo_rooty() + y_offset
+            except Exception:
+                pass
             owner.preview_window.destroy()
+            owner.preview_window = None
 
-        owner.preview_window = self.create_toplevel(owner.winfo_toplevel(), title="Sign PDF", geometry="1100x900")
+        for pdf_path in pdf_paths:
+            owner.preview_pdf_path = pdf_path
+            owner.selected_signature_rect = None
 
-        signer = PdfSigner(owner.preview_window)
-        signer.preview_pdf_file(pdf_path)
+            geometry = f"1100x900+{next_x}+{next_y}"
+            preview_window = self.create_toplevel(owner.winfo_toplevel(), title="Sign PDF", geometry=geometry)
+            signer = PdfSigner(preview_window)
+            signer.preview_pdf_file(pdf_path)
+            preview_window.grab_set()
 
-        owner.preview_window.grab_set()
+            owner.preview_window = preview_window
+            next_x += x_offset
+            next_y += y_offset
 
     def create_toplevel(self, parent, title: str = "", geometry: Optional[str] = None):
         """Create a configured Toplevel window."""
