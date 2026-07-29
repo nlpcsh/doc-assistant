@@ -3,8 +3,8 @@ import threading
 import subprocess
 import shutil
 from os import path, makedirs, unlink
-from docxtpl import DocxTemplate, InlineImage
-from docx.shared import Inches
+from docxtpl import DocxTemplate  #, InlineImage
+#from docx.shared import Inches
 
 from classes.UIMgr import UIMgr
 
@@ -41,6 +41,7 @@ class BaseDoc(ttk.Frame):
         try:
             context = self.get_context()  # Defined in subclasses
             generated_pdfs = []
+            generated_docx = []
 
             for template in self.template_names:
                 doc = DocxTemplate(self.template_dir + template)
@@ -51,6 +52,7 @@ class BaseDoc(ttk.Frame):
                 doc.render(context)
                 out_docx = f"{context['bt_date']}_{context['person_id']}_{template}"
                 doc.save(out_docx)
+                generated_docx.append(out_docx)
 
                 office_converter = self._find_office_converter()
                 if not office_converter:
@@ -72,8 +74,9 @@ class BaseDoc(ttk.Frame):
             if generated_pdfs:
                 self.after(0, lambda: self.ui_mgr.show_signature_preview(self, generated_pdfs[-1]))
                 # Delete the temporary DOCX file
-                if path.exists(out_docx):
-                    unlink(out_docx)
+                for out_docx in generated_docx:
+                    if path.exists(out_docx):
+                        unlink(out_docx)
 
                 # Auto-open PDF
                 subprocess.run(['xdg-open', pdf_path])
