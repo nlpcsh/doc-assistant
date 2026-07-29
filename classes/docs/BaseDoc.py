@@ -68,8 +68,9 @@ class BaseDoc(ttk.Frame):
                     makedirs(move_path, exist_ok=True)
                 # Only move PDF file
                 pdf_path = out_docx.replace(".docx", ".pdf")
-                shutil.move(pdf_path, path.join(move_path, path.basename(pdf_path)))
-                generated_pdfs.append(path.join(move_path, path.basename(pdf_path)))
+                new_path = path.join(move_path, path.basename(pdf_path))
+                shutil.move(pdf_path, new_path)
+                generated_pdfs.append(new_path)
 
             if generated_pdfs:
                 self.after(0, lambda: self.ui_mgr.show_signature_preview(self, generated_pdfs[-1]))
@@ -79,7 +80,7 @@ class BaseDoc(ttk.Frame):
                         unlink(out_docx)
 
                 # Auto-open PDF
-                subprocess.run(['xdg-open', pdf_path])
+                #subprocess.run(['xdg-open', new_path])
 
             #self.ui_mgr.show_info(self.labels["messages"]["success_title"], "Done!")
         except Exception as e:
