@@ -256,12 +256,16 @@ class PdfSigner:
     def _update_certificate_preferences(self, cert: CertificateInfo) -> None:
         Preferences.set_selected_certificate_thumbprint(cert.thumbprint)
         Preferences.set_selected_certificate_friendly_name(cert.friendly_name)
+        Preferences.set_selected_certificate_subject(cert.subject)
+        Preferences.set_selected_certificate_issuer(cert.issuer)
         Preferences.set_selected_certificate_path(cert.cert_path)
         Preferences.set_valid_to(cert.valid_to)
 
     def _clear_certificate_preferences(self) -> None:
         Preferences.set_selected_certificate_thumbprint(None)
         Preferences.set_selected_certificate_friendly_name(None)
+        Preferences.set_selected_certificate_subject(None)
+        Preferences.set_selected_certificate_issuer(None)
         Preferences.set_selected_certificate_path(None)
         Preferences.set_valid_to(None)
 
@@ -369,7 +373,6 @@ class PdfSigner:
     def _build_certificate_info_from_path(self, path: str) -> Optional[CertificateInfo]:
         try:
             ext = os.path.splitext(path)[1].lower()
-            # TODO: return information from preference instead
             if ext in {'.pfx', '.p12'}:
                 if Preferences.PREFS_FILE.exists():
                     cert_info = CertificateManager._load_certificate_info_from_preferences(path)
@@ -674,8 +677,6 @@ class PdfSigner:
             return
 
         is_visual_only = self.visual_only_var.get()
-        # TODO: get real certificate data
-        signer_name = "Visual Signature" if is_visual_only else self._extract_signer_name_from_cert(self.selected_certificate)
         cert_password = None
         certificate_to_use = None if is_visual_only else self.selected_certificate
 
@@ -689,6 +690,21 @@ class PdfSigner:
                 UIMgr.show_warning("Sign PDF", "Digital signing cancelled.")
                 return
 
+            actual_certificate = CertificateManager.load_certificate_file(self.selected_certificate.cert_path, password=cert_password)
+            if actual_certificate is None:
+                UIMgr.show_error(
+                    "Sign PDF",
+                    "Unable to load certificate metadata with provided password. Please verify the password and try again."
+                )
+                return
+
+            actual_certificate.password = cert_password
+            self.selected_certificate = actual_certificate
+            self._replace_selected_certificate_in_list(actual_certificate)
+            self._update_certificate_preferences(actual_certificate)
+            self._update_certificate_labels(actual_certificate)
+            certificate_to_use = actual_certificate
+
         page = self.reader.pages[self.selection.page_number]
         page_w, page_h = self.pdf_page_size(page)
 
@@ -697,6 +713,7 @@ class PdfSigner:
         overlay_pdf.close()
 
         signature_declaration = self.signature_declaration_var.get()
+        signer_name = "Visual Signature" if is_visual_only else self._extract_signer_name_from_cert(self.selected_certificate)
 
         try:
             self.create_signature_overlay(
@@ -739,10 +756,9 @@ class PdfSigner:
                 UIMgr.show_info(
                     "Sign PDF",
                     f"PDF digitally signed and saved:\n{output_pdf}\n\n"
-                    f"Certificate: {self.selected_certificate.friendly_name}\n"
+                    f"Certificate: {self.selected_certificate.issuer}\n"
                     f"Signer: {signer_name}"
                 )
-            # TODO: update Preferences with real certificate data used for signing
         except Exception as exc:
             UIMgr.show_error("Sign PDF", f"Failed to sign PDF:\n{exc}")
         finally:
@@ -865,6 +881,18 @@ class PdfSigner:
             c.setFont(font, size)
             c.drawString(x, y, text)
             y -= line_height
+
+    def _replace_selected_certificate_in_list(self, actual_certificate: CertificateInfo) -> None:
+        for index, cert in enumerate(self.available_certificates):
+            if cert.cert_path == actual_certificate.cert_path:
+                self.available_certificates[index] = actual_certificate
+                break
+
+        if self.certificate_combo:
+            self.certificate_combo['values'] = [c.friendly_name for c in self.available_certificates]
+            current_index = next((i for i, c in enumerate(self.available_certificates) if c.cert_path == actual_certificate.cert_path), None)
+            if current_index is not None:
+                self.certificate_combo.current(current_index)
 
     @staticmethod
     def merge_overlay(

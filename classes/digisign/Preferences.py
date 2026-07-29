@@ -81,6 +81,32 @@ class Preferences:
         cls.save(prefs)
 
     @classmethod
+    def get_selected_certificate_subject(cls) -> Optional[str]:
+        """Get the last selected certificate subject."""
+        prefs = cls.load()
+        return prefs.get("selected_certificate_subject")
+
+    @classmethod
+    def set_selected_certificate_subject(cls, subject: Optional[str]) -> None:
+        """Save the selected certificate subject."""
+        prefs = cls.load()
+        prefs["selected_certificate_subject"] = subject
+        cls.save(prefs)
+
+    @classmethod
+    def get_selected_certificate_issuer(cls) -> Optional[str]:
+        """Get the last selected certificate issuer."""
+        prefs = cls.load()
+        return prefs.get("selected_certificate_issuer")
+
+    @classmethod
+    def set_selected_certificate_issuer(cls, issuer: Optional[str]) -> None:
+        """Save the selected certificate issuer."""
+        prefs = cls.load()
+        prefs["selected_certificate_issuer"] = issuer
+        cls.save(prefs)
+
+    @classmethod
     def get_valid_to(cls) -> Optional[str]:
         """Get the last selected certificate valid to date."""
         prefs = cls.load()
