@@ -9,6 +9,7 @@
   "fields": {
     "projects": "Проект:",
     "select_person": "Избери човек:",
+    "select_car": "Избери кола:",
     "full_name": "Пълно име:",
     "bt_purpose": "Цел на командировката:",
     "bt_destination": "Направление:",
@@ -35,5 +36,14 @@
     "gen_finished": "Готово!",
     "account_on": "За сметка на ",
     "third_party": "приемащата страна."
+  },
+  "signing": {
+    "signing_title": "Подписване на PDF",
+    "signing_in_progress": "Подписването е в процес...",
+    "signing_success": "PDF успешно подписан!",
+    "signing_error": "Грешка при подписването на PDF.",
+    "select_certificate": "Моля, изберете сертификат за подписване.",
+    "enter_password": "Моля, въведете парола за сертификата.",
+    "invalid_password": "Невалидна парола. Моля, опитайте отново."
   }
 }

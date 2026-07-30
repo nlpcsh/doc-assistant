@@ -112,13 +112,15 @@ class UIMgr:
         owner.input_fields.append((label_key, field_frame, entry))
         return entry
 
-    def add_checkbox_multi(self, owner, checkbox_text, options):
+    def add_checkbox_multi(self, owner, checkbox_text, options, parent=None):
+        if parent is None:
+            parent = owner.container
         var = tk.BooleanVar()
-        checkbox = ttk.Checkbutton(owner.container, text=checkbox_text, variable=var)
+        checkbox = ttk.Checkbutton(parent, text=checkbox_text, variable=var)
         checkbox.pack(anchor="w", padx=10, pady=5)
 
         height = min(len(options), 10)
-        listbox = tk.Listbox(owner.container, selectmode=MULTIPLE, height=height, exportselection=0)
+        listbox = tk.Listbox(parent, selectmode=MULTIPLE, height=height, exportselection=0)
         for option in options:
             listbox.insert(END, option)
         listbox.pack_forget()
@@ -198,6 +200,15 @@ class UIMgr:
         if options:
             combo.current(0)
         return combo
+
+    def add_multiselect(self, owner, label_key, options, height=10):
+        ttk.Label(owner.container, text=self.labels["fields"][label_key]).pack(anchor="w")
+        listbox_height = min(max(len(options), 1), height)
+        listbox = tk.Listbox(owner.container, selectmode=MULTIPLE, height=listbox_height, exportselection=0)
+        for option in options:
+            listbox.insert(END, option)
+        listbox.pack(pady=5, padx=10, fill="x")
+        return listbox
 
     def start_generation(self, owner):
         owner.gen_btn.config(state="disabled")
