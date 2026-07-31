@@ -220,33 +220,46 @@ class BusinessTripOrder(BaseDoc):
         else:
             self.bt_context["bt_nights_money_from"] = self.labels["messages"]["account_on"] + self.labels["messages"]["third_party"]
 
+    def get_selected_travel_options(self):
+        if not self.bt_travel_with_var.get():
+            return []
+
+        selected_indices = self.travel_multiselect.curselection()
+        return [self.labels["multiselect"]["travel_with"][i] for i in selected_indices]
+
+    def get_selected_car_details(self):
+        if not hasattr(self, 'persons_cars') or not getattr(self, 'persons_cars_items', None):
+            return ""
+
+        car_texts = []
+        for index in self.persons_cars.curselection():
+            try:
+                _, personal_car = self.persons_cars_items[index]
+            except Exception:
+                continue
+            if personal_car:
+                car_texts.append(
+                    f"Лично МПС {personal_car.get('brand','')} {personal_car.get('model','')} "
+                    f"{personal_car.get('year','')}г. с рег. номер {personal_car.get('plate','')}, "
+                    f"разход {personal_car.get('liters_per_100km','')} л/100км, "
+                    f"{personal_car.get('fuel_type','')}."
+                )
+        return " ".join(car_texts)
+
     def process_travel_options(self):
         bt_contract_info = self.bt_context.get("bt_contract_info", "")
-        selected_options = []
+        selected_options = self.get_selected_travel_options()
         if self.bt_travel_with_var.get():
             self.bt_context["bt_travel_money_from"] = self.labels["messages"]["account_on"] + bt_contract_info
-            selected_indices = self.travel_multiselect.curselection()
-            selected_options = [self.labels["multiselect"]["travel_with"][i] for i in selected_indices]
             self.bt_context["bt_travel_with"] = ", ".join(selected_options)
         else:
             self.bt_context["bt_travel_money_from"] = self.labels["messages"]["account_on"] + self.labels["messages"]["third_party"]
             self.bt_context["bt_travel_with"] = ""
 
-        for option in selected_options:
-            if option == "кола":
-                # append details for selected cars from persons_cars
-                if hasattr(self, 'persons_cars') and getattr(self, 'persons_cars_items', None):
-                    idxs = self.persons_cars.curselection()
-                    car_texts = []
-                    for i in idxs:
-                        try:
-                            pid, personal_car = self.persons_cars_items[i]
-                        except Exception:
-                            continue
-                        if personal_car:
-                            car_texts.append(f"Лично МПС {personal_car.get('brand','')} {personal_car.get('model','')} {personal_car.get('year','')}г. с рег. номер {personal_car.get('plate','')}, разход {personal_car.get('liters_per_100km','')} л/100км, {personal_car.get('fuel_type','')}.")
-                    if car_texts:
-                        self.bt_context["bt_travel_money_from"] += " " + " ".join(car_texts)
+        if "кола" in selected_options:
+            car_details = self.get_selected_car_details()
+            if car_details:
+                self.bt_context["bt_travel_money_from"] += " " + car_details
 
     def get_context(self):
         self.bt_context = {}
