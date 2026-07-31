@@ -76,7 +76,6 @@ class PdfSigner:
         # Toolbar
         toolbar = UIMgr.build_toolbar(self.root)
         self._toolbar_buttons = UIMgr.build_buttons(toolbar, {
-            "open_pdf": self.open_pdf,
             "load_certificates": self.load_certificates,
             "load_certificate_file": self.load_certificate_file,
         })
@@ -177,8 +176,7 @@ class PdfSigner:
             )
 
         cert_info = CertificateManager.load_certificate_file(path, password=password)
-        # TODO: check if necessary:
-        #self._update_certificate_display(cert_info)
+
         if not cert_info:
             UIMgr.show_error(
                 "Load certificate",
@@ -449,34 +447,6 @@ class PdfSigner:
             self.signature_image_label.config(text=os.path.basename(self.signature_image_path))
         else:
             self.signature_image_label.config(text="No signature image loaded")
-
-    def open_pdf(self) -> None:
-        path = UIMgr.ask_open_filename(filetypes=[("PDF files", "*.pdf")])
-        if not path:
-            return
-        try:
-            reader = PdfReader(path)
-        except Exception as exc:
-            UIMgr.show_error("Open PDF", f"Failed to open PDF:\n{exc}")
-            return
-
-        self.pdf_path = path
-        self.reader = reader
-        self.page_var.set(1)
-        self.page_spin.config(to=len(reader.pages))
-
-        if self.fitz_doc:
-            try:
-                self.fitz_doc.close()
-            except Exception:
-                pass
-        try:
-            self.fitz_doc = fitz.open(path)
-        except Exception as exc:
-            self.fitz_doc = None
-            UIMgr.show_warning("Open PDF", f"Preview unavailable:\n{exc}")
-
-        self.load_page(0)
 
     def preview_pdf_file(self, pdf_path: str) -> None:
         try:

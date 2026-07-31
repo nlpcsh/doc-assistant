@@ -326,8 +326,6 @@ class UIMgr:
         """Create toolbar buttons with provided callbacks."""
         buttons = {}
 
-        #tk.Button(toolbar, text="Open PDF", command=callbacks["open_pdf"]).pack(side="left")
-
         if platform.system() != "Linux":
             buttons["refresh_certs"] = tk.Button(
                 toolbar,
