@@ -79,6 +79,7 @@ class BaseDoc(ttk.Frame):
                 #subprocess.run(['xdg-open', new_path])
 
             #self.ui_mgr.show_info(self.labels["messages"]["success_title"], "Done!")
+            self.final_action() # Defined in subclasses
         except Exception as e:
             error_message = str(e)
             self.after(0, lambda error_message=error_message: self.ui_mgr.show_error("Error", error_message))

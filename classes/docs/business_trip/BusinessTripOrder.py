@@ -2,6 +2,7 @@ from classes.docs.BaseDoc import BaseDoc
 from datetime import datetime
 import tkinter as tk
 from tkinter import ttk
+from enums.Enums import BTStatus
 
 class BusinessTripOrder(BaseDoc):
     def __init__(self, parent, data_mgr):
@@ -276,3 +277,17 @@ class BusinessTripOrder(BaseDoc):
         self.process_money_sources()
         self.process_travel_options()
         return self.bt_context
+
+    def final_action(self):
+        project_id = self.all_projects.get()
+        bt_from_date = self.bt_context.get("bt_date", "")
+        bt_tytle = f"{bt_from_date}_{project_id}_{'_'.join(self.selected_person_ids)}"
+        new_bussiness_trip = {
+            bt_tytle: {
+                "project_id": project_id,
+                "person_ids": self.selected_person_ids,
+                "start_date": bt_from_date,
+                "status": BTStatus.GENERATED.name
+            }
+        }
+        self.data_mgr.save_new_bussiness_trip(new_bussiness_trip)
