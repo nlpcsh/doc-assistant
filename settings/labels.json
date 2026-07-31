@@ -4,7 +4,7 @@
     "civil_contract": "Граждански договор",
     "business_trip": "Командировка",
     "bt_report": "Отчет на командировка",
-    "bt_order": "Kомандировка"
+    "bt_order": "Командировка"
   },
   "fields": {
     "projects": "Проект:",
@@ -27,7 +27,7 @@
   "buttons": {
     "select_sig": "Избери подпис",
     "gen_contract": "Създай граждански договор",
-    "gen_business_trip": "Създай командировка",
+    "gen_business_trip": "Създай заповед и доклад за командировка",
     "browse": "Избери..."
   },
   "messages": {

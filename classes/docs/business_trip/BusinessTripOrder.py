@@ -79,7 +79,8 @@ class BusinessTripOrder(BaseDoc):
             team = project.get('team', [])
             self.persons_dropdown.delete(0, 'end')
             for coworker_id in team:
-                self.persons_dropdown.insert('end', coworker_id)
+                coworker = self.data_mgr.get_coworker_by_id(coworker_id)
+                self.persons_dropdown.insert('end', f"({coworker_id}) {coworker.get('names', 'Unknown')}")
             self.persons_dropdown.config(height=min(max(len(team), 1), 10))
 
     def on_travel_options_changed(self, event):
@@ -141,7 +142,13 @@ class BusinessTripOrder(BaseDoc):
             pass
 
     def get_selected_person_ids(self):
-        return [self.persons_dropdown.get(i) for i in self.persons_dropdown.curselection()]
+        selected_persons_ids = []
+        for i in self.persons_dropdown.curselection():
+            item = self.persons_dropdown.get(i)
+            # Extract person ID from the formatted string
+            person_id = item.split(')')[0].strip('(')
+            selected_persons_ids.append(person_id)
+        return selected_persons_ids
 
     def get_all_selected_co_workers(self):
         return [self.data_mgr.get_coworker_by_id(person_id) for person_id in self.selected_person_ids if self.data_mgr.get_coworker_by_id(person_id)]
