@@ -637,79 +637,28 @@ class PdfSigner:
         self.selection_label.config(text=f"x={self.selection.x:.1f} y={self.selection.y:.1f} w={self.selection.width:.1f} h={self.selection.height:.1f}")
 
     def complete_signing(self) -> None:
-        if not self.pdf_path or not self.reader:
-            UIMgr.show_warning(self.labels["signing"]["signing_title"], self.labels["signing"]["no_pdf_loaded"])
-            return
-        if not self.selection:
-            UIMgr.show_warning(self.labels["signing"]["signing_title"], self.labels["signing"]["draw_signature_box"])
-            return
-        if not self.selected_certificate and not self.visual_only_var.get():
-            UIMgr.show_warning(self.labels["signing"]["signing_title"], self.labels["signing"]["select_certificate"])
-            return
-
         is_visual_only = self.visual_only_var.get()
-        cert_password = None
-        certificate_to_use = None if is_visual_only else self.selected_certificate
+        if not self._validate_signing_request(is_visual_only):
+            return
 
-        if not is_visual_only and self.selected_certificate and self.selected_certificate.cert_path and self.selected_certificate.cert_path.lower().endswith(('.pfx', '.p12')):
-            cert_password = UIMgr.ask_string(
-                self.labels["signing"]["enter_password"],
-                self.labels["signing"]["enter_password_description"],
-                show="*"
-            )
-            if cert_password is None:
-                UIMgr.show_warning(self.labels["signing"]["signing_title"], self.labels["signing"]["signing_cancelled"])
-                return
+        certificate_result = self._prepare_certificate_for_signing(is_visual_only)
+        if certificate_result is None:
+            return
+        certificate_to_use, cert_password = certificate_result
 
-            actual_certificate = CertificateManager.load_certificate_file(self.selected_certificate.cert_path, password=cert_password)
-            if actual_certificate is None:
-                UIMgr.show_error(
-                    self.labels["signing"]["signing_title"],
-                    self.labels["signing"]["invalid_password"]
-                )
-                return
-
-            actual_certificate.password = cert_password
-            self.selected_certificate = actual_certificate
-            self._replace_selected_certificate_in_list(actual_certificate)
-            self._update_certificate_preferences(actual_certificate)
-            self._update_certificate_labels(actual_certificate)
-            certificate_to_use = actual_certificate
-
-        page = self.reader.pages[self.selection.page_number]
-        page_w, page_h = self.pdf_page_size(page)
+        page_w, page_h = self.pdf_page_size(self.reader.pages[self.selection.page_number])
 
         overlay_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
         overlay_path = overlay_pdf.name
         overlay_pdf.close()
 
-        signature_declaration = self.signature_declaration_var.get()
-        signer_name = "Visual Signature" if is_visual_only else self._extract_signer_name_from_cert(self.selected_certificate)
-
         try:
-            self.create_signature_overlay(
-                self.selection,
-                signer_name,
-                signature_declaration,
-                overlay_path,
-                page_w,
-                page_h,
-                signature_image_path=self.signature_image_path,
-                visual_only=is_visual_only
-            )
-            output_pdf = os.path.splitext(self.pdf_path)[0] + "_signed.pdf"
-            signing_succeeded = self.merge_overlay(
-                self.pdf_path,
-                overlay_path,
-                self.selection,
-                output_pdf,
-                certificate=certificate_to_use,
-                password=cert_password,
-                signer_name=signer_name
+            output_pdf, signing_succeeded, signer_name = self._create_signed_pdf(
+                overlay_path, page_w, page_h, certificate_to_use, cert_password, is_visual_only
             )
 
             # If visual_only is not checked and digital signing failed, don't proceed
-            if not self.visual_only_var.get() and not signing_succeeded:
+            if not is_visual_only and not signing_succeeded:
                 if os.path.exists(output_pdf):
                     os.remove(output_pdf)
                 UIMgr.show_error(self.labels["signing"]["signing_title"], self.labels["signing"]["digital_signature_failed"])
@@ -717,19 +666,7 @@ class PdfSigner:
 
             self.preview_pdf_file(output_pdf)
 
-            if is_visual_only:
-                UIMgr.show_info(
-                    self.labels["signing"]["signing_title"],
-                    f"{self.labels['signing']['pdf_signed_visual']}\n{output_pdf}\n\n"
-                    f"{self.labels['signing']['type']}: {self.labels['signing']['visual_signature_only']}"
-                )
-            else:
-                UIMgr.show_info(
-                    self.labels["signing"]["signing_title"],
-                    f"{self.labels['signing']['pdf_signed_digital']}\n{output_pdf}\n\n"
-                    f"{self.labels['signing']['certificate']}: {self.selected_certificate.issuer}\n"
-                    f"{self.labels['signing']['signer']}: {signer_name}"
-                )
+            self._show_signing_success(output_pdf, signer_name, is_visual_only)
         except Exception as exc:
             UIMgr.show_error(self.labels["signing"]["signing_title"], f"{self.labels['signing']['signing_error']}\n{exc}")
         finally:
@@ -737,6 +674,112 @@ class PdfSigner:
                 os.remove(overlay_path)
             except OSError:
                 pass
+
+    def _validate_signing_request(self, is_visual_only: bool) -> bool:
+        if not self.pdf_path or not self.reader:
+            message = self.labels["signing"]["no_pdf_loaded"]
+        elif not self.selection:
+            message = self.labels["signing"]["draw_signature_box"]
+        elif not self.selected_certificate and not is_visual_only:
+            message = self.labels["signing"]["select_certificate"]
+        else:
+            return True
+
+        UIMgr.show_warning(self.labels["signing"]["signing_title"], message)
+        return False
+
+    def _prepare_certificate_for_signing(
+        self, is_visual_only: bool
+    ) -> Optional[Tuple[Optional[CertificateInfo], Optional[str]]]:
+        if is_visual_only or not self.selected_certificate:
+            return None, None
+
+        certificate = self.selected_certificate
+        if not certificate.cert_path or not certificate.cert_path.lower().endswith(('.pfx', '.p12')):
+            return certificate, None
+
+        cert_password = UIMgr.ask_string(
+            self.labels["signing"]["enter_password"],
+            self.labels["signing"]["enter_password_description"],
+            show="*"
+        )
+        if cert_password is None:
+            UIMgr.show_warning(
+                self.labels["signing"]["signing_title"],
+                self.labels["signing"]["signing_cancelled"]
+            )
+            return None
+
+        actual_certificate = CertificateManager.load_certificate_file(
+            certificate.cert_path, password=cert_password
+        )
+        if actual_certificate is None:
+            UIMgr.show_error(
+                self.labels["signing"]["signing_title"],
+                self.labels["signing"]["invalid_password"]
+            )
+            return None
+
+        actual_certificate.password = cert_password
+        self.selected_certificate = actual_certificate
+        self._replace_selected_certificate_in_list(actual_certificate)
+        self._update_certificate_preferences(actual_certificate)
+        self._update_certificate_labels(actual_certificate)
+        return actual_certificate, cert_password
+
+    def _create_signed_pdf(
+        self,
+        overlay_path: str,
+        page_width: float,
+        page_height: float,
+        certificate: Optional[CertificateInfo],
+        cert_password: Optional[str],
+        is_visual_only: bool,
+    ) -> Tuple[str, bool, str]:
+        signature_declaration = self.signature_declaration_var.get()
+        signer_name = (
+            "Visual Signature"
+            if is_visual_only
+            else self._extract_signer_name_from_cert(self.selected_certificate)
+        )
+        self.create_signature_overlay(
+            self.selection,
+            signer_name,
+            signature_declaration,
+            overlay_path,
+            page_width,
+            page_height,
+            signature_image_path=self.signature_image_path,
+            visual_only=is_visual_only
+        )
+        output_pdf = os.path.splitext(self.pdf_path)[0] + "_signed.pdf"
+        signing_succeeded = self.merge_overlay(
+            self.pdf_path,
+            overlay_path,
+            self.selection,
+            output_pdf,
+            certificate=certificate,
+            password=cert_password,
+            signer_name=signer_name
+        )
+        return output_pdf, signing_succeeded, signer_name
+
+    def _show_signing_success(
+        self, output_pdf: str, signer_name: str, is_visual_only: bool
+    ) -> None:
+        if is_visual_only:
+            message = (
+                f"{self.labels['signing']['pdf_signed_visual']}\n{output_pdf}\n\n"
+                f"{self.labels['signing']['type']}: "
+                f"{self.labels['signing']['visual_signature_only']}"
+            )
+        else:
+            message = (
+                f"{self.labels['signing']['pdf_signed_digital']}\n{output_pdf}\n\n"
+                f"{self.labels['signing']['certificate']}: {self.selected_certificate.issuer}\n"
+                f"{self.labels['signing']['signer']}: {signer_name}"
+            )
+        UIMgr.show_info(self.labels["signing"]["signing_title"], message)
 
     @staticmethod
     def create_signature_overlay(
