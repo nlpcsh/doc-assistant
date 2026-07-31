@@ -4,7 +4,6 @@ import subprocess
 import shutil
 from os import path, makedirs, unlink
 from docxtpl import DocxTemplate  #, InlineImage
-#from docx.shared import Inches
 
 from classes.UIMgr import UIMgr
 
@@ -45,9 +44,6 @@ class BaseDoc(ttk.Frame):
 
             for template in self.template_names:
                 doc = DocxTemplate(self.template_dir + template)
-
-                # if self.sig_path:
-                #     context['signature'] = InlineImage(doc, self.sig_path, width=Inches(1.5))
 
                 doc.render(context)
                 out_docx = f"{context['bt_date']}_{context['person_id']}_{template}"
