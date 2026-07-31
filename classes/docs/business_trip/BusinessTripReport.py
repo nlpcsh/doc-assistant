@@ -11,6 +11,9 @@ class BusinessTripReport(BaseDoc):
         # self.ent_rep = self.add_field("rep")
         self.ui_mgr.add_common_buttons(self, "gen_business_trip")
 
+    def final_action(self):
+        pass
+
     def get_context(self):
 
         return {}

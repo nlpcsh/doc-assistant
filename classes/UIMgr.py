@@ -112,13 +112,15 @@ class UIMgr:
         owner.input_fields.append((label_key, field_frame, entry))
         return entry
 
-    def add_checkbox_multi(self, owner, checkbox_text, options):
+    def add_checkbox_multi(self, owner, checkbox_text, options, parent=None):
+        if parent is None:
+            parent = owner.container
         var = tk.BooleanVar()
-        checkbox = ttk.Checkbutton(owner.container, text=checkbox_text, variable=var)
+        checkbox = ttk.Checkbutton(parent, text=checkbox_text, variable=var)
         checkbox.pack(anchor="w", padx=10, pady=5)
 
         height = min(len(options), 10)
-        listbox = tk.Listbox(owner.container, selectmode=MULTIPLE, height=height, exportselection=0)
+        listbox = tk.Listbox(parent, selectmode=MULTIPLE, height=height, exportselection=0)
         for option in options:
             listbox.insert(END, option)
         listbox.pack_forget()
@@ -176,7 +178,7 @@ class UIMgr:
                 mindate=mindate,
             )
             calendar.pack(pady=10, padx=10)
-            ttk.Button(cal_window, text="Select", command=select_date).pack(pady=5)
+            ttk.Button(cal_window, text=self.labels["signing"]["select_date"], command=select_date).pack(pady=5)
             cal_window.grab_set()
 
         ttk.Button(date_frame, text="📅", command=open_calendar, width=3).pack(side="left", padx=2)
@@ -198,6 +200,15 @@ class UIMgr:
         if options:
             combo.current(0)
         return combo
+
+    def add_multiselect(self, owner, label_key, options, height=10):
+        ttk.Label(owner.container, text=self.labels["fields"][label_key]).pack(anchor="w")
+        listbox_height = min(max(len(options), 1), height)
+        listbox = tk.Listbox(owner.container, selectmode=MULTIPLE, height=listbox_height, exportselection=0)
+        for option in options:
+            listbox.insert(END, option)
+        listbox.pack(pady=5, padx=10, fill="x")
+        return listbox
 
     def start_generation(self, owner):
         owner.gen_btn.config(state="disabled")
@@ -232,8 +243,8 @@ class UIMgr:
             owner.selected_signature_rect = None
 
             geometry = f"1100x900+{next_x}+{next_y}"
-            preview_window = self.create_toplevel(owner.winfo_toplevel(), title="Sign PDF", geometry=geometry)
-            signer = PdfSigner(preview_window)
+            preview_window = self.create_toplevel(owner.winfo_toplevel(), title=self.labels["signing"]["signing_title"], geometry=geometry)
+            signer = PdfSigner(preview_window, self.labels)
             signer.preview_pdf_file(pdf_path)
             preview_window.grab_set()
 
@@ -311,16 +322,14 @@ class UIMgr:
         return toolbar
 
     @staticmethod
-    def build_buttons(toolbar: tk.Frame, callbacks: dict) -> dict:
+    def build_buttons(toolbar: tk.Frame, callbacks: dict, labels: dict) -> dict:
         """Create toolbar buttons with provided callbacks."""
         buttons = {}
-
-        #tk.Button(toolbar, text="Open PDF", command=callbacks["open_pdf"]).pack(side="left")
 
         if platform.system() != "Linux":
             buttons["refresh_certs"] = tk.Button(
                 toolbar,
-                text="Refresh Certificates",
+                text=labels["signing"]["refresh_certs"],
                 command=callbacks["load_certificates"]
             )
             buttons["refresh_certs"].pack(side="left", padx=(8, 0))
@@ -328,7 +337,7 @@ class UIMgr:
         if platform.system() != "Windows":
             buttons["load_cert_file"] = tk.Button(
                 toolbar,
-                text="Load certificate file",
+                text=labels["signing"]["load_cert_file"],
                 command=callbacks["load_certificate_file"]
             )
             buttons["load_cert_file"].pack(side="left", padx=(8, 0))
@@ -343,10 +352,12 @@ class UIMgr:
         return canvas
 
     @staticmethod
-    def build_sidebar(content: tk.Frame, callbacks: Optional[Dict[str, Any]] = None) -> Tuple[tk.Frame, Dict[str, Any]]:
+    def build_sidebar(content: tk.Frame, callbacks: Optional[Dict[str, Any]] = None, labels: Optional[Dict[str, str]] = None) -> Tuple[tk.Frame, Dict[str, Any]]:
         """Create the right sidebar with certificate and signing options."""
         if callbacks is None:
             callbacks = {}
+        if labels is None:
+            labels = {}
 
         sidebar = tk.Frame(content, padx=12)
         sidebar.pack(side="right", fill="y")
@@ -355,7 +366,7 @@ class UIMgr:
 
         # Certificate section (platform-specific)
         if platform.system() != "Linux":
-            tk.Label(sidebar, text="Digital Certificate:", font=("TkDefaultFont", 10, "bold")).pack(
+            tk.Label(sidebar, text=labels["signing"]["digital_certificate"], font=("TkDefaultFont", 10, "bold")).pack(
                 anchor="w", pady=(0, 6)
             )
             components["cert_combo"] = ttk.Combobox(sidebar, state="readonly", width=25)
@@ -363,7 +374,7 @@ class UIMgr:
 
             components["cert_status_label"] = tk.Label(
                 sidebar,
-                text="No certificate selected",
+                text=labels["signing"]["no_certificate_selected"],
                 wraplength=160,
                 justify="left",
                 fg="#666"
@@ -371,7 +382,7 @@ class UIMgr:
             components["cert_status_label"].pack(anchor="w", pady=(0, 12))
 
         # Signer name info
-        tk.Label(sidebar, text="Signer name:").pack(anchor="w")
+        tk.Label(sidebar, text=labels["signing"]["signer"], font=("TkDefaultFont", 10, "bold")).pack(anchor="w")
         components["signer_name_label"] = tk.Label(
             sidebar,
             text="(From certificate)",
@@ -383,7 +394,7 @@ class UIMgr:
 
         components["cert_validity_label"] = tk.Label(
             sidebar,
-            text="",
+            text=labels["signing"]["no_certificate_selected"],
             wraplength=160,
             justify="left",
             fg="#666"
@@ -393,7 +404,7 @@ class UIMgr:
         # Password info
         tk.Label(
             sidebar,
-            text="Password is set outside this app on certificate load or sign use.",
+            text=labels["signing"]["password_info"],
             font=("TkDefaultFont", 8),
             fg="#999"
         ).pack(anchor="w", pady=(0, 12))
@@ -402,7 +413,7 @@ class UIMgr:
         components["visual_only_var"] = tk.BooleanVar(value=False)
         tk.Checkbutton(
             sidebar,
-            text="Visual signature only\n(no digital certificate)",
+            text=labels["signing"]["visual_signature_only"],
             variable=components["visual_only_var"],
             onvalue=True,
             offvalue=False
@@ -410,13 +421,13 @@ class UIMgr:
 
         tk.Label(
             sidebar,
-            text="Sign with image only, even if certificate is unavailable.",
+            text=labels["signing"]["visual_signature_info"],
             font=("TkDefaultFont", 8),
             fg="#999"
         ).pack(anchor="w", pady=(0, 12))
 
         # Signature declaration
-        tk.Label(sidebar, text="Signature statement:").pack(anchor="w")
+        tk.Label(sidebar, text=labels["signing"]["signature_statement"], font=("TkDefaultFont", 10, "bold")).pack(anchor="w")
         components["signature_declaration_var"] = tk.StringVar(value="I'm the author")
         components["signature_declaration_combo"] = ttk.Combobox(
             sidebar,
@@ -430,17 +441,17 @@ class UIMgr:
 
         # Signature image
         load_sig_callback = callbacks.get("load_signature_image", lambda: None)
-        tk.Button(sidebar, text="Load signature image", command=load_sig_callback).pack(fill="x")
+        tk.Button(sidebar, text=labels["signing"]["load_signature_image"], command=load_sig_callback).pack(fill="x")
         components["signature_image_label"] = tk.Label(
             sidebar,
-            text="No signature image loaded",
+            text=labels["signing"]["no_signature_image_loaded"],
             wraplength=160,
             justify="left"
         )
         components["signature_image_label"].pack(anchor="w", pady=(6, 12))
 
         # Selection display
-        tk.Label(sidebar, text="Selection (PDF points):").pack(anchor="w")
+        tk.Label(sidebar, text=labels["signing"]["selection_display"], font=("TkDefaultFont", 10, "bold")).pack(anchor="w")
         components["selection_label"] = tk.Label(
             sidebar,
             text="x=0.0 y=0.0 w=0.0 h=0.0",
@@ -449,17 +460,17 @@ class UIMgr:
         components["selection_label"].pack(anchor="w", pady=(0, 12))
 
         # Instructions
-        tk.Label(sidebar, text="Instructions:").pack(anchor="w")
+        tk.Label(sidebar, text=labels["signing"]["instructions"], font=("TkDefaultFont", 10, "bold")).pack(anchor="w")
         tk.Label(
             sidebar,
-            text="1) Select a certificate or load a certificate file\n2) Open a PDF\n3) Drag to draw signature box\n4) Load signature image (optional)\n5) Click Sign PDF",
+            text=labels["signing"]["instructions_text"],
             justify="left",
             fg="#333333"
         ).pack(anchor="w")
 
         # Sign button
         sign_callback = callbacks.get("complete_signing", lambda: None)
-        tk.Button(sidebar, text="Sign PDF", command=sign_callback, bg="white", fg="blue").pack(
+        tk.Button(sidebar, text=labels["signing"]["signing_title"], command=sign_callback, bg="white", fg="blue").pack(
             fill="x", pady=(12, 0)
         )
 

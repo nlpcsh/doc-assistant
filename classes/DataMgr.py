@@ -36,14 +36,10 @@ class DataMgr:
     def get_output_folders(self):
         return self.data['output_folders']
 
-    def save_business_trip(self, bt_date, person_id, project_id):
-        if 'business_trip' not in self.data:
-            self.data['business_trip'] = {}
-        if bt_date not in self.data['business_trip']:
-            self.data['business_trip'][bt_date] = {"persons": [], "project": None}
-
-        self.data['business_trip'][bt_date]["persons"].append(person_id)
-        self.data['business_trip'][bt_date]["project"] = project_id
+    def save_new_bussiness_trip(self, new_bussiness_trip):
+        if 'business_trips' not in self.data:
+            self.data['business_trips'] = {}
+        self.data['business_trips'].update(new_bussiness_trip)
 
         with open('data/data.json', 'w', encoding="utf-8") as f:
             json.dump(self.data, f, indent=4)

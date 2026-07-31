@@ -4,11 +4,12 @@
     "civil_contract": "Граждански договор",
     "business_trip": "Командировка",
     "bt_report": "Отчет на командировка",
-    "bt_order": "Kомандировка"
+    "bt_order": "Командировка"
   },
   "fields": {
     "projects": "Проект:",
     "select_person": "Избери човек:",
+    "select_car": "Избери кола:",
     "full_name": "Пълно име:",
     "bt_purpose": "Цел на командировката:",
     "bt_destination": "Направление:",
@@ -26,7 +27,7 @@
   "buttons": {
     "select_sig": "Избери подпис",
     "gen_contract": "Създай граждански договор",
-    "gen_business_trip": "Създай командировка",
+    "gen_business_trip": "Създай заповед и доклад за командировка",
     "browse": "Избери..."
   },
   "messages": {
@@ -35,5 +36,44 @@
     "gen_finished": "Готово!",
     "account_on": "За сметка на ",
     "third_party": "приемащата страна."
+  },
+  "signing": {
+    "signing_title": "Подпиши PDF",
+    "signing_in_progress": "Подписването е в процес...",
+    "signing_success": "PDF успешно подписан!",
+    "signing_error": "Грешка при подписването на PDF.",
+    "select_certificate": "Изберете нов сертификат",
+    "enter_password": "Моля, въведете парола за сертификата.",
+    "enter_password_description": "Въведете паролата за файла на сертификата (оставете празно, ако няма):",
+    "invalid_password": "Невалидна парола. Моля, опитайте отново.",
+    "preview_pdf": "Преглед на PDF",
+    "preview_error": "Грешка при преглед на PDF.",
+    "draw_signature_box": "Моля, нарисувайте кутия за подпис.",
+    "signing_cancelled": "Подписването е отменено.",
+    "digital_signature_failed": "Неуспешен опит за цифров подпис. Моля, проверете сертификата си или активирайте 'Само визуален подпис'.",
+    "pdf_signed_visual": "PDF е подписан с визуален подпис и запазен на:",
+    "pdf_signed_digital": "PDF е цифрово подписан и запазен на:",
+    "visual_signature_only": "Само визуален подпис",
+    "no_certificate_selected": "Няма избран сертификат",
+    "password_info": "Парола за сертификата:",
+    "signature_statement": "Изявление за подписване",
+    "certificate": "Сертификат",
+    "signer": "Подписващ",
+    "type": "Тип",
+    "digital_certificate": "Цифров сертификат:",
+    "visual_signature": "Визуален подпис:",
+    "no_signature_image_loaded": "Няма заредена снимка за подпис",
+    "selection_display": "Избор (PDF точки):",
+    "instructions": "Инструкции",
+    "instructions_title": "Как да подпишете PDF",
+    "select_certificate_button": "Изберете сертификат",
+    "select_date": "Изберете дата",
+    "load_signature_image": "Заредете снимка за подпис",
+    "visual_signature_info": "Информация за избрания подпис",
+    "refresh_certs": "Обновете сертификатите",
+    "load_cert_file": "Заредете файл с сертификат",
+    "password_prompt": "Въведете парола за сертификата",
+    "password_prompt_description": "Въведете паролата за файла на сертификата (оставете празно, ако няма):",
+    "instructions_text": "1) При първо използване \n - заредете файл със сертификат\n - заредете картинка с подпис (по избор)\n2) Селектирайте с левия бутон на мишката място за\n поставяне на подписа върху документа\n3) Кликнете върху 'Подпиши PDF'"
   }
 }
