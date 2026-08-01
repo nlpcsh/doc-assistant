@@ -7,6 +7,9 @@
     "bt_order": "Командировка"
   },
   "fields": {
+    "business_trips": "Командировка:",
+    "bt_order_number": "Номер на заповедта:",
+    "bt_personal_report": "Личен отчет:",
     "projects": "Проект:",
     "select_person": "Избери човек:",
     "select_car": "Избери кола:",
@@ -28,6 +31,7 @@
     "select_sig": "Избери подпис",
     "gen_contract": "Създай граждански договор",
     "gen_business_trip": "Създай заповед и доклад за командировка",
+    "get_bt_report": "Създай отчет за командировка",
     "browse": "Избери..."
   },
   "messages": {

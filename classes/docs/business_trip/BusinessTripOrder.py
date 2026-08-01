@@ -285,8 +285,11 @@ class BusinessTripOrder(BaseDoc):
         new_bussiness_trip = {
             bt_tytle: {
                 "project_id": project_id,
+                "bt_heading": self.bt_context.get("bt_purpose", ""),
+                "bt_order_number": "",
                 "person_ids": self.selected_person_ids,
-                "start_date": bt_from_date,
+                "start_date": self.bt_context.get("bt_from", ""),
+                "end_date": self.bt_context.get("bt_to", ""),
                 "status": BTStatus.GENERATED.name
             }
         }
