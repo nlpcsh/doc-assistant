@@ -9,8 +9,9 @@ class BusinessTripReport(BaseDoc):
         super().__init__(parent, data_mgr, "business_trip", ["business_trip_report_personal.docx", "business_trip_report.docx"])
         self.data_mgr.update_business_trip_statuses()
         self.current_bts_to_report = self.data_mgr.get_all_bussiness_trips_by_status(BTStatus.READY_TO_REPORT)
-        self.setup_ui_components()
         self.preselect_latest_business_trip()
+        self.project_leader_id = self._update_project_leader_id()
+        self.setup_ui_components()
 
     def setup_ui_components(self):
         self.ui_mgr.add_tab_title(self, "bt_report")
@@ -36,6 +37,15 @@ class BusinessTripReport(BaseDoc):
         )
         self.business_trips_dropdown.set(latest_id)
         self.on_business_trip_selected(None)
+
+    def _update_project_leader_id(self):
+        business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get(), {})
+        project = self.data_mgr.get_project_by_id(business_trip.get("project_id", "")) or {}
+        project_lead_id = project.get("project_lead")
+        if project_lead_id and project_lead_id in business_trip.get("person_ids", []):
+            self.project_leader_id = project_lead_id
+        else:
+            self.project_leader_id = None
 
     def on_business_trip_selected(self, event):
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get(), {})
