@@ -1,6 +1,5 @@
 from classes.docs.BaseDoc import BaseDoc
 from datetime import datetime
-import tkinter as tk
 from enums.Enums import BTStatus
 from Helpers import Helpers
 
@@ -9,9 +8,9 @@ class BusinessTripReport(BaseDoc):
         super().__init__(parent, data_mgr, "business_trip", ["business_trip_report_personal.docx", "business_trip_report.docx"])
         self.data_mgr.update_business_trip_statuses()
         self.current_bts_to_report = self.data_mgr.get_all_bussiness_trips_by_status(BTStatus.READY_TO_REPORT)
-        self.preselect_latest_business_trip()
-        self.project_leader_id = self._update_project_leader_id()
+        self.project_leader_id = None
         self.setup_ui_components()
+        self.preselect_latest_business_trip()
 
     def setup_ui_components(self):
         self.ui_mgr.add_tab_title(self, "bt_report")
@@ -20,10 +19,34 @@ class BusinessTripReport(BaseDoc):
             self, "business_trips", self.business_trip_ids
         )
         self.business_trips_dropdown.bind("<<ComboboxSelected>>", self.on_business_trip_selected)
-        self.persons_dropdown = self.ui_mgr.add_dropdown(self, "select_person", [])
         self.ui_mgr.add_field(self, "bt_order_number")
-        self.ui_mgr.add_text_field(self, "bt_personal_report", height=10, width=70)
-        self.ui_mgr.add_common_buttons(self, "get_bt_report")
+
+        self.generate_only_report_var = self.ui_mgr.create_int_var(value=0)
+        self.generate_only_report_checkbox = self.ui_mgr.add_checkbox(
+            self,
+            self.labels["fields"]["generate_only_report"],
+            variable=self.generate_only_report_var,
+            command=self.on_generate_only_report_checkbox_changed,
+        )
+
+        self.report_fields_frame = self.ui_mgr.add_frame(self)
+        self.persons_dropdown = self.ui_mgr.add_dropdown(
+            self, "select_person", [], container=self.report_fields_frame
+        )
+        self.ui_mgr.add_text_field(
+            self, "bt_personal_report", height=10, width=70, container=self.report_fields_frame
+        )
+
+        self.buttons_frame = self.ui_mgr.add_frame(self, show_by_default=True)
+        self.ui_mgr.add_common_buttons(self, "get_bt_report", container=self.buttons_frame)
+
+    def on_generate_only_report_checkbox_changed(self):
+        if self.generate_only_report_var.get() == 1:
+            self.ui_mgr.set_field_state(self, "bt_order_number", "disabled")
+            self.ui_mgr.set_widget_visibility(self.report_fields_frame, False)
+        else:
+            self.ui_mgr.set_field_state(self, "bt_order_number", "normal")
+            self.ui_mgr.set_widget_visibility(self.report_fields_frame, True, before=self.buttons_frame)
 
     def preselect_latest_business_trip(self):
         if not self.business_trip_ids:
@@ -61,6 +84,10 @@ class BusinessTripReport(BaseDoc):
             self.persons_dropdown.current(0)
         else:
             self.persons_dropdown.set('')
+        bt_order_number = business_trip.get("bt_order_number")
+        if bt_order_number:
+            self.ui_mgr.set_field_value(self, "bt_order_number", bt_order_number)
+        self._update_project_leader_id()
 
     def final_action(self):
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())
@@ -73,10 +100,10 @@ class BusinessTripReport(BaseDoc):
         project = self.data_mgr.get_project_by_id(business_trip.get("project_id", "")) or {}
         leader = self.data_mgr.get_coworker_by_id(project.get("project_lead", "")) or {}
 
-        selected_person_ids = [
-            self.persons_dropdown.get(index).split(")", 1)[0].lstrip("(")
-            for index in self.persons_dropdown.curselection()
-        ]
+        selected_person = self.persons_dropdown.get().strip()
+        selected_person_ids = []
+        if selected_person:
+            selected_person_ids = [selected_person.split(")", 1)[0].lstrip("(")]
         if not selected_person_ids:
             selected_person_ids = list(business_trip.get("person_ids", []))
         all_bt_persons = [

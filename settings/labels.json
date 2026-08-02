@@ -22,7 +22,8 @@
     "bt_night_money": "Нощувки",
     "bt_travel_money": "Пътни",
     "bt_euro_per_day": "Евро на ден",
-    "bt_other_expences": "Други разходи"
+    "bt_other_expences": "Други разходи",
+    "generate_only_report": "Генерирай само доклад за изплащане на командировка"
   },
   "multiselect": {
     "travel_with": ["кола", "самолет", "влак", "автобус", "такси", "друго"]

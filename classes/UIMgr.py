@@ -70,8 +70,41 @@ class UIMgr:
         owner.input_fields.append((label_key, field_frame, entry))
         return entry
 
-    def add_text_field(self, owner, label_key, height=4, width=40):
-        field_frame = tk.Frame(owner.container)
+    def add_frame(self, owner, label_key=None, show_by_default=True, padx=10, pady=5):
+        frame = tk.Frame(owner.container)
+        if label_key:
+            ttk.Label(frame, text=self.labels["fields"][label_key]).pack(anchor="w")
+        if show_by_default:
+            frame.pack(fill="x", padx=padx, pady=pady)
+        else:
+            frame.pack_forget()
+        return frame
+
+    def add_checkbox(self, owner, checkbox_text, variable=None, command=None, container=None):
+        if container is None:
+            container = owner.container
+        if variable is None:
+            variable = tk.BooleanVar()
+        checkbox = ttk.Checkbutton(container, text=checkbox_text, variable=variable, command=command)
+        checkbox.pack(anchor="w", padx=10, pady=5)
+        return checkbox
+
+    def create_int_var(self, value=0):
+        return tk.IntVar(value=value)
+
+    def set_widget_visibility(self, widget, visible, fill="x", padx=10, pady=5, before=None):
+        if visible:
+            if before is not None:
+                widget.pack(fill=fill, padx=padx, pady=pady, before=before)
+            else:
+                widget.pack(fill=fill, padx=padx, pady=pady)
+        else:
+            widget.pack_forget()
+
+    def add_text_field(self, owner, label_key, height=4, width=40, container=None):
+        if container is None:
+            container = owner.container
+        field_frame = tk.Frame(container)
 
         ttk.Label(field_frame, text=self.labels["fields"][label_key]).pack(anchor="w")
         text_widget = tk.Text(field_frame, height=height, width=width, wrap="word")
@@ -83,11 +116,11 @@ class UIMgr:
         owner.input_fields.append((label_key, field_frame, text_widget))
         return text_widget
 
-    def add_checkbox_field(self, owner, label_key, checkbox_text, default_value="", show_by_default=False, width=20):
+    def add_checkbox_field(self, owner, label_key, checkbox_text, default_value="", show_by_default=False, width=20, command=None):
         field_frame = tk.Frame(owner.container)
 
         checkbox_var = tk.BooleanVar(value=show_by_default)
-        ttk.Checkbutton(field_frame, text=checkbox_text, variable=checkbox_var).pack(side="left", padx=(0, 10))
+        ttk.Checkbutton(field_frame, text=checkbox_text, variable=checkbox_var, command=command).pack(side="left", padx=(0, 10))
 
         entry = ttk.Entry(field_frame, width=width)
         entry.configure(font=("Arial", 10))
@@ -184,18 +217,22 @@ class UIMgr:
         ttk.Button(date_frame, text="📅", command=open_calendar, width=3).pack(side="left", padx=2)
         return date_entry
 
-    def add_common_buttons(self, owner, gen_label_key):
+    def add_common_buttons(self, owner, gen_label_key, container=None):
+        if container is None:
+            container = owner.container
         if path.exists(owner.signature_path + "sig.png"):
             owner.sig_path = owner.signature_path + "sig.png"
         else:
-            ttk.Button(owner.container, text=self.labels["buttons"]["select_sig"], command=owner.get_signature).pack(pady=10)
+            ttk.Button(container, text=self.labels["buttons"]["select_sig"], command=owner.get_signature).pack(pady=10)
 
-        owner.gen_btn = ttk.Button(owner.container, text=self.labels["buttons"][gen_label_key], command=owner.start_generation)
+        owner.gen_btn = ttk.Button(container, text=self.labels["buttons"][gen_label_key], command=owner.start_generation)
         owner.gen_btn.pack(pady=20)
 
-    def add_dropdown(self, owner, label_key, options):
-        ttk.Label(owner.container, text=self.labels["fields"][label_key]).pack(anchor="w")
-        combo = ttk.Combobox(owner.container, values=options, state="readonly", width=37)
+    def add_dropdown(self, owner, label_key, options, container=None):
+        if container is None:
+            container = owner.container
+        ttk.Label(container, text=self.labels["fields"][label_key]).pack(anchor="w")
+        combo = ttk.Combobox(container, values=options, state="readonly", width=37)
         combo.pack(pady=5)
         if options:
             combo.current(0)
@@ -251,6 +288,26 @@ class UIMgr:
             owner.preview_window = preview_window
             next_x += x_offset
             next_y += y_offset
+
+    def set_field_value(self, owner, label_key, value):
+        for key, frame, widget in owner.input_fields:
+            if key == label_key:
+                if isinstance(widget, tk.Entry):
+                    widget.delete(0, END)
+                    widget.insert(0, value)
+                elif isinstance(widget, tk.Text):
+                    widget.delete("1.0", END)
+                    widget.insert("1.0", value)
+                break
+
+    def set_field_state(self, owner, label_key, state):
+        for key, frame, widget in owner.input_fields:
+            if key == label_key:
+                try:
+                    widget.config(state=state)
+                except Exception:
+                    pass
+                break
 
     def create_toplevel(self, parent, title: str = "", geometry: Optional[str] = None):
         """Create a configured Toplevel window."""
