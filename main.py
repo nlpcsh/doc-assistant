@@ -1,7 +1,7 @@
 from os import path
-from tkinter import Tk
 import locale
 import platform
+from tkinterdnd2 import Tk
 
 from classes.MainApp import MainApp
 

@@ -4,8 +4,8 @@ from os import path
 from tkinter import END, ttk, messagebox, filedialog, MULTIPLE, simpledialog
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
-
 from tkcalendar import Calendar
+from tkinterdnd2 import DND_FILES
 
 class UIMgr:
     def __init__(self, data_mgr):
@@ -237,6 +237,67 @@ class UIMgr:
         if options:
             combo.current(0)
         return combo
+
+    def add_file_upload(self, owner, label_text, container=None):
+        if container is None:
+            container = owner.container
+
+        frame = tk.Frame(container)
+        frame.pack(fill="x", padx=10, pady=5)
+
+        ttk.Label(frame, text=label_text).pack(anchor="w")
+        upload_frame = tk.Frame(frame, relief="groove", bd=1)
+        upload_frame.pack(fill="x", padx=2, pady=2)
+
+        file_listbox = tk.Listbox(upload_frame, height=4, exportselection=0)
+        file_listbox.pack(fill="x", padx=6, pady=(6, 2))
+
+        button_row = tk.Frame(upload_frame)
+        button_row.pack(fill="x", padx=6, pady=(0, 6))
+
+        selected_files = []
+
+        def add_files(file_paths):
+            for file_path in file_paths:
+                normalized_path = path.abspath(file_path)
+                if not normalized_path or normalized_path in selected_files:
+                    continue
+                selected_files.append(normalized_path)
+                file_listbox.insert(END, path.basename(normalized_path))
+                owner.uploaded_files = selected_files
+
+        def browse_for_files():
+            chosen_files = filedialog.askopenfilenames(title="Select files")
+            if chosen_files:
+                add_files(list(chosen_files))
+
+        def handle_drop(event):
+            dropped_data = event.data or ""
+            if not dropped_data:
+                return "break"
+            if dropped_data.startswith("{") and dropped_data.endswith("}"):
+                dropped_data = dropped_data[1:-1]
+            if dropped_data.startswith("(") and dropped_data.endswith(")"):
+                dropped_data = dropped_data[1:-1]
+            file_paths = []
+            for raw_item in dropped_data.replace("\n", " ").split():
+                item = raw_item.strip().strip("{}()")
+                if item:
+                    file_paths.append(item)
+            if file_paths:
+                add_files(file_paths)
+            return "break"
+
+        ttk.Button(button_row, text=self.labels["buttons"]["browse"], command=browse_for_files).pack(side="left")
+        ttk.Label(button_row, text="Пуснете файлове тук").pack(side="left", padx=(8, 0))
+
+        if DND_FILES:
+            upload_frame.drop_target_register(DND_FILES)
+            upload_frame.dnd_bind("<<Drop>>", handle_drop)
+
+        owner.uploaded_files = selected_files
+        owner.file_upload_listbox = file_listbox
+        return {"frame": frame, "listbox": file_listbox, "selected_files": selected_files}
 
     def add_multiselect(self, owner, label_key, options, height=10):
         ttk.Label(owner.container, text=self.labels["fields"][label_key]).pack(anchor="w")

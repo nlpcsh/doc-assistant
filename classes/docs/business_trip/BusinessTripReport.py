@@ -2,6 +2,8 @@ from classes.docs.BaseDoc import BaseDoc
 from enums.Enums import BTStatus
 from Helpers import Helpers
 
+from os import path
+
 class BusinessTripReport(BaseDoc):
     def __init__(self, parent, data_mgr):
         super().__init__(parent, data_mgr, "business_trip", [])
@@ -20,6 +22,7 @@ class BusinessTripReport(BaseDoc):
         self.business_trips_dropdown.bind("<<ComboboxSelected>>", self.on_business_trip_selected)
         self.ui_mgr.add_field(self, "bt_order_number")
 
+
         self.generate_only_report_var = self.ui_mgr.create_int_var(value=0)
         self.generate_only_report_checkbox = self.ui_mgr.add_checkbox(
             self,
@@ -35,6 +38,9 @@ class BusinessTripReport(BaseDoc):
         self.ui_mgr.add_text_field(
             self, "bt_personal_report", height=10, width=70, container=self.report_fields_frame
         )
+
+        self.uploaded_files = []
+        self.ui_mgr.add_file_upload(self, self.labels["fields"]["attachments"])
 
         self.buttons_frame = self.ui_mgr.add_frame(self, show_by_default=True)
         self.ui_mgr.add_common_buttons(self, "get_bt_report", container=self.buttons_frame)
@@ -88,10 +94,21 @@ class BusinessTripReport(BaseDoc):
             self.ui_mgr.set_field_value(self, "bt_order_number", bt_order_number)
         self._update_project_leader_id()
 
+    def _get_report_output_folder(self):
+        business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get(), {})
+        selected_person = self.persons_dropdown.get().strip().split(")", 1)[0].lstrip("(") if self.persons_dropdown.get() else ""
+        doc_identifier = self.business_trips_dropdown.get()
+        sub_folder = f"/{selected_person}/" if selected_person else "/"
+        output_folders = self.data_mgr.get_output_folders()
+        return f"{output_folders['common']}{output_folders['business_trip']}{doc_identifier}{sub_folder}"
+
     def final_action(self):
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())
         if business_trip:
             business_trip["status"] = BTStatus.REPORTED.name
+            report_folder = self._get_report_output_folder()
+            if getattr(self, "uploaded_files", None):
+                Helpers.copy_files_to_folder(self.uploaded_files, report_folder)
             self.data_mgr.save_data()
 
     def get_context(self):
