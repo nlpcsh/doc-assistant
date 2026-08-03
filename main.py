@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     # Configure Tkinter for Unicode support
     if platform.system() == 'Linux':
-        default_font = ('DejaVu Sans', 10)
+        default_font = ('Liberation Sans', 10)
     else:
         default_font = ('Arial', 10)
 
