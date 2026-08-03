@@ -276,6 +276,7 @@ class BusinessTripOrder(BaseDoc):
         self.process_field_values()
         self.process_money_sources()
         self.process_travel_options()
+        self.bt_context["doc_date_and_ids_identifier"] = self.bt_context.get("bt_date", "") + "_" + self.all_projects.get() + "_" + "_".join(self.selected_person_ids)
         return self.bt_context
 
     def final_action(self):
@@ -290,6 +291,21 @@ class BusinessTripOrder(BaseDoc):
                 "person_ids": self.selected_person_ids,
                 "start_date": self.bt_context.get("bt_from", ""),
                 "end_date": self.bt_context.get("bt_to", ""),
+                "doc_date_and_ids_identifier": self.bt_context.get("doc_date_and_ids_identifier", ""),
+                "bt_travel_with": self.bt_context.get("bt_travel_with", ""),
+                "bt_day_money_from": self.bt_context.get("bt_day_money_from", ""),
+                "bt_nights_money_from": self.bt_context.get("bt_nights_money_from", ""),
+                "bt_travel_money_from": self.bt_context.get("bt_travel_money_from", ""),
+                "bt_destination": self.bt_context.get("bt_destination", ""),
+                "bt_euro_per_day": self.bt_context.get("bt_euro_per_day", ""),
+                "bt_nights_max_value": self.bt_context.get("bt_nights_max_value", ""),
+                "bt_other_expences": self.bt_context.get("bt_other_expences", ""),
+                "bt_contract_info": self.bt_context.get("bt_contract_info", ""),
+                "leader_titles": self.bt_context.get("leader_titles", ""),
+                "leader_names": self.bt_context.get("leader_names", ""),
+                "leader_full_name": self.bt_context.get("leader_full_name", ""),
+                "leader_work_place": self.bt_context.get("leader_work_place", ""),
+                "bt_all_persons": self.bt_context.get("bt_all_persons", ""),
                 "status": BTStatus.GENERATED.name
             }
         }
