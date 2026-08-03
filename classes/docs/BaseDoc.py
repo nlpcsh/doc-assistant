@@ -46,7 +46,7 @@ class BaseDoc(ttk.Frame):
                 doc = DocxTemplate(self.template_dir + template)
 
                 doc.render(context)
-                out_docx = f"{context['bt_date']}_{context['person_id']}_{template}"
+                out_docx = f"{context['doc_date_and_ids_identifier']}_{template}"
                 doc.save(out_docx)
                 generated_docx.append(out_docx)
 
@@ -59,7 +59,7 @@ class BaseDoc(ttk.Frame):
 
                 # Move files to output folder
                 output_folders = self.data_mgr.get_output_folders()
-                move_path = f"{output_folders['common']}{output_folders['business_trip']}{context['bt_date']}"
+                move_path = f"{output_folders['common']}{output_folders['business_trip']}{context['doc_date_and_ids_identifier']}{context['sub_folder']}"
                 if not path.exists(move_path):
                     makedirs(move_path, exist_ok=True)
                 # Only move PDF file

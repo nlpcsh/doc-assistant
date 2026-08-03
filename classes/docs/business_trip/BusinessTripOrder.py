@@ -276,6 +276,7 @@ class BusinessTripOrder(BaseDoc):
         self.process_field_values()
         self.process_money_sources()
         self.process_travel_options()
+        self.bt_context["sub_folder"] = ""
         self.bt_context["doc_date_and_ids_identifier"] = self.bt_context.get("bt_date", "") + "_" + self.all_projects.get() + "_" + "_".join(self.selected_person_ids)
         return self.bt_context
 

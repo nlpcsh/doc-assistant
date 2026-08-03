@@ -1,11 +1,10 @@
 from classes.docs.BaseDoc import BaseDoc
-from datetime import datetime
 from enums.Enums import BTStatus
 from Helpers import Helpers
 
 class BusinessTripReport(BaseDoc):
     def __init__(self, parent, data_mgr):
-        super().__init__(parent, data_mgr, "business_trip", ["business_trip_report_personal.docx", "business_trip_report.docx"])
+        super().__init__(parent, data_mgr, "business_trip", [])
         self.data_mgr.update_business_trip_statuses()
         self.current_bts_to_report = self.data_mgr.get_all_bussiness_trips_by_status(BTStatus.READY_TO_REPORT)
         self.project_leader_id = None
@@ -98,9 +97,10 @@ class BusinessTripReport(BaseDoc):
     def get_context(self):
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get(), {})
         project = self.data_mgr.get_project_by_id(business_trip.get("project_id", "")) or {}
-        leader = self.data_mgr.get_coworker_by_id(project.get("project_lead", "")) or {}
+        leader_id = project.get("project_lead")
+        leader = self.data_mgr.get_coworker_by_id(leader_id) or {}
 
-        selected_person = self.persons_dropdown.get().strip()
+        selected_person = self.persons_dropdown.get().strip().split(")", 1)[0].lstrip("(") if self.persons_dropdown.get() else None
         selected_person_ids = []
         if selected_person:
             selected_person_ids = [selected_person.split(")", 1)[0].lstrip("(")]
@@ -116,17 +116,31 @@ class BusinessTripReport(BaseDoc):
             for index, person in enumerate(all_bt_persons, 1)
         )
 
+        if self.generate_only_report_var.get() == 1:
+            self.template_names.append("business_trip_report_money.docx")
+        elif self.project_leader_id and leader_id == self.project_leader_id:
+            self.template_names = ["business_trip_report_personal.docx", "business_trip_report_money.docx"]
+        else:
+            self.template_names.append("business_trip_report_personal.docx")
+
+        doc_date_and_ids_identifier = self.business_trips_dropdown.get()
+
         return {
+            "bt_person_title": #selected co-worker's title
+                self.data_mgr.get_coworker_by_id(selected_person_ids[0]).get("titles", "") if selected_person_ids else "",
+            "bt_person_names": #selected co-worker's full name
+                self.data_mgr.get_coworker_by_id(selected_person_ids[0]).get("full_name", "") if selected_person_ids else "",
+            "bt_headline": business_trip.get("bt_heading", ""),
             "leader_titles": leader.get("titles", ""),
             "leader_names": leader.get("names", ""),
-            "leader_full_name": leader.get("full_name", ""),
-            "leader_work_place": f"{leader.get('department', '')}, {leader.get('work_place', '')}",
-            "bt_contract_info": project.get("description", ""),
-            "bt_purpose": business_trip.get("bt_heading", ""),
             "bt_order_number": self._field_value("bt_order_number"),
             "bt_personal_report": self._field_value("bt_personal_report"),
             "person_id": "_".join(selected_person_ids),
             "persons_bank_info": persons_bank_info,
+            "current_date": Helpers.get_current_date_str(dateformat="%d.%m.%Y"),
+            "bt_contract_info": project.get("description", ""),
+            "doc_date_and_ids_identifier": doc_date_and_ids_identifier,
+            "sub_folder": f"/{selected_person}/",
         }
 
     def _field_value(self, field_key):

@@ -10,3 +10,7 @@ class Helpers:
             return datetime.strptime(value or "", dateformat)
         except ValueError:
             return datetime.min
+
+    @staticmethod
+    def get_current_date_str(dateformat="%d.%m.%Y"):
+        return datetime.now().strftime(dateformat)
