@@ -1,6 +1,7 @@
 from os import path
-from tkinter import Tk
 import locale
+import platform
+from tkinterdnd2 import Tk
 
 from classes.MainApp import MainApp
 
@@ -18,7 +19,12 @@ if __name__ == "__main__":
     root = Tk()
 
     # Configure Tkinter for Unicode support
-    root.option_add('*font', ('Arial', 10))  # Set default font that supports Cyrillic
+    if platform.system() == 'Linux':
+        default_font = ('Liberation Sans', 10)
+    else:
+        default_font = ('Arial', 10)
+
+    root.option_add('*font', default_font)  # Set a readable default font with Cyrillic support
     root.tk.call('encoding', 'system', 'utf-8')  # Ensure UTF-8 encoding
 
     base_dir = path.dirname(path.abspath(__file__))

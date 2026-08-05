@@ -61,9 +61,28 @@ Install the Python dependencies required by the project, including:
 - cryptography
 - tkcalendar
 
-## Running the app
+## Install the app
+
+### Linux
 
 From the project root, run:
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+### Windows (PowerShell)
+
+From the project root, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+### Run the app
+
+After the environment is activated, run:
 
 ```bash
 python main.py

@@ -7,6 +7,10 @@
     "bt_order": "Командировка"
   },
   "fields": {
+    "business_trips": "Командировка:",
+    "bt_order_number": "Номер на заповедта:",
+    "bt_personal_report": "Личен отчет:",
+    "attachments": "Прикачени файлове:",
     "projects": "Проект:",
     "select_person": "Избери човек:",
     "select_car": "Избери кола:",
@@ -19,7 +23,8 @@
     "bt_night_money": "Нощувки",
     "bt_travel_money": "Пътни",
     "bt_euro_per_day": "Евро на ден",
-    "bt_other_expences": "Други разходи"
+    "bt_other_expences": "Други разходи",
+    "generate_only_report": "Генерирай само доклад за изплащане на командировка"
   },
   "multiselect": {
     "travel_with": ["кола", "самолет", "влак", "автобус", "такси", "друго"]
@@ -28,6 +33,7 @@
     "select_sig": "Избери подпис",
     "gen_contract": "Създай граждански договор",
     "gen_business_trip": "Създай заповед и доклад за командировка",
+    "get_bt_report": "Създай отчет за командировка",
     "browse": "Избери..."
   },
   "messages": {
