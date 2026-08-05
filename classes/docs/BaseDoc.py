@@ -5,7 +5,7 @@ import shutil
 from os import path, makedirs, unlink
 from docxtpl import DocxTemplate  #, InlineImage
 
-from classes.UIMgr import UIMgr
+from ui.UIMgr import UIMgr
 
 class BaseDoc(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
