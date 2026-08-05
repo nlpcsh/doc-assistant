@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import END, ttk, MULTIPLE
+from tkinter import END, ttk, MULTIPLE, filedialog
 from datetime import datetime
 from os import path
 
@@ -209,6 +209,15 @@ class DocumentUIHelper:
             selected_files.append(normalized_path)
             file_listbox.insert(END, path.basename(normalized_path))
         owner.uploaded_files = selected_files
+
+    def _browse_for_files(self, selected_files, file_listbox, owner):
+        file_paths = filedialog.askopenfilenames(
+            title=self.labels["buttons"]["browse"],
+            filetypes=[("All files", "*.*")],
+            parent=owner.winfo_toplevel() if hasattr(owner, "winfo_toplevel") else None,
+        )
+        if file_paths:
+            self._add_files_to_list(file_paths, selected_files, file_listbox, owner)
 
     def _extract_file_paths_from_drop(self, dropped_data):
         if not dropped_data:

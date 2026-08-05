@@ -7,13 +7,13 @@ from tkinter import Tk, Event, IntVar, Frame, BooleanVar, StringVar
 from PIL import Image, ImageTk
 import fitz
 from PyPDF2 import PdfReader, PdfWriter
-from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
-from reportlab.lib.utils import ImageReader
 
 from classes.digisign.DataClasses import SignaturePlacement, CertificateInfo
 from classes.digisign.CertificateManager import CertificateManager
 from classes.digisign.Preferences import Preferences
+from classes.digisign.PdfPreviewRenderer import PdfPreviewRenderer
+from classes.digisign.SignatureOverlay import SignatureOverlay
 from ui.UIMgr import UIMgr
 
 DEFAULT_WIDTH = 3 * inch
@@ -37,6 +37,7 @@ class PdfSigner:
 
         # Build UI
         self._build_ui()
+        self.preview_renderer = PdfPreviewRenderer(self.canvas, self.canvas_width, self.canvas_height)
 
         # Setup event handlers
         self._setup_event_handlers()
@@ -486,29 +487,11 @@ class PdfSigner:
         height = float(box.height)
         return width, height
 
-    def pdf_to_canvas_coords(self,x: float, y: float, page_size: Tuple[float, float]) -> Tuple[float, float]:
-        page_w, page_h = page_size
-        scale = min(self.canvas_width / page_w, self.canvas_height / page_h)
-        disp_w = int(page_w * scale)
-        disp_h = int(page_h * scale)
-        x_offset = (self.canvas_width - disp_w) / 2
-        y_offset = (self.canvas_height - disp_h) / 2
-
-        canvas_x = x * scale + x_offset
-        canvas_y = self.canvas_height - (y * scale) - y_offset
-        return canvas_x, canvas_y
+    def pdf_to_canvas_coords(self, x: float, y: float, page_size: Tuple[float, float]) -> Tuple[float, float]:
+        return self.preview_renderer.pdf_to_canvas_coords(x, y, page_size)
 
     def canvas_to_pdf_coords(self, x: float, y: float, page_size: Tuple[float, float]) -> Tuple[float, float]:
-        page_w, page_h = page_size
-        scale = min(self.canvas_width / page_w, self.canvas_height / page_h)
-        disp_w = int(page_w * scale)
-        disp_h = int(page_h * scale)
-        x_offset = (self.canvas_width - disp_w) / 2
-        y_offset = (self.canvas_height - disp_h) / 2
-
-        pdf_x = (x - x_offset) / scale
-        pdf_y = (self.canvas_height - y - y_offset) / scale
-        return pdf_x, pdf_y
+        return self.preview_renderer.canvas_to_pdf_coords(x, y, page_size)
 
     def load_page(self, page_index: int) -> None:
         if not self.reader:
@@ -540,14 +523,7 @@ class PdfSigner:
         return "\n".join(lines)
 
     def render_page_preview(self, page_index: int):
-        if not self.fitz_doc:
-            return None
-        try:
-            page = self.fitz_doc.load_page(page_index)
-            pix = page.get_pixmap(alpha=False)
-            return Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        except Exception:
-            return None
+        return self.preview_renderer.render_page_preview(self.fitz_doc, page_index)
 
     def redraw_canvas(self) -> None:
         self.canvas.delete("all")
@@ -792,109 +768,16 @@ class PdfSigner:
         signature_image_path: Optional[str] = None,
         visual_only: bool = False,
     ) -> None:
-        c = canvas.Canvas(output_path, pagesize=(page_width, page_height))
-
-        if visual_only:
-            PdfSigner._draw_centered_image(c, placement, signature_image_path)
-            c.save()
-            return
-
-        PdfSigner._draw_border(c, placement)
-
-        text_lines = PdfSigner._build_text_lines(signer_name, signature_type)
-        text_start_y, line_height = PdfSigner._calculate_text_layout(placement, text_lines)
-
-        text_x = placement.x + 0.1 * inch
-        text_x = PdfSigner._draw_image_and_adjust_text_x(
-            c, placement, signature_image_path, text_x
+        SignatureOverlay.create(
+            placement=placement,
+            signer_name=signer_name,
+            signature_type=signature_type,
+            output_path=output_path,
+            page_width=page_width,
+            page_height=page_height,
+            signature_image_path=signature_image_path,
+            visual_only=visual_only,
         )
-
-        PdfSigner._draw_text_lines(c, text_lines, text_x, text_start_y, line_height)
-        c.save()
-
-    @staticmethod
-    def _draw_border(c, placement: SignaturePlacement) -> None:
-        c.setStrokeColorRGB(0.867, 0.894, 1.0)
-        c.setFillColorRGB(0, 0, 0)
-        c.setLineWidth(1)
-        c.rect(placement.x, placement.y, placement.width, placement.height)
-
-    @staticmethod
-    def _build_text_lines(signer_name: str, signature_type: str):
-        size = 6
-        return [
-            ("Digitally signed by:", "Helvetica", size),
-            (signer_name, "Helvetica-Bold", size),
-            (f"Reason: {signature_type}", "Helvetica", size),
-            (f"Date: {CertificateManager.get_current_time_iso()}", "Helvetica", size),
-        ]
-
-    @staticmethod
-    def _calculate_text_layout(placement: SignaturePlacement, text_lines):
-        line_spacing = 2
-        total_height = sum(size + line_spacing for _, _, size in text_lines) - line_spacing
-        line_height = text_lines[0][2] + line_spacing
-
-        box_center_y = placement.y + placement.height / 2
-        start_y = box_center_y + total_height / 2 - line_height / 2 - line_spacing / 2
-
-        return start_y, line_height
-
-    @staticmethod
-    def _draw_centered_image(c, placement: SignaturePlacement, path: Optional[str]) -> None:
-        if not path or not os.path.isfile(path):
-            return
-
-        try:
-            reader = ImageReader(path)
-            img_w, img_h = reader.getSize()
-            if img_w <= 0 or img_h <= 0:
-                return
-
-            scale = min(placement.width / img_w, placement.height / img_h, 1.0)
-            w, h = img_w * scale, img_h * scale
-
-            x = placement.x + (placement.width - w) / 2
-            y = placement.y + (placement.height - h) / 2
-
-            c.drawImage(reader, x, y, width=w, height=h, mask="auto")
-        except Exception:
-            pass
-
-    @staticmethod
-    def _draw_image_and_adjust_text_x(c, placement, path, default_text_x):
-        if not path or not os.path.isfile(path):
-            return default_text_x
-
-        try:
-            reader = ImageReader(path)
-            img_w, img_h = reader.getSize()
-            if img_w <= 0 or img_h <= 0:
-                return default_text_x
-
-            margin = 0.08 * inch
-            area_w = placement.width * 0.35
-            area_h = placement.height - (margin * 2)
-
-            scale = min(area_w / img_w, area_h / img_h, 1.0)
-            w, h = img_w * scale, img_h * scale
-
-            x = placement.x + margin
-            y = placement.y + placement.height - h - margin
-
-            c.drawImage(reader, x, y, width=w, height=h, mask="auto")
-            return x + w + 0.1 * inch
-
-        except Exception:
-            return default_text_x
-
-    @staticmethod
-    def _draw_text_lines(c, text_lines, x, start_y, line_height):
-        y = start_y
-        for text, font, size in text_lines:
-            c.setFont(font, size)
-            c.drawString(x, y, text)
-            y -= line_height
 
     def _replace_selected_certificate_in_list(self, actual_certificate: CertificateInfo) -> None:
         for index, cert in enumerate(self.available_certificates):
