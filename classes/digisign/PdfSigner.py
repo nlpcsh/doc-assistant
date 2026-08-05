@@ -14,7 +14,7 @@ from reportlab.lib.utils import ImageReader
 from classes.digisign.DataClasses import SignaturePlacement, CertificateInfo
 from classes.digisign.CertificateManager import CertificateManager
 from classes.digisign.Preferences import Preferences
-from classes.UIMgr import UIMgr
+from ui.UIMgr import UIMgr
 
 DEFAULT_WIDTH = 3 * inch
 DEFAULT_HEIGHT = 1 * inch

@@ -1,5 +1,5 @@
 from classes.DataMgr import DataMgr
-from classes.UIMgr import UIMgr
+from ui.UIMgr import UIMgr
 
 class MainApp:
     def __init__(self, root, base_dir):
