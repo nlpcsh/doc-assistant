@@ -1,7 +1,5 @@
 from classes.docs.BaseDoc import BaseDoc
 from datetime import datetime
-import tkinter as tk
-from tkinter import ttk
 from enums.Enums import BTStatus
 
 class BusinessTripOrder(BaseDoc):
@@ -23,12 +21,12 @@ class BusinessTripOrder(BaseDoc):
         self.date_to = self.ui_mgr.add_date_field(self, "bt_to", min_date_from=self.date_from, width=11)
         self.ui_mgr.add_checkbox_field(self, "bt_euro_per_day", self.labels["fields"]["bt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")), width=5)
         self.ui_mgr.add_checkbox_field(self, "bt_nights_max_value", self.labels["fields"]["bt_night_money"], width=5)
-        travel_row = tk.Frame(self.container)
+        travel_row = self.ui_mgr.add_frame(self, show_by_default=False)
         travel_row.pack(fill='x', padx=0, pady=0)
 
-        travel_left = tk.Frame(travel_row)
+        travel_left = self.ui_mgr.add_frame(self, show_by_default=False, container=travel_row)
         travel_left.pack(side='left', anchor='n')
-        travel_right = tk.Frame(travel_row)
+        travel_right = self.ui_mgr.add_frame(self, show_by_default=False, container=travel_row)
         travel_right.pack(side='left', fill='y', pady=(20, 0), padx=(10, 0))
 
         self.bt_travel_with_var, self.travel_multiselect = self.ui_mgr.add_checkbox_multi(
@@ -38,10 +36,16 @@ class BusinessTripOrder(BaseDoc):
             parent=travel_left,
         )
 
-        self.persons_cars_frame = tk.Frame(travel_right)
-        ttk.Label(self.persons_cars_frame, text=self.labels["fields"]["select_car"]).pack(anchor='w')
-        self.persons_cars = tk.Listbox(self.persons_cars_frame, selectmode=tk.MULTIPLE, exportselection=0, height=10)
-        self.persons_cars.pack(fill='both', expand=True)
+        self.persons_cars_frame = self.ui_mgr.add_frame(self, show_by_default=False, container=travel_right)
+        self.ui_mgr.add_label(self, self.labels["fields"]["select_car"], container=self.persons_cars_frame, anchor='w')
+        self.persons_cars = self.ui_mgr.add_listbox(
+            self,
+            selectmode="multiple",
+            height=10,
+            exportselection=0,
+            container=self.persons_cars_frame,
+            pack_kwargs={"fill": "both", "expand": True},
+        )
         self.persons_cars_frame.pack_forget()
 
         # internal mapping of displayed car entries -> (person_id, car_dict)

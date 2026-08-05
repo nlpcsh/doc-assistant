@@ -70,8 +70,10 @@ class UIMgr:
         owner.input_fields.append((label_key, field_frame, entry))
         return entry
 
-    def add_frame(self, owner, label_key=None, show_by_default=True, padx=10, pady=5):
-        frame = tk.Frame(owner.container)
+    def add_frame(self, owner, label_key=None, show_by_default=True, padx=10, pady=5, container=None):
+        if container is None:
+            container = owner.container
+        frame = tk.Frame(container)
         if label_key:
             ttk.Label(frame, text=self.labels["fields"][label_key]).pack(anchor="w")
         if show_by_default:
@@ -79,6 +81,29 @@ class UIMgr:
         else:
             frame.pack_forget()
         return frame
+
+    def add_label(self, owner, text, container=None, **pack_kwargs):
+        if container is None:
+            container = owner.container
+        label = ttk.Label(container, text=text)
+        label.pack(**pack_kwargs)
+        return label
+
+    def add_listbox(self, owner, options=None, selectmode=MULTIPLE, height=10, exportselection=0, container=None, pack=True, pack_kwargs=None):
+        if container is None:
+            container = owner.container
+        if isinstance(selectmode, str):
+            selectmode = MULTIPLE if selectmode.lower() == "multiple" else None
+        listbox = tk.Listbox(container, selectmode=selectmode, height=height, exportselection=exportselection)
+        if options:
+            for option in options:
+                listbox.insert(END, option)
+        if pack:
+            kwargs = {"padx": 10, "pady": 5, "fill": "x"}
+            if pack_kwargs:
+                kwargs.update(pack_kwargs)
+            listbox.pack(**kwargs)
+        return listbox
 
     def add_checkbox(self, owner, checkbox_text, variable=None, command=None, container=None):
         if container is None:
@@ -238,66 +263,77 @@ class UIMgr:
             combo.current(0)
         return combo
 
-    def add_file_upload(self, owner, label_text, container=None):
-        if container is None:
-            container = owner.container
-
+    def _create_file_upload_frame(self, container, label_text):
         frame = tk.Frame(container)
         frame.pack(fill="x", padx=10, pady=5)
 
         ttk.Label(frame, text=label_text).pack(anchor="w")
         upload_frame = tk.Frame(frame, relief="groove", bd=1)
         upload_frame.pack(fill="x", padx=2, pady=2)
+        return frame, upload_frame
 
+    def _create_file_listbox(self, upload_frame):
         file_listbox = tk.Listbox(upload_frame, height=4, exportselection=0)
         file_listbox.pack(fill="x", padx=6, pady=(6, 2))
+        return file_listbox
+
+    def _add_files_to_list(self, file_paths, selected_files, file_listbox, owner):
+        for file_path in file_paths:
+            normalized_path = path.abspath(file_path)
+            if not normalized_path or normalized_path in selected_files:
+                continue
+            selected_files.append(normalized_path)
+            file_listbox.insert(END, path.basename(normalized_path))
+        owner.uploaded_files = selected_files
+
+    def _extract_file_paths_from_drop(self, dropped_data):
+        if not dropped_data:
+            return []
+        if dropped_data.startswith("{") and dropped_data.endswith("}"):
+            dropped_data = dropped_data[1:-1]
+        if dropped_data.startswith("(") and dropped_data.endswith(")"):
+            dropped_data = dropped_data[1:-1]
+
+        normalized_items = []
+        for raw_item in dropped_data.replace("\n", " ").split():
+            item = raw_item.strip().strip("{}()")
+            if item:
+                normalized_items.append(item)
+        return normalized_items
+
+    def _on_file_drop(self, event, selected_files, file_listbox, owner):
+        file_paths = self._extract_file_paths_from_drop(event.data or "")
+        if file_paths:
+            self._add_files_to_list(file_paths, selected_files, file_listbox, owner)
+        return "break"
+
+    def add_file_upload(self, owner, label_text, container=None):
+        if container is None:
+            container = owner.container
+
+        frame, upload_frame = self._create_file_upload_frame(container, label_text)
+        file_listbox = self._create_file_listbox(upload_frame)
 
         button_row = tk.Frame(upload_frame)
         button_row.pack(fill="x", padx=6, pady=(0, 6))
 
         selected_files = []
-
-        def add_files(file_paths):
-            for file_path in file_paths:
-                normalized_path = path.abspath(file_path)
-                if not normalized_path or normalized_path in selected_files:
-                    continue
-                selected_files.append(normalized_path)
-                file_listbox.insert(END, path.basename(normalized_path))
-                owner.uploaded_files = selected_files
-
-        def browse_for_files():
-            chosen_files = filedialog.askopenfilenames(title="Select files")
-            if chosen_files:
-                add_files(list(chosen_files))
-
-        def handle_drop(event):
-            dropped_data = event.data or ""
-            if not dropped_data:
-                return "break"
-            if dropped_data.startswith("{") and dropped_data.endswith("}"):
-                dropped_data = dropped_data[1:-1]
-            if dropped_data.startswith("(") and dropped_data.endswith(")"):
-                dropped_data = dropped_data[1:-1]
-            file_paths = []
-            for raw_item in dropped_data.replace("\n", " ").split():
-                item = raw_item.strip().strip("{}()")
-                if item:
-                    file_paths.append(item)
-            if file_paths:
-                add_files(file_paths)
-            return "break"
-
-        ttk.Button(button_row, text=self.labels["buttons"]["browse"], command=browse_for_files).pack(side="left")
+        browse_button = ttk.Button(button_row, text=self.labels["buttons"]["browse"], command=lambda: self._browse_for_files(selected_files, file_listbox, owner))
+        browse_button.pack(side="left")
         ttk.Label(button_row, text="Пуснете файлове тук").pack(side="left", padx=(8, 0))
 
         if DND_FILES:
             upload_frame.drop_target_register(DND_FILES)
-            upload_frame.dnd_bind("<<Drop>>", handle_drop)
+            upload_frame.dnd_bind("<<Drop>>", lambda event: self._on_file_drop(event, selected_files, file_listbox, owner))
 
         owner.uploaded_files = selected_files
         owner.file_upload_listbox = file_listbox
         return {"frame": frame, "listbox": file_listbox, "selected_files": selected_files}
+
+    def _browse_for_files(self, selected_files, file_listbox, owner):
+        chosen_files = filedialog.askopenfilenames(title="Select files")
+        if chosen_files:
+            self._add_files_to_list(list(chosen_files), selected_files, file_listbox, owner)
 
     def add_multiselect(self, owner, label_key, options, height=10):
         ttk.Label(owner.container, text=self.labels["fields"][label_key]).pack(anchor="w")
