@@ -37,7 +37,7 @@ class SigningUIBuilder:
             preview_window = self.factory.create_toplevel(owner.winfo_toplevel(), title=self.labels["signing"]["signing_title"], geometry=geometry)
             signer = PdfSigner(preview_window, self.labels)
             signer.preview_pdf_file(pdf_path)
-            preview_window.grab_set()
+            preview_window.focus_set()
 
             owner.preview_window = preview_window
             next_x += x_offset
