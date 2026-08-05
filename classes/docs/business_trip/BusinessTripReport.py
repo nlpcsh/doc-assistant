@@ -102,6 +102,7 @@ class BusinessTripReport(BaseDoc):
         return f"{output_folders['common']}{output_folders['business_trip']}{doc_identifier}{sub_folder}"
 
     def final_action(self):
+        # TODO: set different conditions on changing the status to REPORTED
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())
         if business_trip:
             business_trip["status"] = BTStatus.REPORTED.name

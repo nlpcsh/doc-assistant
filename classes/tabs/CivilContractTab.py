@@ -1,22 +1,17 @@
+from tkinter import ttk
+
 from classes.docs.BaseDoc import BaseDoc
+
+from classes.docs.civil_contract.CivilContractCreate import CivilContractCreate
+from classes.docs.civil_contract.CivilContractReport import CivilContractReport
 
 class CivilContractTab(BaseDoc):
     def __init__(self, parent, data_mgr):
-        super().__init__(parent, data_mgr, "civil_contracts", "contract_template.docx")
+        super().__init__(parent, data_mgr, "civil_contract", [])
 
-        # 1. Add the dropdown using the list 'names_list' from your JSON
-        # self.combo_name = self.add_dropdown("select_person", self.labels["names_list"])
+        sub_nb = ttk.Notebook(self)
+        sub_nb.pack(expand=True, fill="both")
 
-        # 2. Add other fields as usual
-        #self.ent_ssn = self.add_field("ssn")
-        #self.ent_phone = self.add_field("phone")
-
-        self.ui_mgr.add_common_buttons(self, "gen_contract")
-
-    def get_context(self):
-        # IMPORTANT: Use .get() on the combo box to grab the selected name
-        return {
-            # 'name': self.combo_name.get(), 
-            # 'ssn': self.ent_ssn.get(),
-            # 'phone': self.ent_phone.get()
-        }
+        labels = data_mgr.get_labels()
+        sub_nb.add(CivilContractCreate(sub_nb, data_mgr), text=labels["tabs"]["cc_create"])
+        sub_nb.add(CivilContractReport(sub_nb, data_mgr), text=labels["tabs"]["cc_report"])

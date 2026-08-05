@@ -4,7 +4,11 @@
     "civil_contract": "Граждански договор",
     "business_trip": "Командировка",
     "bt_report": "Отчет на командировка",
-    "bt_order": "Командировка"
+    "bt_order": "Командировка",
+    "cc_create": "Създай граждански договор",
+    "cc_report": "Отчет на граждански договор",
+    "civil_contract_create": "Нов граждански договор",
+    "civil_contract_report": "Отчет на граждански договор"
   },
   "fields": {
     "business_trips": "Командировка:",
@@ -34,7 +38,8 @@
     "gen_contract": "Създай граждански договор",
     "gen_business_trip": "Създай заповед и доклад за командировка",
     "get_bt_report": "Създай отчет за командировка",
-    "browse": "Избери..."
+    "browse": "Избери...",
+    "gen_contract_report": "Създай отчет за граждански договор"
   },
   "messages": {
     "success_title": "Успешно",
