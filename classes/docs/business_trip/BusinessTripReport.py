@@ -95,7 +95,6 @@ class BusinessTripReport(BaseDoc):
         self._update_project_leader_id()
 
     def _get_report_output_folder(self):
-        business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get(), {})
         selected_person = self.persons_dropdown.get().strip().split(")", 1)[0].lstrip("(") if self.persons_dropdown.get() else ""
         doc_identifier = self.business_trips_dropdown.get()
         sub_folder = f"/{selected_person}/" if selected_person else "/"
