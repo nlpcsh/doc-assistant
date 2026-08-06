@@ -16,7 +16,15 @@ class CivilContractCreate(BaseDoc):
         self.all_projects = self.ui_mgr.add_dropdown(self, "projects", self.projects_list)
         self.all_projects.bind("<<ComboboxSelected>>", self.on_project_selected)
         self.persons_dropdown = self.ui_mgr.add_dropdown(self, "select_person", [])
-
+        self.cc_start_date = self.ui_mgr.add_date_field(self, "cc_start_date", preselect_today=False)
+        self.cc_task = self.ui_mgr.add_text_field(self, "cc_task")
+        self.cc_task_start_date = self.ui_mgr.add_date_field(self, "cc_task_start_date", preselect_today=False)
+        self.cc_task_end_date = self.ui_mgr.add_date_field(self, "cc_task_end_date", preselect_today=False, min_date_from=self.cc_task_start_date)
+        self.cc_payment_due_date = self.ui_mgr.add_date_field(self, "cc_payment_due_date", preselect_today=False)
+        self.cc_task_amount = self.ui_mgr.add_field(self, "cc_task_amount", width=20)
+        self.cc_task_amount_in_words = self.ui_mgr.add_field(self, "cc_task_amount_in_words", width=70)
+        self.cc_person_responsibility = self.ui_mgr.add_text_field(self, "cc_person_responsibility", height=3, width=70)
+        self.cc_penalty = self.ui_mgr.add_text_field(self, "cc_penalty", height=3, width=70)
 
         self.buttons_frame = self.ui_mgr.add_frame(self, show_by_default=True)
         self.ui_mgr.add_common_buttons(self, "gen_contract", container=self.buttons_frame)
@@ -50,3 +58,18 @@ class CivilContractCreate(BaseDoc):
             self.persons_dropdown.current(0)
         else:
             self.persons_dropdown.set('')
+
+    def get_context(self):
+        self.bt_context = {}
+        self.bt_context["cc_task"] = self.cc_task.get()
+        # get date in format dd.mm.yyyy
+        self.bt_context["cc_start_date"] = self.cc_start_date.get().strftime("%d.%m.%Y") if self.cc_start_date.get() else ""
+        self.bt_context["cc_task_start_date"] = self.cc_task_start_date.get().strftime("%d.%m.%Y") if self.cc_task_start_date.get() else ""
+        self.bt_context["cc_task_end_date"] = self.cc_task_end_date.get().strftime("%d.%m.%Y") if self.cc_task_end_date.get() else ""
+        self.bt_context["cc_payment_due_date"] = self.cc_payment_due_date.get().strftime("%d.%m.%Y") if self.cc_payment_due_date.get() else ""
+        self.bt_context["cc_task_amount"] = self.cc_task_amount.get()
+        self.bt_context["cc_task_amount_in_words"] = self.cc_task_amount_in_words.get()
+        self.bt_context["cc_person_responsibility"] = self.cc_person_responsibility.get()
+        self.bt_context["cc_penalty"] = self.cc_penalty.get()
+
+        return self.bt_context
