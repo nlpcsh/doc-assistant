@@ -5,7 +5,7 @@ from classes.docs.BaseDoc import BaseDoc
 
 class CivilContractCreate(BaseDoc):
     def __init__(self, parent, data_mgr):
-        super().__init__(parent, data_mgr, "civil_contract", ["civil_contract_create.docx", "cc_pl_report.docx"])
+        super().__init__(parent, data_mgr, "civil_contract", ["civil_contract_create.docx", "cc_pl_report.docx"], output_folder='civil_contracts')
         self.setup_ui_components()
         self.preselect_latest_project()
 
@@ -61,15 +61,81 @@ class CivilContractCreate(BaseDoc):
 
     def get_context(self):
         self.bt_context = {}
-        self.bt_context["cc_task"] = self.cc_task.get()
-        # get date in format dd.mm.yyyy
-        self.bt_context["cc_start_date"] = self.cc_start_date.get().strftime("%d.%m.%Y") if self.cc_start_date.get() else ""
-        self.bt_context["cc_task_start_date"] = self.cc_task_start_date.get().strftime("%d.%m.%Y") if self.cc_task_start_date.get() else ""
-        self.bt_context["cc_task_end_date"] = self.cc_task_end_date.get().strftime("%d.%m.%Y") if self.cc_task_end_date.get() else ""
-        self.bt_context["cc_payment_due_date"] = self.cc_payment_due_date.get().strftime("%d.%m.%Y") if self.cc_payment_due_date.get() else ""
-        self.bt_context["cc_task_amount"] = self.cc_task_amount.get()
-        self.bt_context["cc_task_amount_in_words"] = self.cc_task_amount_in_words.get()
-        self.bt_context["cc_person_responsibility"] = self.cc_person_responsibility.get()
-        self.bt_context["cc_penalty"] = self.cc_penalty.get()
+        self._populate_contract_fields()
+
+        self.bt_context["sub_folder"] = ""
+        self.bt_context["doc_date_and_ids_identifier"] = self._build_doc_identifier()
+        self._populate_project_context()
+        self._populate_person_context()
 
         return self.bt_context
+
+    def _populate_contract_fields(self):
+        self.bt_context["cc_task"] = self._get_text_value(self.cc_task)
+        self.bt_context["cc_start_date"] = self._get_date_value(self.cc_start_date)
+        self.bt_context["cc_task_start_date"] = self._get_date_value(self.cc_task_start_date)
+        self.bt_context["cc_task_end_date"] = self._get_date_value(self.cc_task_end_date)
+        self.bt_context["cc_payment_due_date"] = self._get_date_value(self.cc_payment_due_date)
+        self.bt_context["cc_task_amount"] = self._get_text_value(self.cc_task_amount)
+        self.bt_context["cc_task_amount_in_words"] = self._get_text_value(self.cc_task_amount_in_words)
+        self.bt_context["cc_person_responsibility"] = self._get_text_value(self.cc_person_responsibility)
+        self.bt_context["cc_penalty"] = self._get_text_value(self.cc_penalty)
+
+    def _get_text_value(self, widget):
+        try:
+            return widget.get("1.0", "end-1c").strip()
+        except TypeError:
+            return widget.get().strip()
+
+    def _get_date_value(self, widget):
+        value = widget.get().strip()
+        return value.replace("/", ".") if value else ""
+
+    def _build_doc_identifier(self):
+        selected_person_id = self._extract_selected_person_id()
+        return f"{self.bt_context.get('cc_start_date', '')}_{self.all_projects.get()}_{selected_person_id}"
+
+    def _extract_selected_person_id(self):
+        selected_person = self.persons_dropdown.get()
+        return selected_person.split(')')[0].strip('(') if selected_person else ""
+
+    def _populate_project_context(self):
+        selected_project = self.all_projects.get()
+        project = self.data_mgr.get_project_by_id(selected_project)
+        if project:
+            project_lead_id = project.get('project_lead')
+            if project_lead_id:
+                pl = self.data_mgr.get_coworker_by_id(project_lead_id)
+                if pl:
+                    self.bt_context["project_leader_names"] = pl.get('names', 'Unknown')
+                    self.bt_context["project_leader_title"] = pl.get('titles', 'Unknown')
+                    self.bt_context["project_leader_full_name"] = pl.get('full_name', 'Unknown')
+        self.bt_context["project_info"] = project.get('description', 'Unknown') if project else 'Unknown'
+        self.bt_context["project_nb"] = project.get('number', 'Unknown') if project else 'Unknown'
+
+    def _populate_person_context(self):
+        person_id = self._extract_selected_person_id()
+        if not person_id:
+            return
+
+        person = self.data_mgr.get_coworker_by_id(person_id)
+        if not person:
+            return
+
+        self.bt_context["person_full_name"] = person.get('full_name', 'Unknown')
+        self.bt_context["person_titles"] = person.get('titles', 'Unknown')
+        self.bt_context["person_egn"] = person.get('egn', 'Unknown')
+        person_address = person.get('address', 'Unknown')
+        self.bt_context["person_address"] = person_address.get('main_line', 'Unknown') if isinstance(person_address, dict) else person_address
+        self.bt_context["person_zip"] = person_address.get('zip', 'Unknown') if isinstance(person_address, dict) else 'Unknown'
+        self.bt_context["person_city"] = person_address.get('city', 'Unknown') if isinstance(person_address, dict) else 'Unknown'
+        self.bt_context["person_municipality"] = person_address.get('municipality', 'Unknown') if isinstance(person_address, dict) else 'Unknown'
+        person_id_data = person.get('id', {})
+        self.bt_context["person_id_number"] = person_id_data.get('number', 'Unknown')
+        self.bt_context["person_id_issuer"] = person_id_data.get('issuer', 'Unknown')
+        self.bt_context["person_id_issue_date"] = person_id_data.get('issue_date', 'Unknown')
+        self.bt_context["person_bank_account"] = person.get('iban', 'Unknown')
+
+    def final_action(self):
+        # TODO: save civil contract data to the database or perform any final actions after document generation
+        pass
