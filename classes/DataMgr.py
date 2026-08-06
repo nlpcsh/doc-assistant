@@ -45,6 +45,13 @@ class DataMgr:
 
         self.save_data()
 
+    def save_new_civil_contract(self, new_civil_contract):
+        if 'civil_contracts' not in self.data:
+            self.data['civil_contracts'] = {}
+        self.data['civil_contracts'].update(new_civil_contract)
+
+        self.save_data()
+
     def get_all_bussiness_trips_by_status(self, status):
         status_value = getattr(status, 'value', status)
         expected_statuses = {
