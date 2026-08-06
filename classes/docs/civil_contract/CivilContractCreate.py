@@ -15,7 +15,7 @@ class CivilContractCreate(BaseDoc):
         self.projects_list = self.data_mgr.get_all_projects()
         self.all_projects = self.ui_mgr.add_dropdown(self, "projects", self.projects_list)
         self.all_projects.bind("<<ComboboxSelected>>", self.on_project_selected)
-        self.persons_dropdown = self.ui_mgr.add_multiselect(self, "select_person", [])
+        self.persons_dropdown = self.ui_mgr.add_dropdown(self, "select_person", [])
 
 
         self.buttons_frame = self.ui_mgr.add_frame(self, show_by_default=True)
@@ -39,10 +39,14 @@ class CivilContractCreate(BaseDoc):
     def on_project_selected(self, event):
         selected_project = self.all_projects.get()
         project = self.data_mgr.get_project_by_id(selected_project)
+        options = []
         if project:
             team = project.get('team', [])
-            self.persons_dropdown.delete(0, 'end')
             for coworker_id in team:
                 coworker = self.data_mgr.get_coworker_by_id(coworker_id)
-                self.persons_dropdown.insert('end', f"({coworker_id}) {coworker.get('names', 'Unknown')}")
-            self.persons_dropdown.config(height=min(max(len(team), 1), 10))
+                options.append(f"({coworker_id}) {coworker.get('names', 'Unknown')}")
+        self.persons_dropdown['values'] = options
+        if options:
+            self.persons_dropdown.current(0)
+        else:
+            self.persons_dropdown.set('')
