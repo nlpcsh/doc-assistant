@@ -52,17 +52,17 @@ class WidgetFactory:
             listbox.pack(**kwargs)
         return listbox
 
-    def add_entry(self, container, width: int = 30, font=("Arial", 10), pack_kwargs: Optional[Dict[str, Any]] = None):
+    def add_entry(self, container, width: int = 30, pack_kwargs: Optional[Dict[str, Any]] = None):
         entry = ttk.Entry(container, width=width)
-        entry.configure(font=font)
+        entry.configure()
         if pack_kwargs is None:
             pack_kwargs = {}
         entry.pack(**pack_kwargs)
         return entry
 
-    def add_text(self, container, height: int = 4, width: int = 40, wrap: str = "word", font=("Arial", 10), pack_kwargs: Optional[Dict[str, Any]] = None):
+    def add_text(self, container, height: int = 4, width: int = 40, wrap: str = "word", pack_kwargs: Optional[Dict[str, Any]] = None):
         text_widget = tk.Text(container, height=height, width=width, wrap=wrap)
-        text_widget.configure(font=font)
+        text_widget.configure()
         if pack_kwargs is None:
             pack_kwargs = {"fill": "x"}
         text_widget.pack(**pack_kwargs)
