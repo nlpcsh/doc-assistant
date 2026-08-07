@@ -299,17 +299,16 @@ class BusinessTripOrder(BaseDoc):
 
     def final_action(self):
         project_id = self.all_projects.get()
-        bt_from_date = self.bt_context.get("bt_date", "")
-        bt_tytle = f"{bt_from_date}_{project_id}_{'_'.join(self.selected_person_ids)}"
+        bt_title = self.bt_context.get("doc_date_and_ids_identifier", "")
         new_bussiness_trip = {
-            bt_tytle: {
+            bt_title: {
                 "project_id": project_id,
                 "bt_heading": self.bt_context.get("bt_purpose", ""),
                 "bt_order_number": "",
                 "person_ids": self.selected_person_ids,
                 "start_date": self.bt_context.get("bt_from", ""),
                 "end_date": self.bt_context.get("bt_to", ""),
-                "doc_date_and_ids_identifier": self.bt_context.get("doc_date_and_ids_identifier", ""),
+                "doc_date_and_ids_identifier": bt_title,
                 "bt_travel_with": self.bt_context.get("bt_travel_with", ""),
                 "bt_day_money_from": self.bt_context.get("bt_day_money_from", ""),
                 "bt_nights_money_from": self.bt_context.get("bt_nights_money_from", ""),
