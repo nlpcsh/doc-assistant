@@ -323,6 +323,7 @@ class BusinessTripOrder(BaseDoc):
                 "leader_full_name": self.bt_context.get("leader_full_name", ""),
                 "leader_work_place": self.bt_context.get("leader_work_place", ""),
                 "bt_all_persons": self.bt_context.get("bt_all_persons", ""),
+                "reported_ids": [],
                 "status": BTStatus.GENERATED.name
             }
         }
