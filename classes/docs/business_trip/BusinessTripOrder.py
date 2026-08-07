@@ -161,8 +161,11 @@ class BusinessTripOrder(BaseDoc):
     def get_all_persons_names_for_bt(self):
         result = ""
         nb = 1
+        selected_persons_count = len(self.selected_persons)
         for co_worker in self.selected_persons:
-            result += f"{nb}.\t{co_worker['titles']} {co_worker['full_name']}, {co_worker['department']}, {co_worker['work_place']}\n"
+            result += f"{nb}.\t{co_worker['titles']} {co_worker['full_name']}, {co_worker['department']}, {co_worker['work_place']}"
+            if selected_persons_count > nb:
+                result += '\n'
             nb += 1
         return result
 
@@ -273,6 +276,15 @@ class BusinessTripOrder(BaseDoc):
             if car_details:
                 self.bt_context["bt_travel_money_from"] += " " + car_details
 
+    def _get_date_value(self, widget, date_format="%d.%m.%Y"):
+        value = widget.get()
+        if value:
+            try:
+                return datetime.strptime(value, '%d/%m/%Y').strftime(date_format)
+            except ValueError:
+                pass
+        return ""
+
     def get_context(self):
         self.bt_context = {}
         self.add_project_and_person_data()
@@ -281,7 +293,8 @@ class BusinessTripOrder(BaseDoc):
         self.process_money_sources()
         self.process_travel_options()
         self.bt_context["sub_folder"] = ""
-        self.bt_context["doc_date_and_ids_identifier"] = self.bt_context.get("bt_date", "") + "_" + self.all_projects.get() + "_" + "_".join(self.selected_person_ids)
+        bt_start_date = self._get_date_value(self.date_from, date_format='%Y_%m_%d')
+        self.bt_context["doc_date_and_ids_identifier"] = bt_start_date + "_" + self.all_projects.get() + "_" + "_".join(self.selected_person_ids)
         return self.bt_context
 
     def final_action(self):
