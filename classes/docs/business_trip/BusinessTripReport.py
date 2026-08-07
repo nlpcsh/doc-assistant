@@ -2,8 +2,6 @@ from classes.docs.BaseDoc import BaseDoc
 from enums.Enums import BTStatus
 from Helpers import Helpers
 
-from os import path
-
 class BusinessTripReport(BaseDoc):
     def __init__(self, parent, data_mgr):
         super().__init__(parent, data_mgr, "business_trip", [])
@@ -117,16 +115,11 @@ class BusinessTripReport(BaseDoc):
         leader_id = project.get("project_lead")
         leader = self.data_mgr.get_coworker_by_id(leader_id) or {}
 
-        selected_person = self.persons_dropdown.get().strip().split(")", 1)[0].lstrip("(") if self.persons_dropdown.get() else None
-        selected_person_ids = []
-        if selected_person:
-            selected_person_ids = [selected_person.split(")", 1)[0].lstrip("(")]
-        if not selected_person_ids:
-            selected_person_ids = list(business_trip.get("person_ids", []))
         all_bt_persons = [
             self.data_mgr.get_coworker_by_id(person_id) or {}
-            for person_id in selected_person_ids
+            for person_id in business_trip.get("person_ids", "")
         ]
+
         persons_bank_info = "\n".join(
             f"{index}.\t{person.get('titles', '')} {person.get('full_name', '')}, "
             f"IBAN: {person.get('iban', '')}"
@@ -141,6 +134,13 @@ class BusinessTripReport(BaseDoc):
             self.template_names.append("business_trip_report_personal.docx")
 
         doc_date_and_ids_identifier = self.business_trips_dropdown.get()
+
+        selected_person = self.persons_dropdown.get().strip().split(")", 1)[0].lstrip("(") if self.persons_dropdown.get() else None
+        selected_person_ids = []
+        if selected_person:
+            selected_person_ids = [selected_person.split(")", 1)[0].lstrip("(")]
+        if not selected_person_ids:
+            selected_person_ids = list(business_trip.get("person_ids", []))
 
         return {
             "bt_person_title": #selected co-worker's title
