@@ -40,7 +40,7 @@ class BusinessTripReport(BaseDoc):
         )
 
         self.uploaded_files = []
-        self.ui_mgr.add_file_upload(self, self.labels["fields"]["attachments"])
+        self.ui_mgr.add_file_upload(self, self.labels["fields"]["attachments"], container=self.report_fields_frame)
 
         self.buttons_frame = self.ui_mgr.add_frame(self, show_by_default=True)
         self.ui_mgr.add_common_buttons(self, "get_bt_report", container=self.buttons_frame)
