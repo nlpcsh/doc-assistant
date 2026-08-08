@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from classes.docs.BaseDoc import BaseDoc
+from classes.docs.civil_contract.CivilContractExporter import CivilContractExporter
 from enums.Enums import CCStatus
 
 class CivilContractCreate(BaseDoc):
@@ -152,15 +153,11 @@ class CivilContractCreate(BaseDoc):
         person_id = self._extract_selected_person_id()
         cc_title = self.cc_context["doc_date_and_ids_identifier"]
         new_civil_contract = {
-            cc_title: {
-                "project_id": project_id,
-                "cc_task": self.cc_context["cc_task"],
-                "cc_number": "",
-                "person_id": person_id,
-                "cc_task_start_date": self.cc_context["cc_task_start_date"],
-                "cc_task_end_date": self.cc_context["cc_task_end_date"],
-                "doc_date_and_ids_identifier": cc_title,
-                "status": CCStatus.GENERATED.name
-            }
+            cc_title: CivilContractExporter.build_civil_contract_payload(
+                contract_title=cc_title,
+                project_id=project_id,
+                person_id=person_id,
+                context=self.cc_context,
+            )
         }
         self.data_mgr.save_new_civil_contract(new_civil_contract)
