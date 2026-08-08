@@ -17,7 +17,8 @@ if __name__ == "__main__":
             pass  # Use system default
 
     root = Tk()
-
+    icon = root.tk.PhotoImage(file="icon.svg")
+    root.iconphoto(True, icon)
     # Configure Tkinter for Unicode support
     if platform.system() == 'Linux':
         default_font = ('Liberation Sans', 10)
