@@ -102,16 +102,18 @@ class BusinessTripOrderEdit(BusinessTripOrder):
     def final_action(self):
         if not self.selected_business_trip_id:
             return
-
-        current_trip = self.data_mgr.data["business_trips"].get(self.selected_business_trip_id, {})
+        business_trip_id = self.business_trips_dropdown.get()
         context = self.bt_context
-        current_trip.update({
+        edited_business_trip_id = context.get("doc_date_and_ids_identifier", '')
+        edited_business_trip = {
             "project_id": self.all_projects.get(),
             "bt_heading": context.get("bt_purpose", ""),
+            "bt_order_number": "",
+            "based_on": business_trip_id,
             "person_ids": self.selected_person_ids,
             "start_date": context.get("bt_from", ""),
             "end_date": context.get("bt_to", ""),
-            "doc_date_and_ids_identifier": context.get("doc_date_and_ids_identifier", ""),
+            "doc_date_and_ids_identifier": edited_business_trip_id,
             "bt_travel_with": context.get("bt_travel_with", ""),
             "bt_day_money_from": context.get("bt_day_money_from", ""),
             "bt_nights_money_from": context.get("bt_nights_money_from", ""),
@@ -126,6 +128,8 @@ class BusinessTripOrderEdit(BusinessTripOrder):
             "leader_full_name": context.get("leader_full_name", ""),
             "leader_work_place": context.get("leader_work_place", ""),
             "bt_all_persons": context.get("bt_all_persons", ""),
-        })
-        self.data_mgr.data["business_trips"][self.selected_business_trip_id] = current_trip
+            "reported_ids": [],
+            "status": BTStatus.GENERATED.name,
+        }
+        self.data_mgr.data["business_trips"][edited_business_trip_id] = edited_business_trip
         self.data_mgr.save_data()
