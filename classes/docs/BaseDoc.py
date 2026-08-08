@@ -64,7 +64,14 @@ class BaseDoc(ttk.Frame):
             for template in self.template_names:
                 doc = DocxTemplate(self.template_dir + template)
 
-                doc.render(context)
+                try:
+                    doc.render(context)
+                except Exception as render_exc:
+                    # Surface template rendering errors with template name and traceback
+                    import traceback
+                    tb = traceback.format_exc()
+                    raise RuntimeError(f"Template render error in {template}: {render_exc}\n{tb}")
+
                 out_docx = f"{context['doc_date_and_ids_identifier']}_{template}"
                 doc.save(out_docx)
                 generated_docx.append(out_docx)
