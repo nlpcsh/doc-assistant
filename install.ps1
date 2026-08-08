@@ -50,7 +50,7 @@ if ($desktopPath) {
     $shortcut.Description = 'Launch Doc Assistant'
 
     # Custom icon
-    $iconPath = Join-Path $RepoRoot 'icon.ico'
+    $iconPath = Join-Path $PSScriptRoot 'icon.ico'
     if (Test-Path $iconPath) {
         $shortcut.IconLocation = $iconPath
     } else {
