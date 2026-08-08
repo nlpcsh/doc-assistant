@@ -53,13 +53,18 @@ class DataMgr:
         self.save_data()
 
     def get_all_bussiness_trips_by_status(self, status):
-        status_value = getattr(status, 'value', status)
-        expected_statuses = {
-            status,
-            status_value,
-            str(status_value),
-            getattr(status, 'name', status),
-        }
+        """Return business trips whose status matches any supplied status."""
+        statuses = status if isinstance(status, (list, tuple, set, frozenset)) else [status]
+        expected_statuses = set()
+        for candidate in statuses:
+            status_value = getattr(candidate, 'value', candidate)
+            expected_statuses.update({
+                candidate,
+                status_value,
+                str(status_value),
+                getattr(candidate, 'name', candidate),
+            })
+
         return {
             k: v for k, v in self.data.get('business_trips', {}).items()
             if v.get('status') in expected_statuses

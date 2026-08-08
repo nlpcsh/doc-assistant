@@ -6,8 +6,7 @@ class BusinessTripReport(BaseDoc):
     def __init__(self, parent, data_mgr):
         super().__init__(parent, data_mgr, "business_trip", [])
         self.data_mgr.update_business_trip_statuses()
-        # TODO: get bt by list os statuses:
-        self.current_bts_to_report = self.data_mgr.get_all_bussiness_trips_by_status(BTStatus.READY_TO_REPORT)
+        self.current_bts_to_report = self.data_mgr.get_all_bussiness_trips_by_status([BTStatus.READY_TO_REPORT, BTStatus.PL_REPORTED])
         self.project_leader_id = None
         self.setup_ui_components()
         self.preselect_latest_business_trip()
@@ -147,18 +146,17 @@ class BusinessTripReport(BaseDoc):
 
     def final_action(self):
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())
-        if business_trip:
-            # TODO: verify this logic
-            if self.bt_context['leader_id'] == self.bt_context['selected_person_id'] or self.generate_only_report_checkbox:
-                business_trip['status'] == BTStatus.PL_REPORTED.name
-            if self.bt_context['selected_person_id'] not in business_trip['reported_ids']:
-                business_trip['reported_ids'].append(self.bt_context['selected_person_id'])
-            if len(business_trip['person_ids']) == len(business_trip['reported_ids']) and business_trip['status'] == BTStatus.PL_REPORTED.name:
-                business_trip['status'] = BTStatus.REPORTED.name
-            report_folder = self._get_report_output_folder()
-            if getattr(self, "uploaded_files", None):
-                Helpers.copy_files_to_folder(self.uploaded_files, report_folder)
-            self.data_mgr.save_data()
+        if self.bt_context['selected_person_id'] not in business_trip['reported_ids']:
+            business_trip['reported_ids'].append(self.bt_context['selected_person_id'])
+        is_all_persons_reported = len(business_trip['person_ids']) == len(business_trip['reported_ids'])
+        if self.bt_context['leader_id'] == self.bt_context['selected_person_id'] or self.generate_only_report_checkbox.get() == 1:
+            business_trip['status'] = BTStatus.PL_REPORTED.name
+        if is_all_persons_reported and business_trip['status'] == BTStatus.PL_REPORTED.name:
+            business_trip['status'] = BTStatus.REPORTED.name
+        report_folder = self._get_report_output_folder()
+        if getattr(self, "uploaded_files", None):
+            Helpers.copy_files_to_folder(self.uploaded_files, report_folder)
+        self.data_mgr.save_data()
 
     def _field_value(self, field_key):
         for key, _, widget in self.input_fields:
