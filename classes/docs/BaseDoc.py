@@ -9,7 +9,7 @@ from ui.UIMgr import UIMgr
 
 class BaseDoc(ttk.Frame):
     """Parent class containing shared logic for all document tabs."""
-    def __init__(self, parent, data_mgr, template_dir, template_names):
+    def __init__(self, parent, data_mgr, template_dir, template_names, output_folder='business_trip'):
         super().__init__(parent)
         self.data_mgr = data_mgr
         self.labels = self.data_mgr.get_labels()
@@ -18,6 +18,8 @@ class BaseDoc(ttk.Frame):
         self.template_dir = base_dir + "/templates/" + template_dir + "/"
         self.template_group = template_dir
         self.template_names = template_names if isinstance(template_names, list) else [template_names]
+        self.output_folder = output_folder
+
         self.ui_mgr = UIMgr(data_mgr)
 
         self.ui_mgr.initialize_document_container(self)
@@ -59,7 +61,7 @@ class BaseDoc(ttk.Frame):
 
                 # Move files to output folder
                 output_folders = self.data_mgr.get_output_folders()
-                move_path = f"{output_folders['common']}{output_folders['business_trip']}{context['doc_date_and_ids_identifier']}{context['sub_folder']}"
+                move_path = f"{output_folders['common']}{output_folders[self.output_folder]}{context['doc_date_and_ids_identifier']}{context['sub_folder']}"
                 if not path.exists(move_path):
                     makedirs(move_path, exist_ok=True)
                 # Only move PDF file

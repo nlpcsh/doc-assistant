@@ -2,13 +2,11 @@ from classes.docs.BaseDoc import BaseDoc
 from enums.Enums import BTStatus
 from Helpers import Helpers
 
-from os import path
-
 class BusinessTripReport(BaseDoc):
     def __init__(self, parent, data_mgr):
         super().__init__(parent, data_mgr, "business_trip", [])
         self.data_mgr.update_business_trip_statuses()
-        self.current_bts_to_report = self.data_mgr.get_all_bussiness_trips_by_status(BTStatus.READY_TO_REPORT)
+        self.current_bts_to_report = self.data_mgr.get_all_bussiness_trips_by_status([BTStatus.READY_TO_REPORT, BTStatus.PL_REPORTED])
         self.project_leader_id = None
         self.setup_ui_components()
         self.preselect_latest_business_trip()
@@ -40,7 +38,7 @@ class BusinessTripReport(BaseDoc):
         )
 
         self.uploaded_files = []
-        self.ui_mgr.add_file_upload(self, self.labels["fields"]["attachments"])
+        self.ui_mgr.add_file_upload(self, self.labels["fields"]["attachments"], container=self.report_fields_frame)
 
         self.buttons_frame = self.ui_mgr.add_frame(self, show_by_default=True)
         self.ui_mgr.add_common_buttons(self, "get_bt_report", container=self.buttons_frame)
@@ -94,38 +92,18 @@ class BusinessTripReport(BaseDoc):
             self.ui_mgr.set_field_value(self, "bt_order_number", bt_order_number)
         self._update_project_leader_id()
 
-    def _get_report_output_folder(self):
-        selected_person = self.persons_dropdown.get().strip().split(")", 1)[0].lstrip("(") if self.persons_dropdown.get() else ""
-        doc_identifier = self.business_trips_dropdown.get()
-        sub_folder = f"/{selected_person}/" if selected_person else "/"
-        output_folders = self.data_mgr.get_output_folders()
-        return f"{output_folders['common']}{output_folders['business_trip']}{doc_identifier}{sub_folder}"
-
-    def final_action(self):
-        business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())
-        if business_trip:
-            business_trip["status"] = BTStatus.REPORTED.name
-            report_folder = self._get_report_output_folder()
-            if getattr(self, "uploaded_files", None):
-                Helpers.copy_files_to_folder(self.uploaded_files, report_folder)
-            self.data_mgr.save_data()
-
     def get_context(self):
+        self.bt_context = {}
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get(), {})
         project = self.data_mgr.get_project_by_id(business_trip.get("project_id", "")) or {}
         leader_id = project.get("project_lead")
+        self.bt_context['leader_id'] = leader_id
         leader = self.data_mgr.get_coworker_by_id(leader_id) or {}
-
-        selected_person = self.persons_dropdown.get().strip().split(")", 1)[0].lstrip("(") if self.persons_dropdown.get() else None
-        selected_person_ids = []
-        if selected_person:
-            selected_person_ids = [selected_person.split(")", 1)[0].lstrip("(")]
-        if not selected_person_ids:
-            selected_person_ids = list(business_trip.get("person_ids", []))
         all_bt_persons = [
             self.data_mgr.get_coworker_by_id(person_id) or {}
-            for person_id in selected_person_ids
+            for person_id in business_trip.get("person_ids", "")
         ]
+
         persons_bank_info = "\n".join(
             f"{index}.\t{person.get('titles', '')} {person.get('full_name', '')}, "
             f"IBAN: {person.get('iban', '')}"
@@ -141,23 +119,44 @@ class BusinessTripReport(BaseDoc):
 
         doc_date_and_ids_identifier = self.business_trips_dropdown.get()
 
+        self.bt_context['selected_person_id'] = self.persons_dropdown.get().strip().split(")", 1)[0].lstrip("(") if self.persons_dropdown.get() else None
+        selected_person = self.data_mgr.get_coworker_by_id(self.bt_context['selected_person_id'])
+
         return {
-            "bt_person_title": #selected co-worker's title
-                self.data_mgr.get_coworker_by_id(selected_person_ids[0]).get("titles", "") if selected_person_ids else "",
-            "bt_person_names": #selected co-worker's full name
-                self.data_mgr.get_coworker_by_id(selected_person_ids[0]).get("full_name", "") if selected_person_ids else "",
+            "bt_person_title": selected_person.get("titles", ""),
+            "bt_person_names": selected_person.get("full_name", ""),
             "bt_headline": business_trip.get("bt_heading", ""),
             "leader_titles": leader.get("titles", ""),
             "leader_names": leader.get("names", ""),
             "bt_order_number": self._field_value("bt_order_number"),
             "bt_personal_report": self._field_value("bt_personal_report"),
-            "person_id": "_".join(selected_person_ids),
+            "person_id": self.bt_context['selected_person_id'],
             "persons_bank_info": persons_bank_info,
             "current_date": Helpers.get_current_date_str(dateformat="%d.%m.%Y"),
             "bt_contract_info": project.get("description", ""),
             "doc_date_and_ids_identifier": doc_date_and_ids_identifier,
-            "sub_folder": f"/{selected_person}/",
+            "sub_folder": f"/{self.bt_context['selected_person_id']}/",
         }
+
+    def _get_report_output_folder(self):
+        doc_identifier = self.business_trips_dropdown.get()
+        sub_folder = f"/{self.bt_context['selected_person_id']}/" if self.bt_context['selected_person_id'] else "/"
+        output_folders = self.data_mgr.get_output_folders()
+        return f"{output_folders['common']}{output_folders['business_trip']}{doc_identifier}{sub_folder}"
+
+    def final_action(self):
+        business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())
+        if self.bt_context['selected_person_id'] not in business_trip['reported_ids']:
+            business_trip['reported_ids'].append(self.bt_context['selected_person_id'])
+        is_all_persons_reported = len(business_trip['person_ids']) == len(business_trip['reported_ids'])
+        if self.bt_context['leader_id'] == self.bt_context['selected_person_id'] or self.generate_only_report_checkbox.get() == 1:
+            business_trip['status'] = BTStatus.PL_REPORTED.name
+        if is_all_persons_reported and business_trip['status'] == BTStatus.PL_REPORTED.name:
+            business_trip['status'] = BTStatus.REPORTED.name
+        report_folder = self._get_report_output_folder()
+        if getattr(self, "uploaded_files", None):
+            Helpers.copy_files_to_folder(self.uploaded_files, report_folder)
+        self.data_mgr.save_data()
 
     def _field_value(self, field_key):
         for key, _, widget in self.input_fields:

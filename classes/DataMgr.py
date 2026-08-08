@@ -45,14 +45,26 @@ class DataMgr:
 
         self.save_data()
 
+    def save_new_civil_contract(self, new_civil_contract):
+        if 'civil_contracts' not in self.data:
+            self.data['civil_contracts'] = {}
+        self.data['civil_contracts'].update(new_civil_contract)
+
+        self.save_data()
+
     def get_all_bussiness_trips_by_status(self, status):
-        status_value = getattr(status, 'value', status)
-        expected_statuses = {
-            status,
-            status_value,
-            str(status_value),
-            getattr(status, 'name', status),
-        }
+        """Return business trips whose status matches any supplied status."""
+        statuses = status if isinstance(status, (list, tuple, set, frozenset)) else [status]
+        expected_statuses = set()
+        for candidate in statuses:
+            status_value = getattr(candidate, 'value', candidate)
+            expected_statuses.update({
+                candidate,
+                status_value,
+                str(status_value),
+                getattr(candidate, 'name', candidate),
+            })
+
         return {
             k: v for k, v in self.data.get('business_trips', {}).items()
             if v.get('status') in expected_statuses
@@ -60,7 +72,7 @@ class DataMgr:
 
     def save_data(self):
         with open(path.join(self.base_dir, 'data/data.json'), 'w', encoding='utf-8') as f:
-            json.dump(self.data, f, indent=4)
+            json.dump(self.data, f, indent=4, ensure_ascii=False)
 
     def update_business_trip_statuses(self):
         if 'business_trips' not in self.data:
