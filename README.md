@@ -1,57 +1,58 @@
 # doc-assistant
 
-A Tkinter-based assistant for generating administrative documents such as business trip orders and civil contracts. The application reads project and coworker data from JSON, populates document templates, converts them to PDF, and can preview and sign the generated PDF with a visible signature.
+A Tkinter-based desktop assistant for generating administrative documents such as business trip orders, business trip reports, civil contract drafts, and civil contract reports. The application reads project and coworker data from JSON, populates DOCX templates, converts them to PDF, and can preview and sign generated files.
 
-## Current functionality
-
-### Main application
+## What the app does
 
 - Launches a desktop UI with a notebook-style interface.
 - Provides separate tabs for:
   - business trip documents
   - civil contract documents
+- Generates documents from DOCX templates using the selected project, person, and form data.
+- Converts generated DOCX files to PDF using LibreOffice or, when available, docx2pdf.
+- Supports PDF preview and visible signature placement.
+- Can sign PDFs with a certificate file (for example PKCS#12 / PFX).
+
+## Main workflows
 
 ### Business trip workflow
 
-- Selects a project and a person from the loaded data.
-- Fills in trip details such as:
-  - purpose
-  - destination
-  - travel dates
-  - daily/night/travel expenses
-- Uses the selected values to build the document context and generate the business trip documents from DOCX templates.
-- Converts the generated DOCX files to PDF using LibreOffice/Office-compatible tools.
-- If LibreOffice is not available, the app will try local Word conversion via `docx2pdf` when Office is installed.
-- Opens the generated PDF preview so the user can place a visible signature.
+- Select a project and one or more coworkers.
+- Fill in trip details such as purpose, destination, travel dates, and expense options.
+- Generate business trip order and report documents from the configured templates.
+- Save generated records and route outputs into the configured output folders.
 
 ### Civil contract workflow
 
-- Provides a contract document generation flow from the civil contract tab.
-- Uses the shared document generation pipeline to create and process the document.
-
-### Signature and PDF handling
-
-- Allows the user to select a signature image.
-- Opens a preview of the generated PDF.
-- Lets the user click inside the preview to place a visible signature rectangle.
-- Supports signing the PDF using a certificate file (for example PKCS#12 / PFX).
-- Saves the signed output as a PDF and opens it after signing.
+- Select a project and a person.
+- Fill in contract details such as task description, dates, amount, and responsibilities.
+- Generate civil contract creation and reporting documents from the corresponding DOCX templates.
 
 ## Project structure
 
 - main.py — application entry point
+- Helpers.py — shared utility methods and common export helpers
 - classes/MainApp.py — app bootstrapper
-- classes/UIMgr.py — centralized UI management and widget creation
-- classes/docs/BaseDoc.py — shared document generation and signing logic
-- classes/DataMgr.py — JSON data and label loading
+- classes/DataMgr.py — JSON data loading and persistence helpers
 - classes/docs/ — document-specific implementations
+  - classes/docs/business_trip/ — business trip order/report logic and export helpers
+  - classes/docs/civil_contract/ — civil contract create/report logic and export helpers
+- classes/tabs/ — tab container wiring for the UI
+- ui/ — UI management and widget creation helpers
 - templates/ — DOCX templates used for document generation
-- data/ — data source files such as projects and coworkers
-- settings/ — labels and UI text
+- data/ — input data files such as projects and coworkers
+- settings/ — labels and UI text configuration
+- tests/ — unit tests for document export and report helpers
 
 ## Requirements
 
-Install the Python dependencies required by the project, including:
+Install the dependencies from requirements.txt:
+
+```bash
+pip install -r requirements.txt
+```
+
+The most important runtime packages include:
 
 - tkinter
 - docxtpl
@@ -61,9 +62,9 @@ Install the Python dependencies required by the project, including:
 - pyhanko
 - cryptography
 - tkcalendar
-- docx2pdf (for Word-based DOCX-to-PDF conversion on Windows/macOS)
+- docx2pdf (optional, for Word-based DOCX-to-PDF conversion on Windows/macOS)
 
-## Install the app
+## Installation
 
 ### Linux
 
@@ -82,7 +83,7 @@ From the project root, run:
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-### Run the app
+## Run the app
 
 After the environment is activated, run:
 
@@ -90,7 +91,14 @@ After the environment is activated, run:
 python main.py
 ```
 
+## Run the tests
+
+```bash
+python -m unittest discover -s tests
+```
+
 ## Notes
 
-- The application expects LibreOffice to be installed and available in PATH for DOCX-to-PDF conversion.
-- The UI and labels are configured through the JSON files in the settings and data folders.
+- LibreOffice should be installed and available in PATH for DOCX-to-PDF conversion.
+- If LibreOffice is unavailable, the app will try docx2pdf when it is installed.
+- The UI labels and some defaults are configured through the JSON files in the settings and data folders.
