@@ -1,4 +1,5 @@
 from tkinter import ttk
+import platform
 import threading
 import subprocess
 import shutil
@@ -31,6 +32,22 @@ class BaseDoc(ttk.Frame):
                 return path_value
         return None
 
+    def _try_docx2pdf(self, out_docx):
+        try:
+            from docx2pdf import convert
+        except ImportError:
+            return False
+
+        if platform.system() not in ('Windows', 'Darwin'):
+            return False
+
+        pdf_path = out_docx.replace('.docx', '.pdf')
+        try:
+            convert(out_docx, pdf_path)
+            return path.exists(pdf_path)
+        except Exception:
+            return False
+
     def get_signature(self):
         self.sig_path = self.ui_mgr.ask_open_filename(filetypes=[("Images", "*.png *.jpg *.jpeg")])
 
@@ -53,11 +70,12 @@ class BaseDoc(ttk.Frame):
                 generated_docx.append(out_docx)
 
                 office_converter = self._find_office_converter()
-                if not office_converter:
-                    raise FileNotFoundError(
-                        "LibreOffice converter not found. Install LibreOffice and ensure 'lowriter', 'soffice', or 'libreoffice' is available in PATH."
-                    )
-                subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx], check=True)
+                if office_converter:
+                    subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx], check=True)
+                elif self._try_docx2pdf(out_docx):
+                    print(f"Converted {out_docx} to PDF using docx2pdf.")
+                else:
+                    raise RuntimeError("No suitable method found to convert DOCX to PDF. Please install LibreOffice or docx2pdf.")
 
                 # Move files to output folder
                 output_folders = self.data_mgr.get_output_folders()
