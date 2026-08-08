@@ -52,6 +52,14 @@ class BusinessTripOrderEdit(BusinessTripOrder):
         self._set_entry_by_key("bt_other_expences", business_trip.get("bt_other_expences", ""))
         self._select_travel_options(business_trip.get("bt_travel_with", ""))
 
+    def get_context(self):
+        """Build the order context with a separate identifier for edited files."""
+        context = super().get_context()
+        identifier = context.get("doc_date_and_ids_identifier", "")
+        if identifier and not identifier.endswith("_Edited"):
+            context["doc_date_and_ids_identifier"] = identifier + "_Edited"
+        return context
+
     def _select_persons(self, person_ids):
         self.persons_dropdown.selection_clear(0, "end")
         person_ids = set(person_ids or [])
