@@ -61,13 +61,12 @@ class CivilContractReport(BaseDoc):
             "project_info": project.get("description", ""),
             "leader_titles": project_leader.get("titles", ""),
             "leader_names": project_leader.get("names", ""),
-            "project_leader_names": project_leader.get("full_name", ""),
+            "cc_person_titles": person.get("titles", ""),
             "cc_person_names": person.get("full_name", person.get("names", "")),
             "person_titles": person.get("titles", ""),
             "person_names": person.get("full_name", person.get("names", "")),
             "personal_report": self._field_value("personal_report"),
             "completed_task_description": self._field_value("completed_task_description"),
-            "current_date": Helpers.get_current_date_str(dateformat="%d.%m.%Y"),
             "cc_report_date": Helpers.get_current_date_str(dateformat="%d.%m.%Y"),
             "doc_date_and_ids_identifier": contract.get(
                 "doc_date_and_ids_identifier", contract_id
