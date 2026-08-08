@@ -1,4 +1,5 @@
 from classes.docs.BaseDoc import BaseDoc
+from classes.docs.business_trip.BusinessTripExporter import BusinessTripExporter
 from datetime import datetime
 from enums.Enums import BTStatus
 
@@ -305,30 +306,11 @@ class BusinessTripOrder(BaseDoc):
         project_id = self.all_projects.get()
         bt_title = self.bt_context.get("doc_date_and_ids_identifier", "")
         new_bussiness_trip = {
-            bt_title: {
-                "project_id": project_id,
-                "bt_heading": self.bt_context.get("bt_purpose", ""),
-                "bt_order_number": "",
-                "person_ids": self.selected_person_ids,
-                "start_date": self.bt_context.get("bt_from", ""),
-                "end_date": self.bt_context.get("bt_to", ""),
-                "doc_date_and_ids_identifier": bt_title,
-                "bt_travel_with": self.bt_context.get("bt_travel_with", ""),
-                "bt_day_money_from": self.bt_context.get("bt_day_money_from", ""),
-                "bt_nights_money_from": self.bt_context.get("bt_nights_money_from", ""),
-                "bt_travel_money_from": self.bt_context.get("bt_travel_money_from", ""),
-                "bt_destination": self.bt_context.get("bt_destination", ""),
-                "bt_euro_per_day": self.bt_context.get("bt_euro_per_day", ""),
-                "bt_nights_max_value": self.bt_context.get("bt_nights_max_value", ""),
-                "bt_other_expences": self.bt_context.get("bt_other_expences", ""),
-                "bt_contract_info": self.bt_context.get("bt_contract_info", ""),
-                "leader_titles": self.bt_context.get("leader_titles", ""),
-                "leader_names": self.bt_context.get("leader_names", ""),
-                "leader_full_name": self.bt_context.get("leader_full_name", ""),
-                "leader_work_place": self.bt_context.get("leader_work_place", ""),
-                "bt_all_persons": self.bt_context.get("bt_all_persons", ""),
-                "reported_ids": [],
-                "status": BTStatus.GENERATED.name
-            }
+            bt_title: BusinessTripExporter.build_business_trip_payload(
+                bt_title=bt_title,
+                project_id=project_id,
+                context=self.bt_context,
+                selected_person_ids=self.selected_person_ids,
+            )
         }
         self.data_mgr.save_new_bussiness_trip(new_bussiness_trip)
