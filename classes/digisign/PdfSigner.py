@@ -7,7 +7,7 @@ from tkinter import Tk, Event, IntVar, Frame, BooleanVar, StringVar
 from PIL import Image, ImageTk
 import fitz
 from PyPDF2 import PdfReader, PdfWriter
-from reportlab.lib.units import inch
+from reportlab.lib.units import cm
 
 from classes.digisign.DataClasses import SignaturePlacement, CertificateInfo
 from classes.digisign.CertificateManager import CertificateManager
@@ -16,8 +16,8 @@ from classes.digisign.PdfPreviewRenderer import PdfPreviewRenderer
 from classes.digisign.SignatureOverlay import SignatureOverlay
 from ui.UIMgr import UIMgr
 
-DEFAULT_WIDTH = 3 * inch
-DEFAULT_HEIGHT = 1 * inch
+DEFAULT_WIDTH = 8 * cm
+DEFAULT_HEIGHT = 3 * cm
 
 class PdfSigner:
     """

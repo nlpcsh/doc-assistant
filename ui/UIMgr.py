@@ -17,6 +17,16 @@ class UIMgr:
 
         notebook = ttk.Notebook(root)
         notebook.pack(expand=True, fill="both")
+
+        style = ttk.Style(root)
+        style.configure("TNotebook", background="#f0f0f0")
+        style.configure("TNotebook.Tab", padding=[5, 3], background="#d0d0d0", foreground="#222222")
+        style.map(
+            "TNotebook.Tab",
+            background=[("selected", "#4a4a4a"), ("active", "#6b6b6b")],
+            foreground=[("selected", "blue"), ("active", "blue")],
+        )
+
         return notebook
 
     def build_app_tabs(self, notebook):

@@ -21,6 +21,7 @@ A Tkinter-based assistant for generating administrative documents such as busine
   - daily/night/travel expenses
 - Uses the selected values to build the document context and generate the business trip documents from DOCX templates.
 - Converts the generated DOCX files to PDF using LibreOffice/Office-compatible tools.
+- If LibreOffice is not available, the app will try local Word conversion via `docx2pdf` when Office is installed.
 - Opens the generated PDF preview so the user can place a visible signature.
 
 ### Civil contract workflow
@@ -60,6 +61,7 @@ Install the Python dependencies required by the project, including:
 - pyhanko
 - cryptography
 - tkcalendar
+- docx2pdf (for Word-based DOCX-to-PDF conversion on Windows/macOS)
 
 ## Install the app
 
