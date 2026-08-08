@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="${1:-$ROOT_DIR/.venv}"
 PYTHON_BIN="${PYTHON_BIN:-}"
+ICON_FILE="$APP_DIR/icon.svg"
 
 if [ -z "$PYTHON_BIN" ]; then
   if command -v python3 >/dev/null 2>&1; then
@@ -38,6 +39,7 @@ Type=Application
 Name=Doc Assistant
 Comment=Generate administrative documents
 Exec=$VENV_DIR/bin/python "$ROOT_DIR/main.py"
+Icon=$ICON_FILE
 Path=$ROOT_DIR
 Terminal=false
 Categories=Office;

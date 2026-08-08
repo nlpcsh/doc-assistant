@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Canvas Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+
+    <!-- Base Shadow -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+
+    <!-- Spark Glow Filter -->
+    <filter id="sparkGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Document 1 Gradient (Bottom Layer) -->
+    <linearGradient id="docBottomGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+
+    <!-- Document 2 Gradient (Middle Layer) -->
+    <linearGradient id="docMidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#cbd5e1" />
+    </linearGradient>
+
+    <!-- Document 3 Gradient (Top Glass Layer) -->
+    <linearGradient id="docTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f1f5f9" />
+    </linearGradient>
+
+    <!-- AI Spark Gradient -->
+    <linearGradient id="aiSparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <!-- Gold Accent Spark -->
+    <linearGradient id="goldSparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+
+    <!-- Border Highlight -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+
+  <!-- App Icon Base Container (Squircle) -->
+  <rect x="32" y="32" width="448" height="448" rx="100" fill="url(#bgGrad)" />
+  <rect x="32" y="32" width="448" height="448" rx="100" fill="none" stroke="url(#borderGrad)" stroke-width="2" stroke-opacity="0.3" />
+
+  <!-- STACKED DOCUMENTS GROUP -->
+  <g filter="url(#dropShadow)">
+    
+    <!-- 1. Bottom Document (Rotated -12 deg) -->
+    <g transform="translate(256, 260) rotate(-12) translate(-256, -260)">
+      <rect x="156" y="130" width="200" height="260" rx="16" fill="url(#docBottomGrad)" opacity="0.7" />
+      <!-- Skeleton Lines -->
+      <line x1="186" y1="180" x2="276" y2="180" stroke="#475569" stroke-width="8" stroke-linecap="round" />
+      <line x1="186" y1="210" x2="326" y2="210" stroke="#475569" stroke-width="8" stroke-linecap="round" />
+      <line x1="186" y1="240" x2="306" y2="240" stroke="#475569" stroke-width="8" stroke-linecap="round" />
+    </g>
+
+    <!-- 2. Middle Document (Rotated 6 deg) -->
+    <g transform="translate(256, 260) rotate(6) translate(-256, -260)">
+      <rect x="156" y="130" width="200" height="260" rx="16" fill="url(#docMidGrad)" />
+      <rect x="156" y="130" width="200" height="260" rx="16" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6" />
+      <!-- Skeleton Lines -->
+      <line x1="186" y1="175" x2="256" y2="175" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" />
+      <line x1="186" y1="205" x2="326" y2="205" stroke="#cbd5e1" stroke-width="8" stroke-linecap="round" />
+      <line x1="186" y1="235" x2="306" y2="235" stroke="#cbd5e1" stroke-width="8" stroke-linecap="round" />
+      <line x1="186" y1="265" x2="276" y2="265" stroke="#cbd5e1" stroke-width="8" stroke-linecap="round" />
+    </g>
+
+    <!-- 3. Top Main Document (Straight Alignment) -->
+    <g transform="translate(0, 0)">
+      <rect x="156" y="125" width="200" height="260" rx="16" fill="url(#docTopGrad)" />
+      <rect x="156" y="125" width="200" height="260" rx="16" fill="none" stroke="#ffffff" stroke-width="2" />
+      
+      <!-- Top Fold Accent Corner -->
+      <path d="M 324 125 L 356 157 L 340 157 C 331.163 157 324 149.837 324 141 L 324 125 Z" fill="#cbd5e1" />
+
+      <!-- Text / Paragraph Lines (AI Accent Styled) -->
+      <line x1="186" y1="170" x2="260" y2="170" stroke="#6366f1" stroke-width="10" stroke-linecap="round" />
+      <line x1="186" y1="200" x2="326" y2="200" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" />
+      <line x1="186" y1="230" x2="326" y2="230" stroke="#cbd5e1" stroke-width="8" stroke-linecap="round" />
+      <line x1="186" y1="260" x2="286" y2="260" stroke="#cbd5e1" stroke-width="8" stroke-linecap="round" />
+      
+      <!-- Mini AI Highlight Box in Document -->
+      <rect x="186" y="290" width="140" height="45" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5" />
+      <line x1="200" y1="307" x2="280" y2="307" stroke="#818cf8" stroke-width="6" stroke-linecap="round" />
+      <line x1="200" y1="320" x2="250" y2="320" stroke="#c084fc" stroke-width="6" stroke-linecap="round" />
+    </g>
+
+  </g>
+
+  <!-- AI SPARK ELEMENTS -->
+  <g filter="url(#sparkGlow)">
+    
+    <!-- Large AI Spark (Top Right Badge Element) -->
+    <path d="M 350 160 
+             C 350 195, 365 210, 400 210 
+             C 365 210, 350 225, 350 260 
+             C 350 225, 335 210, 300 210 
+             C 335 210, 350 195, 350 160 Z" 
+          fill="url(#aiSparkGrad)" />
+
+    <!-- Secondary Gold Spark (Bottom Left Accent) -->
+    <path d="M 150 320 
+             C 150 338, 158 346, 176 346 
+             C 158 346, 150 354, 150 372 
+             C 150 354, 142 346, 124 346 
+             C 142 346, 150 338, 150 320 Z" 
+          fill="url(#goldSparkGrad)" />
+
+    <!-- Small Micro Spark (Top Left) -->
+    <path d="M 180 120 
+             C 180 130, 185 135, 195 135 
+             C 185 135, 180 140, 180 150 
+             C 180 140, 175 135, 165 135 
+             C 175 135, 180 130, 180 120 Z" 
+          fill="#38bdf8" opacity="0.9" />
+
+    <!-- Tiny Star Dots (Ambient Glow) -->
+    <circle cx="390" cy="140" r="3" fill="#38bdf8" />
+    <circle cx="290" cy="250" r="2.5" fill="#e0e7ff" />
+    <circle cx="120" cy="310" r="2" fill="#fde047" />
+  </g>
+</svg>

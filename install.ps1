@@ -48,6 +48,15 @@ if ($desktopPath) {
     $shortcut.WorkingDirectory = $PSScriptRoot
     $shortcut.IconLocation = (Join-Path $VenvPath 'Scripts/python.exe')
     $shortcut.Description = 'Launch Doc Assistant'
+
+    # Custom icon
+    $iconPath = Join-Path $RepoRoot 'icon.ico'
+    if (Test-Path $iconPath) {
+        $shortcut.IconLocation = $iconPath
+    } else {
+        $shortcut.IconLocation = "$pythonwExe,0"
+    }
+
     $shortcut.Save()
 }
 

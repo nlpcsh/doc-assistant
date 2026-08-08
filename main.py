@@ -1,6 +1,7 @@
 from os import path
 import locale
 import platform
+from PIL import Image, ImageTk
 from tkinterdnd2 import Tk
 
 from classes.MainApp import MainApp
@@ -17,7 +18,10 @@ if __name__ == "__main__":
             pass  # Use system default
 
     root = Tk()
-
+    base_dir = path.dirname(path.abspath(__file__))
+    icon_image = Image.open(path.join(base_dir, "icon.ico"))
+    icon = ImageTk.PhotoImage(icon_image, master=root)
+    root.iconphoto(True, icon)
     # Configure Tkinter for Unicode support
     if platform.system() == 'Linux':
         default_font = ('Liberation Sans', 10)
@@ -27,6 +31,5 @@ if __name__ == "__main__":
     root.option_add('*font', default_font)  # Set a readable default font with Cyrillic support
     root.tk.call('encoding', 'system', 'utf-8')  # Ensure UTF-8 encoding
 
-    base_dir = path.dirname(path.abspath(__file__))
     app = MainApp(root, base_dir)
     root.mainloop()
