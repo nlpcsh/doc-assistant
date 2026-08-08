@@ -72,7 +72,7 @@ class DataMgr:
 
     def save_data(self):
         with open(path.join(self.base_dir, 'data/data.json'), 'w', encoding='utf-8') as f:
-            json.dump(self.data, f, indent=4)
+            json.dump(self.data, f, indent=4, ensure_ascii=False)
 
     def update_business_trip_statuses(self):
         if 'business_trips' not in self.data:
