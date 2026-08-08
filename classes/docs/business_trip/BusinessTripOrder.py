@@ -10,6 +10,7 @@ class BusinessTripOrder(BaseDoc):
 
     def setup_ui_components(self):
         self.ui_mgr.add_tab_title(self, "bt_order")
+        self.setup_additional_ui_components()
         self.bt_context = {}
         self.projects_list = self.data_mgr.get_all_projects()
         self.all_projects = self.ui_mgr.add_dropdown(self, "projects", self.projects_list)
@@ -61,6 +62,9 @@ class BusinessTripOrder(BaseDoc):
             pass
         self.ui_mgr.add_checkbox_field(self, "bt_other_expences", self.labels["fields"]["bt_other_expences"], default_value=self.data_mgr.data['common'].get("other_expences", ""), width=30)
         self.ui_mgr.add_common_buttons(self, "gen_business_trip")
+
+    def setup_additional_ui_components(self):
+        """Hook for subclasses that need controls before the order fields."""
 
     def preselect_latest_project(self):
         if self.projects_list:

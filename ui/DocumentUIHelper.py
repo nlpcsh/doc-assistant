@@ -83,6 +83,7 @@ class DocumentUIHelper:
         field_frame = self.factory.add_frame(owner.container, pack_kwargs={"fill": "x", "padx": 10, "pady": 5})
 
         checkbox_var = tk.BooleanVar(value=show_by_default)
+        setattr(owner, f"{label_key}_var", checkbox_var)
         self.factory.add_checkbutton(field_frame, checkbox_text, variable=checkbox_var, command=command, side="left", padx=(0, 10))
 
         entry = self.factory.add_entry(field_frame, width=width)
