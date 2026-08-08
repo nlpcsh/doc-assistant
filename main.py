@@ -1,10 +1,13 @@
 from os import path
 import locale
-import platform
 from PIL import Image, ImageTk
+from tkinter import ttk
 from tkinterdnd2 import Tk
 
 from classes.MainApp import MainApp
+from Helpers import Helpers
+
+# Load preferences
 
 if __name__ == "__main__":
     # Set locale to support Cyrillic input
@@ -19,16 +22,17 @@ if __name__ == "__main__":
 
     root = Tk()
     base_dir = path.dirname(path.abspath(__file__))
+    preferences_path = path.join(base_dir, "settings", "preferences.json")
+    preferences = Helpers.get_preferences(preferences_path)
     icon_image = Image.open(path.join(base_dir, "icon.ico"))
     icon = ImageTk.PhotoImage(icon_image, master=root)
     root.iconphoto(True, icon)
     # Configure Tkinter for Unicode support
-    if platform.system() == 'Linux':
-        default_font = ('Liberation Sans', 10)
-    else:
-        default_font = ('Arial', 10)
+    default_font = Helpers.get_ui_font(preferences_file_path=preferences_path, size_key="body_size")
 
     root.option_add('*font', default_font)  # Set a readable default font with Cyrillic support
+    style = ttk.Style(root)
+    style.configure('.', font=default_font)
     root.tk.call('encoding', 'system', 'utf-8')  # Ensure UTF-8 encoding
 
     app = MainApp(root, base_dir)
