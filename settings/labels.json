@@ -13,8 +13,11 @@
   },
   "fields": {
     "business_trips": "Командировка:",
+    "civil_contracts": "Граждански договор:",
     "bt_order_number": "Номер на заповедта:",
     "bt_personal_report": "Личен отчет:",
+    "personal_report": "Личен отчет:",
+    "completed_task_description": "Описание на извършената работа:",
     "attachments": "Прикачени файлове:",
     "projects": "Проект:",
     "select_person": "Избери човек:",
