@@ -23,18 +23,29 @@ A Tkinter-based desktop assistant for generating administrative documents such a
   - Save business trip context data in the data.json. The status related to the business trip is GENERATED.
   - Save generated records and route outputs into the configured output folders. The output files and folders contains starting date, project and person(s) related ids.
 
-- **Edit a previuosly generated business trip**
+- **Edit a previously generated business trip**
   - On tab selected - checks all saved in data.json business trips and displays all that are not in status REPORTED.
   - Based on business trip template and selected business trip - all data is pre-filled in the form fields.
-  - 
+  - Generate new business trip order and report documents from the configured templates. Saved business trip data in data.json has an additional property *based_on* holding modified business trip id.
+
+- **Report a business trip**
+  - Initially in the first dropdown are listed all business trips that are NOT with status REPORTED
+  - When person is selected in the business trip initially generated id folder will be created new folder with person's id. There all files from the file upload section along with personal report will be placed
+  - If checkbox is checked - only payment report will be generated.
+  - When all persons reported and payment report is generated - status of the business trip will be changed to REPORTED.
 
 ### Civil contract workflow
 - **Create new civil contract**
   - Select a project from the first dropdown
-  - After project selection - person dropdown is polulated by the project related co-workers.
+  - After project selection - person dropdown is populated by the project related co-workers.
   - Fill in contract details such as task description, dates, amount, and responsibilities.
   - Generate civil contract creation and reporting documents from the corresponding DOCX templates.
   - During the generation - civil contract data is saved in data.json with status GENERATED
+
+- **Report a civil contract**
+  - Select from the dropdown civil contract that are not in status REPORTED
+  - Fill in report details
+  - Generate personal report and report of findings in sub civil contract folder named like the if the reporting person.
 
 ## Project structure
 
