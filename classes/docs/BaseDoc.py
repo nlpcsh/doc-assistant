@@ -4,7 +4,7 @@ import threading
 import subprocess
 import shutil
 from os import path, makedirs, unlink
-from docxtpl import DocxTemplate  #, InlineImage
+from docxtpl import DocxTemplate
 
 from ui.UIMgr import UIMgr
 

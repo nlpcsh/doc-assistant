@@ -3,7 +3,6 @@ from datetime import datetime
 
 from classes.docs.BaseDoc import BaseDoc
 from classes.docs.civil_contract.CivilContractExporter import CivilContractExporter
-from enums.Enums import CCStatus
 
 class CivilContractCreate(BaseDoc):
     def __init__(self, parent, data_mgr):
