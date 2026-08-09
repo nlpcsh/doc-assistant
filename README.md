@@ -16,33 +16,37 @@ A Tkinter-based desktop assistant for generating administrative documents such a
 ## Main workflows
 
 ### Business trip workflow
+
 - **Create new business trip**
+
   - Select a project and one or more coworkers.
   - Fill in trip details such as purpose, destination, travel dates, and expense options.
   - Generate business trip order and report documents from the configured templates.
   - Save business trip context data in the data.json. The status related to the business trip is GENERATED.
   - Save generated records and route outputs into the configured output folders. The output files and folders contains starting date, project and person(s) related ids.
-
 - **Edit a previously generated business trip**
+
   - On tab selected - checks all saved in data.json business trips and displays all that are not in status REPORTED.
   - Based on business trip template and selected business trip - all data is pre-filled in the form fields.
   - Generate new business trip order and report documents from the configured templates. Saved business trip data in data.json has an additional property *based_on* holding modified business trip id.
-
 - **Report a business trip**
+
   - Initially in the first dropdown are listed all business trips that are NOT with status REPORTED
   - When person is selected in the business trip initially generated id folder will be created new folder with person's id. There all files from the file upload section along with personal report will be placed
   - If checkbox is checked - only payment report will be generated.
   - When all persons reported and payment report is generated - status of the business trip will be changed to REPORTED.
 
 ### Civil contract workflow
+
 - **Create new civil contract**
+
   - Select a project from the first dropdown
   - After project selection - person dropdown is populated by the project related co-workers.
   - Fill in contract details such as task description, dates, amount, and responsibilities.
   - Generate civil contract creation and reporting documents from the corresponding DOCX templates.
   - During the generation - civil contract data is saved in data.json with status GENERATED
-
 - **Report a civil contract**
+
   - Select from the dropdown civil contract that are not in status REPORTED
   - Fill in report details
   - Generate personal report and report of findings in sub civil contract folder named like the if the reporting person.
@@ -108,6 +112,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 - Create in *data* folder *data.json* object with described bellow data fields.
 - Configure in data.json the pdf output folder: data["output_folders"]["common"] and its sub-folders: data["output_folders"]["business_trip"] and data["output_folders"]["civil_contracts"]
 - Before running the app: in data.json the co-workers and projects have to be predefined. **Note:** use for the co-worker id's short symbol sentences - for example first letters of his/hers names. The same for the project ids. Along with the starting date, both are used for the generated output folders and pdf names.
+- There are sample template and data folders and files in the *sample_template_and_data.zip* file.
 
 ## Run the app
 
@@ -213,4 +218,3 @@ Necessary templates in folder: *templates/civil_contract/*:  **cc_pl_report.docx
 ### Civil contract 'report' templates:
 
 Necessary templates in folder: *templates/civil_contract/*:  **cc_report_of_findings.docx** and **civil_contract_person_report.docx**
-
