@@ -5,7 +5,10 @@ from typing import List, Optional, Tuple
 from tkinter import Tk, Event, IntVar, Frame, BooleanVar, StringVar
 
 from PIL import Image, ImageTk
-import fitz
+try:
+    import pymupdf as fitz
+except ImportError:  # pragma: no cover - compatibility fallback
+    import fitz
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.lib.units import cm
 
