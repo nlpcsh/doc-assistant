@@ -149,7 +149,7 @@ class BusinessTripReport(BaseDoc):
         if self.bt_context['selected_person_id'] not in business_trip['reported_ids']:
             business_trip['reported_ids'].append(self.bt_context['selected_person_id'])
         is_all_persons_reported = len(business_trip['person_ids']) == len(business_trip['reported_ids'])
-        if self.bt_context['leader_id'] == self.bt_context['selected_person_id'] or self.generate_only_report_checkbox.get() == 1:
+        if self.bt_context['leader_id'] == self.bt_context['selected_person_id'] or self.generate_only_report_var.get() == 1:
             business_trip['status'] = BTStatus.PL_REPORTED.name
         if is_all_persons_reported and business_trip['status'] == BTStatus.PL_REPORTED.name:
             business_trip['status'] = BTStatus.REPORTED.name
