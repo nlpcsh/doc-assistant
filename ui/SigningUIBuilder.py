@@ -127,13 +127,6 @@ class SigningUIBuilder:
         )
         components["cert_validity_label"].pack(anchor="w", pady=(0, 12))
 
-        tk.Label(
-            sidebar,
-            text=labels["signing"]["password_info"],
-            font=Helpers.get_ui_font(size_key="label_size"),
-            fg="#999",
-        ).pack(anchor="w", pady=(0, 12))
-
         components["visual_only_var"] = tk.BooleanVar(value=False)
         tk.Checkbutton(
             sidebar,
@@ -141,13 +134,6 @@ class SigningUIBuilder:
             variable=components["visual_only_var"],
             onvalue=True,
             offvalue=False,
-        ).pack(anchor="w", pady=(0, 12))
-
-        tk.Label(
-            sidebar,
-            text=labels["signing"]["visual_signature_info"],
-            font=Helpers.get_ui_font(size_key="label_size"),
-            fg="#999",
         ).pack(anchor="w", pady=(0, 12))
 
         tk.Label(sidebar, text=labels["signing"]["signature_statement"], font=Helpers.get_ui_font(size_key="label_size", bold=True)).pack(anchor="w")
