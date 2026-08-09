@@ -64,7 +64,7 @@ class CivilContractReport(BaseDoc):
             "cc_person_titles": person.get("titles", ""),
             "cc_person_names": person.get("full_name", person.get("names", "")),
             "person_titles": person.get("titles", ""),
-            "person_names": person.get("full_name", person.get("names", "")),
+            "person_names": person.get("names", ""),
             "personal_report": self._field_value("personal_report"),
             "completed_task_description": self._field_value("completed_task_description"),
             "cc_report_date": Helpers.get_current_date_str(dateformat="%d.%m.%Y"),
