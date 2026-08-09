@@ -47,6 +47,7 @@ if ($desktopPath) {
     $shortcut.Arguments = '"{0}"' -f (Join-Path $PSScriptRoot 'main.py')
     $shortcut.WorkingDirectory = $PSScriptRoot
     $shortcut.IconLocation = (Join-Path $VenvPath 'Scripts/python.exe')
+    $shortcut.WindowStyle = 7
     $shortcut.Description = 'Launch Doc Assistant'
 
     # Custom icon
