@@ -68,6 +68,27 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         )
         self.assertEqual(self.data_mgr.get_all_bussiness_trips_by_status(3), {})
 
+    def test_lookup_helpers_return_expected_values(self):
+        self.data_mgr.data["projects"] = {"proj-1": {"name": "Alpha"}}
+        self.data_mgr.data["co_workers"] = {"cw-1": {"full_name": "John Doe"}}
+        self.data_mgr.data["output_folders"] = {"common": "out/", "business_trip": "bt/"}
+        self.data_mgr.save_data()
+
+        self.assertEqual(self.data_mgr.get_project_by_id("proj-1"), {"name": "Alpha"})
+        self.assertEqual(self.data_mgr.get_coworker_by_id("cw-1"), {"full_name": "John Doe"})
+        self.assertEqual(self.data_mgr.get_all_projects(), ["proj-1"])
+        self.assertEqual(self.data_mgr.get_output_folders(), {"common": "out/", "business_trip": "bt/"})
+
+    def test_save_new_methods_persist_data_to_disk(self):
+        self.data_mgr.save_new_bussiness_trip({"trip-1": {"status": "GENERATED"}})
+        self.data_mgr.save_new_civil_contract({"contract-1": {"status": "GENERATED"}})
+
+        data_file = Path(self.data_mgr.base_dir) / "data" / "data.json"
+        saved_data = json.loads(data_file.read_text(encoding="utf-8"))
+
+        self.assertIn("trip-1", saved_data["business_trips"])
+        self.assertIn("contract-1", saved_data["civil_contracts"])
+
 
 if __name__ == "__main__":
     unittest.main()

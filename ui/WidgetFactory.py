@@ -53,7 +53,7 @@ class WidgetFactory:
         return listbox
 
     def add_entry(self, container, width: int = 30, pack_kwargs: Optional[Dict[str, Any]] = None):
-        entry = ttk.Entry(container, width=width)
+        entry = tk.Entry(container, width=width)
         entry.configure()
         if pack_kwargs is None:
             pack_kwargs = {}

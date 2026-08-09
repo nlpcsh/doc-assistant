@@ -62,6 +62,9 @@ class BusinessTripReport(BaseDoc):
             ),
         )
         self.business_trips_dropdown.set(latest_id)
+        bt_order_number = self.current_bts_to_report[latest_id].get("bt_order_number")
+        if bt_order_number:
+            self.ui_mgr.set_field_value(self, "bt_order_number", bt_order_number)
         self.on_business_trip_selected(None)
 
     def _update_project_leader_id(self):
@@ -146,10 +149,11 @@ class BusinessTripReport(BaseDoc):
 
     def final_action(self):
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())
+        business_trip['bt_order_number'] = self._field_value("bt_order_number")
         if self.bt_context['selected_person_id'] not in business_trip['reported_ids']:
             business_trip['reported_ids'].append(self.bt_context['selected_person_id'])
         is_all_persons_reported = len(business_trip['person_ids']) == len(business_trip['reported_ids'])
-        if self.bt_context['leader_id'] == self.bt_context['selected_person_id'] or self.generate_only_report_checkbox.get() == 1:
+        if self.bt_context['leader_id'] == self.bt_context['selected_person_id'] or self.generate_only_report_var.get() == 1:
             business_trip['status'] = BTStatus.PL_REPORTED.name
         if is_all_persons_reported and business_trip['status'] == BTStatus.PL_REPORTED.name:
             business_trip['status'] = BTStatus.REPORTED.name

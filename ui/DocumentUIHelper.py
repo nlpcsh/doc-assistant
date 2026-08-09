@@ -129,7 +129,8 @@ class DocumentUIHelper:
         self.factory.add_label(owner.container, self.labels["fields"][label_key], anchor="w")
 
         date_frame = self.factory.add_frame(owner.container, pack_kwargs={"fill": "x", "padx": 5, "pady": 5})
-        date_entry = self.factory.add_entry(date_frame, width=width, pack_kwargs={"side": "left", "padx": 5})
+        date_entry = tk.Entry(date_frame, width=width)
+        date_entry.pack(side="left", padx=5)
 
         if preselect_today:
             today = datetime.today()
@@ -178,9 +179,9 @@ class DocumentUIHelper:
         if path.exists(owner.signature_path + "sig.png"):
             owner.sig_path = owner.signature_path + "sig.png"
         else:
-            self.factory.add_button(container, text=self.labels["buttons"]["select_sig"], command=owner.get_signature, pack_kwargs={"pady": 10})
+            self.factory.add_button(container, text=self.labels["buttons"]["select_sig"], command=owner.get_signature, pack_kwargs={"pady": 10, "padx": 10})
 
-        owner.gen_btn = self.factory.add_button(container, text=self.labels["buttons"][gen_label_key], command=owner.start_generation, pack_kwargs={"pady": 20})
+        owner.gen_btn = self.factory.add_button(container, text=self.labels["buttons"][gen_label_key], command=owner.start_generation, pack_kwargs={"pady": 20, "padx": 10})
         return owner.gen_btn
 
     def add_dropdown(self, owner, label_key, options, container=None):

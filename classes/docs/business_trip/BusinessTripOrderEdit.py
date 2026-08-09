@@ -1,6 +1,7 @@
 from enums.Enums import BTStatus
 
 from classes.docs.business_trip.BusinessTripOrder import BusinessTripOrder
+from classes.docs.business_trip.BusinessTripExporter import BusinessTripExporter
 
 class BusinessTripOrderEdit(BusinessTripOrder):
     """Edit and regenerate an existing business-trip order."""
@@ -61,12 +62,12 @@ class BusinessTripOrderEdit(BusinessTripOrder):
         return context
 
     def _select_persons(self, person_ids):
-        self.persons_dropdown.selection_clear(0, "end")
+        self.persons_multiselect.selection_clear(0, "end")
         person_ids = set(person_ids or [])
-        for index in range(self.persons_dropdown.size()):
-            person_id = self.persons_dropdown.get(index).split(")", 1)[0].lstrip("(")
+        for index in range(self.persons_multiselect.size()):
+            person_id = self.persons_multiselect.get(index).split(")", 1)[0].lstrip("(")
             if person_id in person_ids:
-                self.persons_dropdown.selection_set(index)
+                self.persons_multiselect.selection_set(index)
 
     def _select_travel_options(self, travel_with):
         options = {option.strip() for option in (travel_with or "").split(",") if option.strip()}
@@ -105,31 +106,12 @@ class BusinessTripOrderEdit(BusinessTripOrder):
         business_trip_id = self.business_trips_dropdown.get()
         context = self.bt_context
         edited_business_trip_id = context.get("doc_date_and_ids_identifier", '')
-        edited_business_trip = {
-            "project_id": self.all_projects.get(),
-            "bt_heading": context.get("bt_purpose", ""),
-            "bt_order_number": "",
-            "based_on": business_trip_id,
-            "person_ids": self.selected_person_ids,
-            "start_date": context.get("bt_from", ""),
-            "end_date": context.get("bt_to", ""),
-            "doc_date_and_ids_identifier": edited_business_trip_id,
-            "bt_travel_with": context.get("bt_travel_with", ""),
-            "bt_day_money_from": context.get("bt_day_money_from", ""),
-            "bt_nights_money_from": context.get("bt_nights_money_from", ""),
-            "bt_travel_money_from": context.get("bt_travel_money_from", ""),
-            "bt_destination": context.get("bt_destination", ""),
-            "bt_euro_per_day": context.get("bt_euro_per_day", ""),
-            "bt_nights_max_value": context.get("bt_nights_max_value", ""),
-            "bt_other_expences": context.get("bt_other_expences", ""),
-            "bt_contract_info": context.get("bt_contract_info", ""),
-            "leader_titles": context.get("leader_titles", ""),
-            "leader_names": context.get("leader_names", ""),
-            "leader_full_name": context.get("leader_full_name", ""),
-            "leader_work_place": context.get("leader_work_place", ""),
-            "bt_all_persons": context.get("bt_all_persons", ""),
-            "reported_ids": [],
-            "status": BTStatus.GENERATED.name,
-        }
+        edited_business_trip = BusinessTripExporter.build_business_trip_payload(
+            bt_title=edited_business_trip_id,
+            project_id=self.all_projects.get(),
+            context=context,
+            selected_person_ids=self.selected_person_ids,
+            based_on=business_trip_id,
+        )
         self.data_mgr.data["business_trips"][edited_business_trip_id] = edited_business_trip
         self.data_mgr.save_data()

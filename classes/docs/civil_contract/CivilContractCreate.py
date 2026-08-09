@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from classes.docs.BaseDoc import BaseDoc
-from enums.Enums import CCStatus
+from classes.docs.civil_contract.CivilContractExporter import CivilContractExporter
 
 class CivilContractCreate(BaseDoc):
     def __init__(self, parent, data_mgr):
@@ -61,6 +61,7 @@ class CivilContractCreate(BaseDoc):
             self.persons_dropdown.set('')
 
     def get_context(self):
+        self.validate_required_fields()
         self.cc_context = {}
         self._populate_contract_fields()
 
@@ -87,6 +88,82 @@ class CivilContractCreate(BaseDoc):
             return widget.get("1.0", "end-1c").strip()
         except TypeError:
             return widget.get().strip()
+
+    def _get_widget_value(self, widget):
+        if widget is None:
+            return ""
+        try:
+            return widget.get("1.0", "end-1c").strip()
+        except Exception:
+            try:
+                return widget.get().strip()
+            except Exception:
+                return ""
+
+    def _apply_required_field_border(self, widget, is_valid):
+        if widget is None:
+            return
+        try:
+            widget.config(
+                highlightthickness=2 if not is_valid else 1,
+                highlightbackground="#d62728" if not is_valid else "#b0b0b0",
+                highlightcolor="#d62728" if not is_valid else "#b0b0b0",
+                relief="solid" if not is_valid else "flat",
+                borderwidth=2 if not is_valid else 1,
+            )
+        except Exception:
+            pass
+
+    def _apply_required_fields_state(self, missing_fields):
+        for field_name, widget in (
+            ("cc_start_date", getattr(self, "cc_start_date", None)),
+            ("cc_task", getattr(self, "cc_task", None)),
+            ("cc_task_start_date", getattr(self, "cc_task_start_date", None)),
+            ("cc_task_end_date", getattr(self, "cc_task_end_date", None)),
+            ("cc_payment_due_date", getattr(self, "cc_payment_due_date", None)),
+            ("cc_task_amount", getattr(self, "cc_task_amount", None)),
+            ("cc_task_amount_in_words", getattr(self, "cc_task_amount_in_words", None)),
+            ("cc_person_responsibility", getattr(self, "cc_person_responsibility", None)),
+            ("cc_penalty", getattr(self, "cc_penalty", None)),
+        ):
+            self._apply_required_field_border(widget, field_name not in missing_fields)
+
+    def get_missing_required_fields(self):
+        missing_fields = []
+
+        for field_name, widget in (
+            ("cc_start_date", getattr(self, "cc_start_date", None)),
+            ("cc_task", getattr(self, "cc_task", None)),
+            ("cc_task_start_date", getattr(self, "cc_task_start_date", None)),
+            ("cc_task_end_date", getattr(self, "cc_task_end_date", None)),
+            ("cc_payment_due_date", getattr(self, "cc_payment_due_date", None)),
+            ("cc_task_amount", getattr(self, "cc_task_amount", None)),
+            ("cc_task_amount_in_words", getattr(self, "cc_task_amount_in_words", None)),
+            ("cc_person_responsibility", getattr(self, "cc_person_responsibility", None)),
+            ("cc_penalty", getattr(self, "cc_penalty", None)),
+        ):
+            value = self._get_widget_value(widget)
+            if not value:
+                missing_fields.append(field_name)
+                continue
+
+            if field_name.startswith("cc_") and "date" in field_name:
+                try:
+                    datetime.strptime(value, "%d/%m/%Y")
+                except ValueError:
+                    missing_fields.append(field_name)
+
+        return missing_fields
+
+    def validate_required_fields(self):
+        missing_fields = self.get_missing_required_fields()
+        self._apply_required_fields_state(missing_fields)
+        if missing_fields:
+            labels = []
+            for field_name in missing_fields:
+                field_label = self.labels.get("fields", {}).get(field_name, field_name)
+                labels.append(field_label)
+            raise ValueError("Please fill in the required fields: " + ", ".join(labels))
 
     def _get_date_value(self, widget, date_format="%d.%m.%Y"):
         value = widget.get()
@@ -152,15 +229,11 @@ class CivilContractCreate(BaseDoc):
         person_id = self._extract_selected_person_id()
         cc_title = self.cc_context["doc_date_and_ids_identifier"]
         new_civil_contract = {
-            cc_title: {
-                "project_id": project_id,
-                "cc_task": self.cc_context["cc_task"],
-                "cc_number": "",
-                "person_id": person_id,
-                "cc_task_start_date": self.cc_context["cc_task_start_date"],
-                "cc_task_end_date": self.cc_context["cc_task_end_date"],
-                "doc_date_and_ids_identifier": cc_title,
-                "status": CCStatus.GENERATED.name
-            }
+            cc_title: CivilContractExporter.build_civil_contract_payload(
+                contract_title=cc_title,
+                project_id=project_id,
+                person_id=person_id,
+                context=self.cc_context,
+            )
         }
         self.data_mgr.save_new_civil_contract(new_civil_contract)

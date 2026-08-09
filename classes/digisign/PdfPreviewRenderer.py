@@ -1,6 +1,12 @@
 from PIL import Image
 from typing import Tuple
 
+try:
+    import pymupdf as fitz
+except ImportError:  # pragma: no cover - compatibility fallback
+    import fitz
+
+
 class PdfPreviewRenderer:
     def __init__(self, canvas, width: int, height: int):
         self.canvas = canvas

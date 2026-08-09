@@ -1,6 +1,8 @@
 from classes.docs.BaseDoc import BaseDoc
+from classes.docs.business_trip.BusinessTripExporter import BusinessTripExporter
 from datetime import datetime
-from enums.Enums import BTStatus
+
+DATE_FORMAT = "%d/%m/%Y"
 
 class BusinessTripOrder(BaseDoc):
     def __init__(self, parent, data_mgr):
@@ -15,9 +17,9 @@ class BusinessTripOrder(BaseDoc):
         self.projects_list = self.data_mgr.get_all_projects()
         self.all_projects = self.ui_mgr.add_dropdown(self, "projects", self.projects_list)
         self.all_projects.bind("<<ComboboxSelected>>", self.on_project_selected)
-        self.persons_dropdown = self.ui_mgr.add_multiselect(self, "select_person", [])
-        self.ui_mgr.add_text_field(self, "bt_purpose", height=5, width=50)
-        self.ui_mgr.add_field(self, "bt_destination")
+        self.persons_multiselect = self.ui_mgr.add_multiselect(self, "select_person", [])
+        self.bt_purpose_field = self.ui_mgr.add_text_field(self, "bt_purpose", height=5, width=50)
+        self.bt_destination_field = self.ui_mgr.add_field(self, "bt_destination")
         self.date_from = self.ui_mgr.add_date_field(self, "bt_from", preselect_today=True, width=11)
         self.date_to = self.ui_mgr.add_date_field(self, "bt_to", min_date_from=self.date_from, width=11)
         self.ui_mgr.add_checkbox_field(self, "bt_euro_per_day", self.labels["fields"]["bt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")), width=5)
@@ -57,7 +59,7 @@ class BusinessTripOrder(BaseDoc):
         except Exception:
             pass
         try:
-            self.persons_dropdown.bind('<<ListboxSelect>>', self.on_persons_selection_changed)
+            self.persons_multiselect.bind('<<ListboxSelect>>', self.on_persons_selection_changed)
         except Exception:
             pass
         self.ui_mgr.add_checkbox_field(self, "bt_other_expences", self.labels["fields"]["bt_other_expences"], default_value=self.data_mgr.data['common'].get("other_expences", ""), width=30)
@@ -86,11 +88,11 @@ class BusinessTripOrder(BaseDoc):
         project = self.data_mgr.get_project_by_id(selected_project)
         if project:
             team = project.get('team', [])
-            self.persons_dropdown.delete(0, 'end')
+            self.persons_multiselect.delete(0, 'end')
             for coworker_id in team:
                 coworker = self.data_mgr.get_coworker_by_id(coworker_id)
-                self.persons_dropdown.insert('end', f"({coworker_id}) {coworker.get('names', 'Unknown')}")
-            self.persons_dropdown.config(height=min(max(len(team), 1), 10))
+                self.persons_multiselect.insert('end', f"({coworker_id}) {coworker.get('names', 'Unknown')}")
+            self.persons_multiselect.config(height=min(max(len(team), 1), 10))
 
     def on_travel_options_changed(self, event):
         # Show or hide the persons_cars multi-select when "кола" travel option is toggled
@@ -152,8 +154,8 @@ class BusinessTripOrder(BaseDoc):
 
     def get_selected_person_ids(self):
         selected_persons_ids = []
-        for i in self.persons_dropdown.curselection():
-            item = self.persons_dropdown.get(i)
+        for i in self.persons_multiselect.curselection():
+            item = self.persons_multiselect.get(i)
             # Extract person ID from the formatted string
             person_id = item.split(')')[0].strip('(')
             selected_persons_ids.append(person_id)
@@ -190,13 +192,87 @@ class BusinessTripOrder(BaseDoc):
         })
         return bt_contract_info
 
+    def _get_widget_value(self, widget):
+        if widget is None:
+            return ""
+        try:
+            return widget.get("1.0", "end-1c").strip()
+        except Exception:
+            try:
+                if hasattr(widget, "curselection"):
+                    return "selected" if widget.curselection() else ""
+                return widget.get().strip()
+            except Exception:
+                return ""
+
+    def _apply_required_field_border(self, widget, is_valid):
+        if widget is None:
+            return
+        try:
+            widget.config(
+                highlightthickness=2 if not is_valid else 1,
+                highlightbackground="#d62728" if not is_valid else "#b0b0b0",
+                highlightcolor="#d62728" if not is_valid else "#b0b0b0",
+                relief="solid" if not is_valid else "flat",
+                borderwidth=2 if not is_valid else 1,
+            )
+        except Exception:
+            pass
+
+    def _apply_required_fields_state(self, missing_fields):
+        for field_name, attr_name in (
+            ("bt_purpose", "bt_purpose_field"),
+            ("bt_destination", "bt_destination_field"),
+            ("persons_multiselect", "persons_multiselect"),
+            ("bt_from", "date_from"),
+            ("bt_to", "date_to"),
+        ):
+            widget = getattr(self, attr_name, None)
+            self._apply_required_field_border(widget, field_name not in missing_fields)
+
+    def get_missing_required_fields(self):
+        missing_fields = []
+
+        if not self._get_widget_value(getattr(self, "bt_purpose_field", None)):
+            missing_fields.append("bt_purpose")
+
+        if not self._get_widget_value(getattr(self, "bt_destination_field", None)):
+            missing_fields.append("bt_destination")
+
+        if not self._get_widget_value(getattr(self, "persons_multiselect", None)):
+            missing_fields.append("persons_multiselect")
+
+        for field_name, attr_name in (("bt_from", "date_from"), ("bt_to", "date_to")):
+            widget = getattr(self, attr_name, None)
+            value = self._get_widget_value(widget)
+            if not value:
+                missing_fields.append(field_name)
+                continue
+
+            try:
+                datetime.strptime(value, DATE_FORMAT)
+            except ValueError:
+                missing_fields.append(field_name)
+
+        return missing_fields
+
+    def validate_required_fields(self):
+        missing_fields = self.get_missing_required_fields()
+        self._apply_required_fields_state(missing_fields)
+        if missing_fields:
+            labels = []
+            for field_name in missing_fields:
+                field_label = self.labels.get("fields", {}).get(field_name, field_name)
+                labels.append(field_label)
+            raise ValueError("Please fill in the required fields: " + ", ".join(labels))
+
     def calculate_date_context(self):
         bt_from_str = self.date_from.get()
         bt_to_str = self.date_to.get()
         if bt_from_str and bt_to_str:
             try:
-                bt_from = datetime.strptime(bt_from_str, '%d/%m/%Y')
-                bt_to = datetime.strptime(bt_to_str, '%d/%m/%Y')
+                bt_from = datetime.strptime(bt_from_str, DATE_FORMAT)
+                bt_to = datetime.strptime(bt_to_str, DATE_FORMAT)
                 total_days = (bt_to - bt_from).days + 1
                 self.bt_context.update({
                     "bt_from": bt_from_str,
@@ -228,12 +304,12 @@ class BusinessTripOrder(BaseDoc):
 
     def process_money_sources(self):
         bt_contract_info = self.bt_context.get("bt_contract_info", "")
-        
+
         if self.bt_context.get("bt_euro_per_day"):
             self.bt_context["bt_day_money_from"] = self.labels["messages"]["account_on"] + bt_contract_info
         else:
             self.bt_context["bt_day_money_from"] = self.labels["messages"]["account_on"] + self.labels["messages"]["third_party"]
-        
+
         if self.bt_context.get("bt_nights_max_value"):
             self.bt_context["bt_nights_money_from"] = self.labels["messages"]["account_on"] + bt_contract_info
         else:
@@ -284,12 +360,13 @@ class BusinessTripOrder(BaseDoc):
         value = widget.get()
         if value:
             try:
-                return datetime.strptime(value, '%d/%m/%Y').strftime(date_format)
+                return datetime.strptime(value, DATE_FORMAT).strftime(date_format)
             except ValueError:
                 pass
         return ""
 
     def get_context(self):
+        self.validate_required_fields()
         self.bt_context = {}
         self.add_project_and_person_data()
         self.calculate_date_context()
@@ -305,30 +382,11 @@ class BusinessTripOrder(BaseDoc):
         project_id = self.all_projects.get()
         bt_title = self.bt_context.get("doc_date_and_ids_identifier", "")
         new_bussiness_trip = {
-            bt_title: {
-                "project_id": project_id,
-                "bt_heading": self.bt_context.get("bt_purpose", ""),
-                "bt_order_number": "",
-                "person_ids": self.selected_person_ids,
-                "start_date": self.bt_context.get("bt_from", ""),
-                "end_date": self.bt_context.get("bt_to", ""),
-                "doc_date_and_ids_identifier": bt_title,
-                "bt_travel_with": self.bt_context.get("bt_travel_with", ""),
-                "bt_day_money_from": self.bt_context.get("bt_day_money_from", ""),
-                "bt_nights_money_from": self.bt_context.get("bt_nights_money_from", ""),
-                "bt_travel_money_from": self.bt_context.get("bt_travel_money_from", ""),
-                "bt_destination": self.bt_context.get("bt_destination", ""),
-                "bt_euro_per_day": self.bt_context.get("bt_euro_per_day", ""),
-                "bt_nights_max_value": self.bt_context.get("bt_nights_max_value", ""),
-                "bt_other_expences": self.bt_context.get("bt_other_expences", ""),
-                "bt_contract_info": self.bt_context.get("bt_contract_info", ""),
-                "leader_titles": self.bt_context.get("leader_titles", ""),
-                "leader_names": self.bt_context.get("leader_names", ""),
-                "leader_full_name": self.bt_context.get("leader_full_name", ""),
-                "leader_work_place": self.bt_context.get("leader_work_place", ""),
-                "bt_all_persons": self.bt_context.get("bt_all_persons", ""),
-                "reported_ids": [],
-                "status": BTStatus.GENERATED.name
-            }
+            bt_title: BusinessTripExporter.build_business_trip_payload(
+                bt_title=bt_title,
+                project_id=project_id,
+                context=self.bt_context,
+                selected_person_ids=self.selected_person_ids,
+            )
         }
         self.data_mgr.save_new_bussiness_trip(new_bussiness_trip)

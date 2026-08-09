@@ -4,7 +4,7 @@ import threading
 import subprocess
 import shutil
 from os import path, makedirs, unlink
-from docxtpl import DocxTemplate  #, InlineImage
+from docxtpl import DocxTemplate
 
 from ui.UIMgr import UIMgr
 
@@ -43,9 +43,24 @@ class BaseDoc(ttk.Frame):
 
         pdf_path = out_docx.replace('.docx', '.pdf')
         try:
-            convert(out_docx, pdf_path)
+            pythoncom = None
+            try:
+                import pythoncom
+            except ImportError:
+                pass
+
+            if pythoncom is not None:
+                pythoncom.CoInitialize()
+            try:
+                convert(out_docx, pdf_path)
+            finally:
+                if pythoncom is not None:
+                    pythoncom.CoUninitialize()
+
             return path.exists(pdf_path)
-        except Exception:
+        except Exception as e:
+            error_message = str(e)
+            self.after(0, lambda error_message=error_message: self.ui_mgr.show_error("Error", error_message))
             return False
 
     def get_signature(self):
@@ -55,58 +70,109 @@ class BaseDoc(ttk.Frame):
         self.ui_mgr.start_generation(self)
         threading.Thread(target=self.process_doc, daemon=True).start()
 
+    def _build_template_output_path(self, context, template):
+        output_dir = self._build_output_path(context)
+        if not path.exists(output_dir):
+            makedirs(output_dir, exist_ok=True)
+        return path.join(output_dir, f"{context['doc_date_and_ids_identifier']}_{template}")
+
+    def _render_template(self, template, context):
+        doc = DocxTemplate(self.template_dir + template)
+
+        try:
+            doc.render(context)
+        except Exception as render_exc:
+            # Surface template rendering errors with template name and traceback
+            import traceback
+            tb = traceback.format_exc()
+            raise RuntimeError(f"Template render error in {template}: {render_exc}\n{tb}") from render_exc
+
+        out_docx = self._build_template_output_path(context, template)
+        doc.save(out_docx)
+        return out_docx
+
+    def _convert_docx_to_pdf(self, out_docx):
+        office_converter = self._find_office_converter()
+        if office_converter:
+            try:
+                subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx], check=True)
+                return True
+            except Exception as e:
+                error_message = str(e)
+                self.after(0, lambda error_message=error_message: self.ui_mgr.show_error("Error", error_message))
+
+        return self._try_docx2pdf(out_docx)
+
+    def _build_output_path(self, context):
+        output_folders = self.data_mgr.get_output_folders()
+        return f"{output_folders['common']}{output_folders[self.output_folder]}{context['doc_date_and_ids_identifier']}{context['sub_folder']}"
+
+    def _get_unique_destination(self, destination):
+        if not path.exists(destination):
+            return destination
+
+        base, ext = path.splitext(destination)
+        index = 1
+        while True:
+            candidate = f"{base}_{index}{ext}"
+            if not path.exists(candidate):
+                return candidate
+            index += 1
+
+    def _move_pdf_to_output(self, out_docx, context):
+        move_path = self._build_output_path(context)
+        if not path.exists(move_path):
+            makedirs(move_path, exist_ok=True)
+
+        pdf_path = out_docx.replace(".docx", ".pdf")
+        destination = path.join(move_path, path.basename(pdf_path))
+        new_path = self._get_unique_destination(destination)
+        shutil.move(pdf_path, new_path)
+        return new_path
+
+    def _move_docx_to_output(self, out_docx, context):
+        move_path = self._build_output_path(context)
+        if not path.exists(move_path):
+            makedirs(move_path, exist_ok=True)
+
+        destination = path.join(move_path, path.basename(out_docx))
+        new_path = self._get_unique_destination(destination)
+        shutil.move(out_docx, new_path)
+        return new_path
+
     def process_doc(self):
         try:
             context = self.get_context()  # Defined in subclasses
             generated_pdfs = []
-            generated_docx = []
+            moved_docx = []
+            converted_docx = []
 
             for template in self.template_names:
-                doc = DocxTemplate(self.template_dir + template)
-
-                try:
-                    doc.render(context)
-                except Exception as render_exc:
-                    # Surface template rendering errors with template name and traceback
-                    import traceback
-                    tb = traceback.format_exc()
-                    raise RuntimeError(f"Template render error in {template}: {render_exc}\n{tb}")
-
-                out_docx = f"{context['doc_date_and_ids_identifier']}_{template}"
-                doc.save(out_docx)
-                generated_docx.append(out_docx)
-
-                office_converter = self._find_office_converter()
-                if office_converter:
-                    subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx], check=True)
-                elif self._try_docx2pdf(out_docx):
-                    print(f"Converted {out_docx} to PDF using docx2pdf.")
+                out_docx = self._render_template(template, context)
+                converted_docx.append(out_docx)
+                if self._convert_docx_to_pdf(out_docx):
+                    generated_pdfs.append(out_docx.replace(".docx", ".pdf"))
                 else:
-                    raise RuntimeError("No suitable method found to convert DOCX to PDF. Please install LibreOffice or docx2pdf.")
-
-                # Move files to output folder
-                output_folders = self.data_mgr.get_output_folders()
-                move_path = f"{output_folders['common']}{output_folders[self.output_folder]}{context['doc_date_and_ids_identifier']}{context['sub_folder']}"
-                if not path.exists(move_path):
-                    makedirs(move_path, exist_ok=True)
-                # Only move PDF file
-                pdf_path = out_docx.replace(".docx", ".pdf")
-                new_path = path.join(move_path, path.basename(pdf_path))
-                shutil.move(pdf_path, new_path)
-                generated_pdfs.append(new_path)
+                    moved_docx.append(out_docx)
 
             if generated_pdfs:
                 self.after(0, lambda: self.ui_mgr.show_signature_preview(self, generated_pdfs))
-                # Delete the temporary DOCX file
-                for out_docx in generated_docx:
-                    if path.exists(out_docx):
+                for out_docx in converted_docx:
+                    pdf_path = out_docx.replace(".docx", ".pdf")
+                    if path.exists(out_docx) and path.exists(pdf_path):
                         unlink(out_docx)
 
-                # Auto-open PDF
-                #subprocess.run(['xdg-open', new_path])
+            if moved_docx:
+                message = (
+                    "Generated DOCX output, but no PDF converter was available. "
+                    "Install LibreOffice or docx2pdf to enable PDF conversion."
+                    if not generated_pdfs
+                    else "Some templates were saved as DOCX because PDF conversion was unavailable. "
+                    "Install LibreOffice or docx2pdf for full PDF generation."
+                )
+                self.after(0, lambda message=message: self.ui_mgr.show_info("Info", message))
 
-            #self.ui_mgr.show_info(self.labels["messages"]["success_title"], "Done!")
-            self.final_action() # Defined in subclasses
+            self.final_action()  # Defined in subclasses
         except Exception as e:
             error_message = str(e)
             self.after(0, lambda error_message=error_message: self.ui_mgr.show_error("Error", error_message))

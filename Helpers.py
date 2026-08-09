@@ -5,6 +5,17 @@ from datetime import datetime
 
 class Helpers:
     @staticmethod
+    def build_common_export_payload(document_id, project_id, status, extra_fields=None):
+        payload = {
+            "project_id": project_id,
+            "doc_date_and_ids_identifier": document_id,
+            "status": status,
+        }
+        if extra_fields:
+            payload.update(extra_fields)
+        return payload
+
+    @staticmethod
     def parse_date(value, dateformat="%d/%m/%Y"):
         try:
             return datetime.strptime(value or "", dateformat)
