@@ -129,7 +129,8 @@ class DocumentUIHelper:
         self.factory.add_label(owner.container, self.labels["fields"][label_key], anchor="w")
 
         date_frame = self.factory.add_frame(owner.container, pack_kwargs={"fill": "x", "padx": 5, "pady": 5})
-        date_entry = self.factory.add_entry(date_frame, width=width, pack_kwargs={"side": "left", "padx": 5})
+        date_entry = tk.Entry(date_frame, width=width)
+        date_entry.pack(side="left", padx=5)
 
         if preselect_today:
             today = datetime.today()

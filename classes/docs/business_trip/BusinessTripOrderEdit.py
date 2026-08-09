@@ -62,12 +62,12 @@ class BusinessTripOrderEdit(BusinessTripOrder):
         return context
 
     def _select_persons(self, person_ids):
-        self.persons_dropdown.selection_clear(0, "end")
+        self.persons_multiselect.selection_clear(0, "end")
         person_ids = set(person_ids or [])
-        for index in range(self.persons_dropdown.size()):
-            person_id = self.persons_dropdown.get(index).split(")", 1)[0].lstrip("(")
+        for index in range(self.persons_multiselect.size()):
+            person_id = self.persons_multiselect.get(index).split(")", 1)[0].lstrip("(")
             if person_id in person_ids:
-                self.persons_dropdown.selection_set(index)
+                self.persons_multiselect.selection_set(index)
 
     def _select_travel_options(self, travel_with):
         options = {option.strip() for option in (travel_with or "").split(",") if option.strip()}
