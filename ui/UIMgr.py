@@ -24,7 +24,7 @@ class UIMgr:
         style.map(
             "TNotebook.Tab",
             background=[("selected", "#4a4a4a"), ("active", "#6b6b6b")],
-            foreground=[("selected", "blue"), ("active", "blue")],
+            foreground=[("selected", "orange"), ("active", "orange")],
         )
 
         return notebook
