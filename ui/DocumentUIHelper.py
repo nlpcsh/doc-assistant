@@ -242,6 +242,11 @@ class DocumentUIHelper:
             self._add_files_to_list(file_paths, selected_files, file_listbox, owner)
         return "break"
 
+    def _remove_selected_files(self, selected_files, file_listbox):
+        for selected in file_listbox.curselection():
+            selected_files.pop(selected)
+            file_listbox.delete(selected)
+
     def add_file_upload(self, owner, label_text, container=None):
         if container is None:
             container = owner.container
@@ -260,6 +265,13 @@ class DocumentUIHelper:
             pack_kwargs={"side": "left"},
         )
         self.factory.add_label(button_row, "Пуснете файлове тук", padx=(8, 0), anchor="w")
+
+        self.factory.add_button(
+            button_row,
+            text=self.labels["buttons"]["remove_files"],
+            command=lambda: self._remove_selected_files(selected_files, file_listbox),
+            pack_kwargs={"side": "right"}
+        )
 
         if DND_FILES:
             upload_frame.drop_target_register(DND_FILES)
