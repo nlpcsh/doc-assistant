@@ -1,5 +1,5 @@
 import json
-import os
+from os import path
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -41,10 +41,10 @@ class Preferences:
     def get_signature_image_path(cls) -> Optional[str]:
         """Get the last used signature image path."""
         prefs = cls.load()
-        path = prefs.get("signature_image_path")
+        img_path = prefs.get("signature_image_path")
         # Validate that file still exists
-        if path and os.path.isfile(path):
-            return path
+        if img_path and path.isfile(img_path):
+            return img_path
         return None
 
     @classmethod
@@ -123,9 +123,9 @@ class Preferences:
     def get_selected_certificate_path(cls) -> Optional[str]:
         """Get the last selected certificate file path."""
         prefs = cls.load()
-        path = prefs.get("selected_certificate_path")
-        if path and os.path.isfile(path):
-            return path
+        crt_path = prefs.get("selected_certificate_path")
+        if crt_path and path.isfile(crt_path):
+            return crt_path
         return None
 
     @classmethod

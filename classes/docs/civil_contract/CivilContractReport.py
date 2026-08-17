@@ -1,3 +1,5 @@
+from os import path
+
 from classes.docs.BaseDoc import BaseDoc
 from enums.Enums import CCStatus
 from Helpers import Helpers
@@ -71,7 +73,7 @@ class CivilContractReport(BaseDoc):
             "doc_date_and_ids_identifier": contract.get(
                 "doc_date_and_ids_identifier", contract_id
             ),
-            "sub_folder": f"/{person_id}/" if person_id else "/",
+            "sub_folder": f"{person_id}" if person_id else "",
         }
         return self.cc_context
 
@@ -92,11 +94,8 @@ class CivilContractReport(BaseDoc):
         output_folders = self.data_mgr.get_output_folders()
         contract_id = self.contracts_dropdown.get()
         person_id = self.cc_context.get("person_id", "")
-        sub_folder = f"/{person_id}/" if person_id else "/"
-        return (
-            f"{output_folders['common']}{output_folders['civil_contracts']}"
-            f"{contract_id}{sub_folder}"
-        )
+        sub_folder = f"{person_id}" if person_id else ""
+        return path.join(output_folders['common'], output_folders['civil_contracts'], contract_id, sub_folder)
 
     def _field_value(self, field_key):
         for key, _, widget in self.input_fields:

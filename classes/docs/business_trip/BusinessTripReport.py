@@ -1,3 +1,5 @@
+from os import path
+
 from classes.docs.BaseDoc import BaseDoc
 from enums.Enums import BTStatus
 from Helpers import Helpers
@@ -138,14 +140,14 @@ class BusinessTripReport(BaseDoc):
             "current_date": Helpers.get_current_date_str(dateformat="%d.%m.%Y"),
             "bt_contract_info": project.get("description", ""),
             "doc_date_and_ids_identifier": doc_date_and_ids_identifier,
-            "sub_folder": f"/{self.bt_context['selected_person_id']}/",
+            "sub_folder": f"{self.bt_context['selected_person_id']}",
         }
 
     def _get_report_output_folder(self):
         doc_identifier = self.business_trips_dropdown.get()
-        sub_folder = f"/{self.bt_context['selected_person_id']}/" if self.bt_context['selected_person_id'] else "/"
+        sub_folder = f"{self.bt_context['selected_person_id']}" if self.bt_context['selected_person_id'] else ""
         output_folders = self.data_mgr.get_output_folders()
-        return f"{output_folders['common']}{output_folders['business_trip']}{doc_identifier}{sub_folder}"
+        return path.join(output_folders['common'], output_folders['business_trip'], doc_identifier, sub_folder)
 
     def final_action(self):
         business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())

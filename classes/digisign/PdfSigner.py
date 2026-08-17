@@ -1,4 +1,4 @@
-import os
+from os import path, remove, replace
 import tempfile
 from typing import List, Optional, Tuple
 
@@ -359,26 +359,26 @@ class PdfSigner:
         self._load_signature_declaration()
 
     def _load_signature_image(self) -> None:
-        path = Preferences.get_signature_image_path()
-        if path and os.path.isfile(path):
-            self.signature_image_path = path
+        img_path = Preferences.get_signature_image_path()
+        if img_path and path.isfile(img_path):
+            self.signature_image_path = img_path
             self.update_signature_image_label()
 
     def _restore_certificate_from_preferences(self) -> None:
-        path = Preferences.get_selected_certificate_path()
-        if not path or not os.path.isfile(path):
+        crt_path = Preferences.get_selected_certificate_path()
+        if not crt_path or not path.isfile(crt_path):
             return
 
-        cert = self._build_certificate_info_from_path(path)
+        cert = self._build_certificate_info_from_path(crt_path)
         if cert:
             self._add_certificate_if_missing(cert)
 
-    def _build_certificate_info_from_path(self, path: str) -> Optional[CertificateInfo]:
+    def _build_certificate_info_from_path(self, crt_path: str) -> Optional[CertificateInfo]:
         try:
-            ext = os.path.splitext(path)[1].lower()
+            ext = path.splitext(crt_path)[1].lower()
             if ext in {'.pfx', '.p12'}:
                 if Preferences.PREFS_FILE.exists():
-                    cert_info = CertificateManager._load_certificate_info_from_preferences(path)
+                    cert_info = CertificateManager._load_certificate_info_from_preferences(crt_path)
                     self._update_certificate_labels(cert_info)
                     return cert_info
                 return CertificateInfo(
@@ -387,16 +387,16 @@ class PdfSigner:
                     thumbprint="",
                     valid_to="N/A",
                     friendly_name="N/A",
-                    cert_path=path,
+                    cert_path=crt_path,
                     password=None,
                 )
 
-            return CertificateManager.load_certificate_file(path)
+            return CertificateManager.load_certificate_file(crt_path)
         except Exception as exc:
             UIMgr.show_error("Error", f"Failed to get digital signature data:\n{exc}")
             return None
 
-    def _prompt_for_certificate_password(self, path: str) -> Optional[CertificateInfo]:
+    def _prompt_for_certificate_password(self, crt_path: str) -> Optional[CertificateInfo]:
         while True:
             password = UIMgr.ask_string(
                 self.labels["signing"]["enter_password"],
@@ -406,7 +406,7 @@ class PdfSigner:
             if password is None:
                 return None
 
-            cert = CertificateManager.load_certificate_file(path, password=password)
+            cert = CertificateManager.load_certificate_file(crt_path, password=password)
             if cert:
                 cert.password = password
                 self.selected_certificate_password = None
@@ -449,7 +449,7 @@ class PdfSigner:
 
     def update_signature_image_label(self) -> None:
         if self.signature_image_path:
-            self.signature_image_label.config(text=os.path.basename(self.signature_image_path))
+            self.signature_image_label.config(text=path.basename(self.signature_image_path))
         else:
             self.signature_image_label.config(text=self.labels["signing"]["no_signature_image_loaded"])
 
@@ -507,7 +507,7 @@ class PdfSigner:
         self.page_image_tk = None
         self.redraw_canvas()
         page_w, page_h = self.page_size
-        self.info_label.config(text=f"{os.path.basename(self.pdf_path)} — page {page_index + 1}/{len(self.reader.pages)} — {page_w:.0f}x{page_h:.0f} pts")
+        self.info_label.config(text=f"{path.basename(self.pdf_path)} — page {page_index + 1}/{len(self.reader.pages)} — {page_w:.0f}x{page_h:.0f} pts")
         self.update_selection_label()
         self.update_signature_image_label()
 
@@ -638,8 +638,8 @@ class PdfSigner:
 
             # If visual_only is not checked and digital signing failed, don't proceed
             if not is_visual_only and not signing_succeeded:
-                if os.path.exists(output_pdf):
-                    os.remove(output_pdf)
+                if path.exists(output_pdf):
+                    remove(output_pdf)
                 UIMgr.show_error(self.labels["signing"]["signing_title"], self.labels["signing"]["digital_signature_failed"])
                 return
 
@@ -650,7 +650,7 @@ class PdfSigner:
             UIMgr.show_error(self.labels["signing"]["signing_title"], f"{self.labels['signing']['signing_error']}\n{exc}")
         finally:
             try:
-                os.remove(overlay_path)
+                remove(overlay_path)
             except OSError:
                 pass
 
@@ -731,7 +731,7 @@ class PdfSigner:
             signature_image_path=self.signature_image_path,
             visual_only=is_visual_only
         )
-        output_pdf = os.path.splitext(self.pdf_path)[0] + "_signed.pdf"
+        output_pdf = path.splitext(self.pdf_path)[0] + "_signed.pdf"
         signing_succeeded = self.merge_overlay(
             self.pdf_path,
             overlay_path,
@@ -855,8 +855,8 @@ class PdfSigner:
                 signer_name=signer_name
             )
 
-            if success and os.path.exists(temp_signed):
-                os.replace(temp_signed, pdf_path)
+            if success and path.exists(temp_signed):
+                replace(temp_signed, pdf_path)
                 print("✓ Digital signature added successfully")
                 return True
 

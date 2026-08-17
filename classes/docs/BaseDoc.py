@@ -15,8 +15,8 @@ class BaseDoc(ttk.Frame):
         self.data_mgr = data_mgr
         self.labels = self.data_mgr.get_labels()
         base_dir = self.data_mgr.base_dir
-        self.signature_path = base_dir + "/templates/"
-        self.template_dir = base_dir + "/templates/" + template_dir + "/"
+        self.signature_path = path.join(base_dir, "templates")
+        self.template_dir = path.join(base_dir, "templates", template_dir)
         self.template_group = template_dir
         self.template_names = template_names if isinstance(template_names, list) else [template_names]
         self.output_folder = output_folder
@@ -77,7 +77,7 @@ class BaseDoc(ttk.Frame):
         return path.join(output_dir, f"{context['doc_date_and_ids_identifier']}_{template}")
 
     def _render_template(self, template, context):
-        doc = DocxTemplate(self.template_dir + template)
+        doc = DocxTemplate(path.join(self.template_dir, template))
 
         try:
             doc.render(context)
@@ -105,7 +105,7 @@ class BaseDoc(ttk.Frame):
 
     def _build_output_path(self, context):
         output_folders = self.data_mgr.get_output_folders()
-        return f"{output_folders['common']}{output_folders[self.output_folder]}{context['doc_date_and_ids_identifier']}{context['sub_folder']}"
+        return path.join(output_folders['common'], output_folders[self.output_folder], context['doc_date_and_ids_identifier'], context['sub_folder'])
 
     def _get_unique_destination(self, destination):
         if not path.exists(destination):
