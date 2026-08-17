@@ -161,6 +161,8 @@ class BaseDoc(ttk.Frame):
                     pdf_path = out_docx.replace(".docx", ".pdf")
                     if path.exists(out_docx) and path.exists(pdf_path):
                         unlink(out_docx)
+                    else:
+                        raise FileNotFoundError(f"Path {out_docx} and {pdf_path} does not exists!")
 
             if moved_docx:
                 message = (
