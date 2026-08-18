@@ -9,7 +9,7 @@
         "entry_size": 10
     },
     "output_folders": {
-        "common": "/home/nlp/Docs",
+        "common": "/home/USER/Docs",
         "civil_contracts": "civil_contracts",
         "business_trip": "business_trip"
     }
