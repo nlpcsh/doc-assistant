@@ -178,8 +178,6 @@ class DocumentUIHelper:
             container = owner.container
         if path.exists(owner.signature_path + "sig.png"):
             owner.sig_path = owner.signature_path + "sig.png"
-        else:
-            self.factory.add_button(container, text=self.labels["buttons"]["select_sig"], command=owner.get_signature, pack_kwargs={"pady": 10, "padx": 10})
 
         owner.gen_btn = self.factory.add_button(container, text=self.labels["buttons"][gen_label_key], command=owner.start_generation, pack_kwargs={"pady": 20, "padx": 10})
         return owner.gen_btn
