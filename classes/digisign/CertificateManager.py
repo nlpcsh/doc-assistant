@@ -1,8 +1,8 @@
-import os
 import platform
 import subprocess
 import json
 import tempfile
+from os import path, listdir, remove
 from pathlib import Path
 from typing import List, Tuple, Optional
 
@@ -108,12 +108,12 @@ $result | ConvertTo-Json -Depth 2
         return certs
 
     @staticmethod
-    def _load_single_certificate(path: str) -> Optional[CertificateInfo]:
+    def _load_single_certificate(crt_path: str) -> Optional[CertificateInfo]:
         try:
-            ext = os.path.splitext(path)[1].lower()
+            ext = path.splitext(crt_path)[1].lower()
             if ext in {'.pfx', '.p12'}:
                 return None
-            return CertificateManager.load_certificate_file(path)
+            return CertificateManager.load_certificate_file(crt_path)
         except Exception:
             return None
 
@@ -167,7 +167,7 @@ $result | ConvertTo-Json -Depth 2
     def load_certificate_file(cert_path: str, password: Optional[str] = None) -> Optional[CertificateInfo]:
         """Load a certificate from a file path, supporting PEM/DER and PKCS#12 files."""
         try:
-            ext = os.path.splitext(cert_path)[1].lower()
+            ext = path.splitext(cert_path)[1].lower()
             if ext in {'.pfx', '.p12'}:
                 if password is None:
                     if Preferences.PREFS_FILE.exists():
@@ -270,7 +270,7 @@ $result | ConvertTo-Json -Depth 2
         cert_paths = []
         try:
             CertificateManager.CERT_FILE_DIR.mkdir(parents=True, exist_ok=True)
-            for filename in os.listdir(CertificateManager.CERT_FILE_DIR):
+            for filename in listdir(CertificateManager.CERT_FILE_DIR):
                 if filename.lower().endswith(('.pfx', '.p12', '.pem', '.crt', '.cer')):
                     cert_paths.append(str(CertificateManager.CERT_FILE_DIR / filename))
         except Exception:
@@ -288,7 +288,7 @@ $result | ConvertTo-Json -Depth 2
 
         try:
             temp_dir = tempfile.gettempdir()
-            pfx_path = os.path.join(temp_dir, f'digisign_cert_{thumbprint[:8]}.pfx')
+            pfx_path = path.join(temp_dir, f'digisign_cert_{thumbprint[:8]}.pfx')
 
             # Use a random password if none provided
             if password is None:
@@ -319,7 +319,7 @@ else {{
             )
 
             if result.returncode == 0 and "SUCCESS" in result.stdout:
-                if os.path.exists(pfx_path) and os.path.getsize(pfx_path) > 0:
+                if path.exists(pfx_path) and path.getsize(pfx_path) > 0:
                     return pfx_path, password
             else:
                 raise Exception(f"Certificate export failed: {result.stdout.strip()}")
@@ -357,7 +357,7 @@ else {{
                 sig_meta = signers.PdfSignatureMetadata(
                     field_name='Signature1',
                     name=signer_name,
-                    reason=f'Signed by {signer_name or os.path.basename(pfx_path)}',
+                    reason=f'Signed by {signer_name or path.basename(pfx_path)}',
                 )
                 signers.sign_pdf(w, sig_meta, signer=signer, output=outf)
 
@@ -379,7 +379,7 @@ else {{
         Returns True if a cryptographic signature was successfully applied.
         """
         try:
-            if thumbprint_or_path and os.path.exists(thumbprint_or_path) and thumbprint_or_path.lower().endswith(('.pfx', '.p12')):
+            if thumbprint_or_path and path.exists(thumbprint_or_path) and thumbprint_or_path.lower().endswith(('.pfx', '.p12')):
                 password_to_use = password if password is not None else None
                 return CertificateManager._sign_pdf_with_pkcs12_file(
                     thumbprint_or_path,
@@ -424,7 +424,7 @@ else {{
                 return False
             finally:
                 try:
-                    os.remove(pfx_path)
+                    remove(pfx_path)
                 except Exception:
                     pass
 

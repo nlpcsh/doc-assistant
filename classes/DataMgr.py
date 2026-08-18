@@ -8,14 +8,19 @@ class DataMgr:
     def __init__(self, base_dir):
         self.base_dir = base_dir
 
-        data_file = path.join(self.base_dir, "data/data.json")
+        data_file = path.join(self.base_dir, "data", "data.json")
         with open(data_file, 'r', encoding="utf-8") as f:
             self.data = json.load(f)
 
-        labels_path = path.join(self.base_dir, "settings/labels.json")
+        labels_path = path.join(self.base_dir, "settings", "labels.json")
         self.labels = {}
         with open(labels_path, "r", encoding="utf-8") as f:
             self.labels = json.load(f)
+
+        preferences_path = path.join(self.base_dir, "settings", "preferences.json")
+        self.preferences = {}
+        with open(preferences_path, "r", encoding="utf-8") as f:
+            self.preferences = json.load(f)
 
     def get_labels(self):
         return self.labels
@@ -36,7 +41,7 @@ class DataMgr:
         return list(self.data['projects'].keys())
 
     def get_output_folders(self):
-        return self.data['output_folders']
+        return self.preferences['output_folders']
 
     def save_new_bussiness_trip(self, new_bussiness_trip):
         if 'business_trips' not in self.data:
@@ -71,7 +76,7 @@ class DataMgr:
         }
 
     def save_data(self):
-        with open(path.join(self.base_dir, 'data/data.json'), 'w', encoding='utf-8') as f:
+        with open(path.join(self.base_dir, 'data', 'data.json'), 'w', encoding='utf-8') as f:
             json.dump(self.data, f, indent=4, ensure_ascii=False)
 
     def update_business_trip_statuses(self):

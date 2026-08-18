@@ -45,11 +45,17 @@ class Helpers:
 
     @staticmethod
     def get_preferences(preferences_file_path):
+        if hasattr(Helpers, 'preferences'):
+            return Helpers.preferences
+        if not preferences_file_path:
+            preferences_file_path = path.join(path.dirname(path.abspath(__file__)), "settings", "preferences.json")
         if not path.exists(preferences_file_path):
             return {}
         with open(preferences_file_path, 'r', encoding='utf-8') as f:
             import json
-            return json.load(f)
+            preferences = json.load(f)
+            Helpers.preferences = preferences
+            return preferences
 
     @staticmethod
     def get_font_preferences(preferences_file_path=None):
@@ -72,4 +78,4 @@ class Helpers:
         size = font_settings.get(size_key, 11)
         if bold:
             return (family, int(size), "bold")
-        return (family, int(size))
+        return (family, int(size), "normal")

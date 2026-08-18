@@ -15,8 +15,8 @@ class BaseDoc(ttk.Frame):
         self.data_mgr = data_mgr
         self.labels = self.data_mgr.get_labels()
         base_dir = self.data_mgr.base_dir
-        self.signature_path = base_dir + "/templates/"
-        self.template_dir = base_dir + "/templates/" + template_dir + "/"
+        self.signature_path = path.join(base_dir, "templates")
+        self.template_dir = path.join(base_dir, "templates", template_dir)
         self.template_group = template_dir
         self.template_names = template_names if isinstance(template_names, list) else [template_names]
         self.output_folder = output_folder
@@ -77,7 +77,7 @@ class BaseDoc(ttk.Frame):
         return path.join(output_dir, f"{context['doc_date_and_ids_identifier']}_{template}")
 
     def _render_template(self, template, context):
-        doc = DocxTemplate(self.template_dir + template)
+        doc = DocxTemplate(path.join(self.template_dir, template))
 
         try:
             doc.render(context)
@@ -95,7 +95,7 @@ class BaseDoc(ttk.Frame):
         office_converter = self._find_office_converter()
         if office_converter:
             try:
-                subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx], check=True)
+                subprocess.run([office_converter, '--headless', '--convert-to', 'pdf', out_docx, '--outdir', path.dirname(out_docx)], check=True)
                 return True
             except Exception as e:
                 error_message = str(e)
@@ -105,40 +105,7 @@ class BaseDoc(ttk.Frame):
 
     def _build_output_path(self, context):
         output_folders = self.data_mgr.get_output_folders()
-        return f"{output_folders['common']}{output_folders[self.output_folder]}{context['doc_date_and_ids_identifier']}{context['sub_folder']}"
-
-    def _get_unique_destination(self, destination):
-        if not path.exists(destination):
-            return destination
-
-        base, ext = path.splitext(destination)
-        index = 1
-        while True:
-            candidate = f"{base}_{index}{ext}"
-            if not path.exists(candidate):
-                return candidate
-            index += 1
-
-    def _move_pdf_to_output(self, out_docx, context):
-        move_path = self._build_output_path(context)
-        if not path.exists(move_path):
-            makedirs(move_path, exist_ok=True)
-
-        pdf_path = out_docx.replace(".docx", ".pdf")
-        destination = path.join(move_path, path.basename(pdf_path))
-        new_path = self._get_unique_destination(destination)
-        shutil.move(pdf_path, new_path)
-        return new_path
-
-    def _move_docx_to_output(self, out_docx, context):
-        move_path = self._build_output_path(context)
-        if not path.exists(move_path):
-            makedirs(move_path, exist_ok=True)
-
-        destination = path.join(move_path, path.basename(out_docx))
-        new_path = self._get_unique_destination(destination)
-        shutil.move(out_docx, new_path)
-        return new_path
+        return path.join(output_folders['common'], output_folders[self.output_folder], context['doc_date_and_ids_identifier'], context['sub_folder'])
 
     def process_doc(self):
         try:
@@ -161,6 +128,8 @@ class BaseDoc(ttk.Frame):
                     pdf_path = out_docx.replace(".docx", ".pdf")
                     if path.exists(out_docx) and path.exists(pdf_path):
                         unlink(out_docx)
+                    else:
+                        raise FileNotFoundError(f"Path {out_docx} and {pdf_path} does not exists!")
 
             if moved_docx:
                 message = (

@@ -110,7 +110,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 - Create *template* folder with subfolders *business_trip* and *civil_contract* containig all necessary templates described bellow. The templates have to own placeholders with all business trip and civil contract context object properties - for example: {{*bt_euro_per_day*}}.
 - Create in *data* folder *data.json* object with described bellow data fields.
-- Configure in data.json the pdf output folder: data["output_folders"]["common"] and its sub-folders: data["output_folders"]["business_trip"] and data["output_folders"]["civil_contracts"]
+- Configure in settings/preferences.json the pdf output folder: preferences["output_folders"]["common"] and its sub-folders: preferences["output_folders"]["business_trip"] and preferences["output_folders"]["civil_contracts"]
 - Before running the app: in data.json the co-workers and projects have to be predefined. **Note:** use for the co-worker id's short symbol sentences - for example first letters of his/hers names. The same for the project ids. Along with the starting date, both are used for the generated output folders and pdf names.
 - There are sample template and data folders and files in the *sample_template_and_data.zip* file.
 

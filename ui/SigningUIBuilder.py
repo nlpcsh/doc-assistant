@@ -94,7 +94,7 @@ class SigningUIBuilder:
             tk.Label(
                 sidebar,
                 text=labels["signing"]["digital_certificate"],
-                font=Helpers.get_ui_font(size_key="label_size", bold=True),
+                font=Helpers.get_ui_font(size_key="label_size", bold=False),
             ).pack(anchor="w", pady=(0, 6))
             components["cert_combo"] = ttk.Combobox(sidebar, state="readonly", width=25)
             components["cert_combo"].pack(fill="x", pady=(0, 6))
@@ -108,7 +108,7 @@ class SigningUIBuilder:
             )
             components["cert_status_label"].pack(anchor="w", pady=(0, 12))
 
-        tk.Label(sidebar, text=labels["signing"]["signer"], font=Helpers.get_ui_font(size_key="label_size", bold=True)).pack(anchor="w")
+        tk.Label(sidebar, text=labels["signing"]["signer"], font=Helpers.get_ui_font(size_key="label_size", bold=False)).pack(anchor="w")
         components["signer_name_label"] = tk.Label(
             sidebar,
             text="(From certificate)",
@@ -136,7 +136,7 @@ class SigningUIBuilder:
             offvalue=False,
         ).pack(anchor="w", pady=(0, 12))
 
-        tk.Label(sidebar, text=labels["signing"]["signature_statement"], font=Helpers.get_ui_font(size_key="label_size", bold=True)).pack(anchor="w")
+        tk.Label(sidebar, text=labels["signing"]["signature_statement"], font=Helpers.get_ui_font(size_key="label_size", bold=False)).pack(anchor="w")
         components["signature_declaration_var"] = tk.StringVar(value="I'm the author")
         components["signature_declaration_combo"] = ttk.Combobox(
             sidebar,
@@ -158,7 +158,7 @@ class SigningUIBuilder:
         )
         components["signature_image_label"].pack(anchor="w", pady=(6, 12))
 
-        tk.Label(sidebar, text=labels["signing"]["selection_display"], font=Helpers.get_ui_font(size_key="label_size", bold=True)).pack(anchor="w")
+        tk.Label(sidebar, text=labels["signing"]["selection_display"], font=Helpers.get_ui_font(size_key="label_size", bold=False)).pack(anchor="w")
         components["selection_label"] = tk.Label(
             sidebar,
             text="x=0.0 y=0.0 w=0.0 h=0.0",
@@ -166,7 +166,7 @@ class SigningUIBuilder:
         )
         components["selection_label"].pack(anchor="w", pady=(0, 12))
 
-        tk.Label(sidebar, text=labels["signing"]["instructions"], font=Helpers.get_ui_font(size_key="label_size", bold=True)).pack(anchor="w")
+        tk.Label(sidebar, text=labels["signing"]["instructions"], font=Helpers.get_ui_font(size_key="label_size", bold=False)).pack(anchor="w")
         tk.Label(
             sidebar,
             text=labels["signing"]["instructions_text"],
