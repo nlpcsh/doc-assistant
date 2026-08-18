@@ -1,12 +1,12 @@
 {
     "font": {
-        "Linux_family": "Liberation Sans",
+        "Linux_family": "terminal",
         "Windows_family": "Arial",
         "body_size": 11,
         "heading_size": 14,
-        "label_size": 10,
-        "button_size": 10,
-        "entry_size": 10
+        "label_size": 11,
+        "button_size": 11,
+        "entry_size": 11
     },
     "output_folders": {
         "common": "/home/USER/Docs",
