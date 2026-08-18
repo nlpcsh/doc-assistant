@@ -1,7 +1,7 @@
 from os import path
 import locale
 from PIL import Image, ImageTk
-from tkinter import ttk
+#from tkinter import font
 from tkinterdnd2 import Tk
 
 from classes.MainApp import MainApp
@@ -27,13 +27,11 @@ if __name__ == "__main__":
     icon_image = Image.open(path.join(base_dir, "icon.ico"))
     icon = ImageTk.PhotoImage(icon_image, master=root)
     root.iconphoto(True, icon)
-    # Configure Tkinter for Unicode support
-    default_font = Helpers.get_ui_font(preferences_file_path=preferences_path, size_key="body_size")
 
-    root.option_add('*font', default_font)  # Set a readable default font with Cyrillic support
-    style = ttk.Style(root)
-    style.configure('.', font=default_font)
+    # Configure Tkinter for Unicode support
     root.tk.call('encoding', 'system', 'utf-8')  # Ensure UTF-8 encoding
 
-    app = MainApp(root, base_dir)
+    default_font = Helpers.get_ui_font(preferences_file_path=preferences_path, size_key="body_size")
+
+    app = MainApp(root, base_dir, default_font)
     root.mainloop()
