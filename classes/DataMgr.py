@@ -17,6 +17,11 @@ class DataMgr:
         with open(labels_path, "r", encoding="utf-8") as f:
             self.labels = json.load(f)
 
+        preferences_path = path.join(self.base_dir, "settings", "preferences.json")
+        self.preferences = {}
+        with open(preferences_path, "r", encoding="utf-8") as f:
+            self.preferences = json.load(f)
+
     def get_labels(self):
         return self.labels
 
@@ -36,7 +41,7 @@ class DataMgr:
         return list(self.data['projects'].keys())
 
     def get_output_folders(self):
-        return self.data['output_folders']
+        return self.preferences['output_folders']
 
     def save_new_bussiness_trip(self, new_bussiness_trip):
         if 'business_trips' not in self.data:

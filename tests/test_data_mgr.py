@@ -26,8 +26,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
                     "reported": {"status": "PL_REPORTED"},
                 },
                 "projects": {},
-                "co_workers": {},
-                "output_folders": {},
+                "co_workers": {}
             }),
             encoding="utf-8",
         )
@@ -71,7 +70,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
     def test_lookup_helpers_return_expected_values(self):
         self.data_mgr.data["projects"] = {"proj-1": {"name": "Alpha"}}
         self.data_mgr.data["co_workers"] = {"cw-1": {"full_name": "John Doe"}}
-        self.data_mgr.data["output_folders"] = {"common": "out/", "business_trip": "bt/"}
+        self.data_mgr.preferences["output_folders"] = {"common": "out/", "business_trip": "bt/"}
         self.data_mgr.save_data()
 
         self.assertEqual(self.data_mgr.get_project_by_id("proj-1"), {"name": "Alpha"})

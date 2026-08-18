@@ -7,5 +7,10 @@
         "label_size": 10,
         "button_size": 10,
         "entry_size": 10
+    },
+    "output_folders": {
+        "common": "/home/nlp/Docs",
+        "civil_contracts": "civil_contracts",
+        "business_trip": "business_trip"
     }
 }
