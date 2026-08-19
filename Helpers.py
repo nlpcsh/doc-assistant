@@ -44,7 +44,7 @@ class Helpers:
         return copied_files
 
     @staticmethod
-    def get_preferences(preferences_file_path):
+    def get_preferences(preferences_file_path=None):
         if hasattr(Helpers, 'preferences'):
             return Helpers.preferences
         if not preferences_file_path:

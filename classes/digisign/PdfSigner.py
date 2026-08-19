@@ -17,6 +17,7 @@ from classes.digisign.CertificateManager import CertificateManager
 from classes.digisign.Preferences import Preferences
 from classes.digisign.PdfPreviewRenderer import PdfPreviewRenderer
 from classes.digisign.SignatureOverlay import SignatureOverlay
+from Helpers import Helpers
 from ui.UIMgr import UIMgr
 
 DEFAULT_WIDTH = 8 * cm
@@ -48,6 +49,7 @@ class PdfSigner:
         # Load initial data
         self.load_certificates()
         self.load_preferences()
+        self.ui_preferences = Helpers.get_preferences().get("digital_signature", {})
 
     def _initialize_state(self) -> None:
         """Initialize application state variables."""
@@ -558,7 +560,7 @@ class PdfSigner:
                 text=preview_text,
                 anchor="nw",
                 fill="#222",
-                font=("Courier", 9),
+                font=self.ui_preferences.get("font", ["Courier", 9]),
                 width=disp_w - 20,
             )
 
