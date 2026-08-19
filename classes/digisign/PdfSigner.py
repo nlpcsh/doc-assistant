@@ -451,7 +451,7 @@ class PdfSigner:
 
     def update_signature_image_label(self) -> None:
         if self.signature_image_path:
-            self.signature_image_label.config(text=path.basename(self.signature_image_path))
+            self.signature_image_label.config(text=path.basename(self.signature_image_path), fg="#5cb85c")
         else:
             self.signature_image_label.config(text=self.labels["signing"]["no_signature_image_loaded"])
 

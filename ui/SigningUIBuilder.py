@@ -123,8 +123,9 @@ class SigningUIBuilder:
             text=labels["signing"]["no_certificate_selected"],
             wraplength=160,
             justify="left",
-            fg="#666",
+            fg="#d9534f"
         )
+
         components["cert_validity_label"].pack(anchor="w", pady=(0, 12))
 
         components["visual_only_var"] = tk.BooleanVar(value=False)
@@ -155,6 +156,7 @@ class SigningUIBuilder:
             text=labels["signing"]["no_signature_image_loaded"],
             wraplength=160,
             justify="left",
+            fg="#d9534f"
         )
         components["signature_image_label"].pack(anchor="w", pady=(6, 12))
 
