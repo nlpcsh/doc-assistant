@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import END, ttk, MULTIPLE, filedialog
 from datetime import datetime
 from os import path
-
+import time
 from tkcalendar import Calendar
 from tkinterdnd2 import DND_FILES
 
@@ -31,6 +31,18 @@ class DocumentUIHelper:
         owner.preview_scale = 1.0
         owner.preview_rect = None
         owner.selected_signature_rect = None
+
+    def _start_progress(self, owner):
+        owner.progress.start()
+
+        # Simulate a task that takes time to complete
+        for i in range(101):
+        # Simulate some work
+            time.sleep(0.05)  
+            owner.progress['value'] = i
+            # Update the GUI
+            owner.update_idletasks()  
+        owner.progress.stop()
 
     def add_tab_title(self, owner, label_key):
         self.factory.add_label(owner.container, self.labels["tabs"][label_key], pady=10)
@@ -287,6 +299,7 @@ class DocumentUIHelper:
     def start_generation(self, owner):
         owner.gen_btn.config(state="disabled")
         owner.progress.pack(pady=5)
+        self._start_progress(owner=owner)
         owner.status_label.pack()
 
     def reset_generation_ui(self, owner):
