@@ -1,5 +1,4 @@
-import tkinter as tk
-from tkinter import END, ttk, MULTIPLE, filedialog
+from tkinter import END, ttk, MULTIPLE, filedialog, BooleanVar, Entry, Text, Frame, PhotoImage
 from datetime import datetime
 from os import path
 import time
@@ -94,7 +93,7 @@ class DocumentUIHelper:
     def add_checkbox_field(self, owner, label_key, checkbox_text, default_value="", show_by_default=False, width=20, command=None):
         field_frame = self.factory.add_frame(owner.container, pack_kwargs={"fill": "x", "padx": 10, "pady": 5})
 
-        checkbox_var = tk.BooleanVar(value=show_by_default)
+        checkbox_var = BooleanVar(value=show_by_default)
         setattr(owner, f"{label_key}_var", checkbox_var)
         self.factory.add_checkbutton(field_frame, checkbox_text, variable=checkbox_var, command=command, side="left", padx=(0, 10))
 
@@ -122,7 +121,7 @@ class DocumentUIHelper:
     def add_checkbox_multi(self, owner, checkbox_text, options, parent=None):
         if parent is None:
             parent = owner.container
-        var = tk.BooleanVar()
+        var = BooleanVar()
         self.factory.add_checkbutton(parent, checkbox_text, variable=var, anchor="w", padx=10, pady=5)
 
         height = min(len(options), 10)
@@ -141,7 +140,7 @@ class DocumentUIHelper:
         self.factory.add_label(owner.container, self.labels["fields"][label_key], anchor="w")
 
         date_frame = self.factory.add_frame(owner.container, pack_kwargs={"fill": "x", "padx": 5, "pady": 5})
-        date_entry = tk.Entry(date_frame, width=width)
+        date_entry = Entry(date_frame, width=width)
         date_entry.pack(side="left", padx=5)
 
         if preselect_today:
@@ -182,7 +181,9 @@ class DocumentUIHelper:
             self.factory.add_button(cal_window, text=self.labels["signing"]["select_date"], command=select_date, pack_kwargs={"pady": 5})
             cal_window.grab_set()
 
-        self.factory.add_button(date_frame, text="📅", command=open_calendar, widget_kwargs={"width": 3}, pack_kwargs={"side": "left", "padx": 2})
+        calendar_img = PhotoImage(file=path.join(self.data_mgr.get_base_dir(), "imgs", "calendar_small.png"))
+        cal_image_resized = calendar_img.subsample(3, 3)
+        self.factory.add_button(date_frame, image=cal_image_resized, command=open_calendar, widget_kwargs={"width": 3}, pack_kwargs={"side": "left", "padx": 1, "pady": 1})
         return date_entry
 
     def add_common_buttons(self, owner, gen_label_key, container=None):
@@ -206,7 +207,7 @@ class DocumentUIHelper:
     def _create_file_upload_frame(self, container, label_text):
         frame = self.factory.add_frame(container, pack_kwargs={"fill": "x", "padx": 10, "pady": 5})
         self.factory.add_label(frame, label_text, anchor="w")
-        upload_frame = tk.Frame(frame, relief="groove", bd=1)
+        upload_frame = Frame(frame, relief="groove", bd=1)
         upload_frame.pack(fill="x", padx=2, pady=2)
         return frame, upload_frame
 
@@ -264,7 +265,7 @@ class DocumentUIHelper:
         frame, upload_frame = self._create_file_upload_frame(container, label_text)
         file_listbox = self._create_file_listbox(upload_frame)
 
-        button_row = tk.Frame(upload_frame)
+        button_row = Frame(upload_frame)
         button_row.pack(fill="x", padx=6, pady=(0, 6))
 
         selected_files = []
@@ -310,10 +311,10 @@ class DocumentUIHelper:
     def set_field_value(self, owner, label_key, value):
         for key, frame, widget in owner.input_fields:
             if key == label_key:
-                if isinstance(widget, tk.Entry):
+                if isinstance(widget, Entry):
                     widget.delete(0, END)
                     widget.insert(0, value)
-                elif isinstance(widget, tk.Text):
+                elif isinstance(widget, Text):
                     widget.delete("1.0", END)
                     widget.insert("1.0", value)
                 break

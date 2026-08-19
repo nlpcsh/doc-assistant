@@ -75,10 +75,12 @@ class WidgetFactory:
         checkbox.pack(**pack_kwargs)
         return checkbox
 
-    def add_button(self, container, text: str, command=None, widget_kwargs: Optional[Dict[str, Any]] = None, pack_kwargs: Optional[Dict[str, Any]] = None):
+    def add_button(self, container, text="", image=None, command=None, widget_kwargs: Optional[Dict[str, Any]] = None, pack_kwargs: Optional[Dict[str, Any]] = None):
         if widget_kwargs is None:
             widget_kwargs = {}
-        button = ttk.Button(container, text=text, command=command, **widget_kwargs)
+        button = ttk.Button(container, text=text, image=image, command=command, **widget_kwargs)
+        if image:
+            button.image = image  # Keep a reference to the image to prevent garbage collection
         if pack_kwargs is None:
             pack_kwargs = {}
         button.pack(**pack_kwargs)

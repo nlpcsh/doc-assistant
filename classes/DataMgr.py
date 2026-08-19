@@ -22,6 +22,9 @@ class DataMgr:
         with open(preferences_path, "r", encoding="utf-8") as f:
             self.preferences = json.load(f)
 
+    def get_base_dir(self):
+        return self.base_dir
+
     def get_labels(self):
         return self.labels
 
