@@ -37,10 +37,10 @@ class DocumentUIHelper:
         # Simulate a task that takes time to complete
         for i in range(101):
         # Simulate some work
-            time.sleep(0.05)  
+            time.sleep(0.01)
             owner.progress['value'] = i
             # Update the GUI
-            owner.update_idletasks()  
+            owner.update_idletasks()
         owner.progress.stop()
 
     def add_tab_title(self, owner, label_key):
