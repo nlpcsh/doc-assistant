@@ -13,6 +13,16 @@
         "button_size": 11,
         "entry_size": 11
     },
+    "tabs": {
+        "colors": {
+            "selected": "#4a4a4a",
+            "active": "#6b6b6b",
+            "selected_text": "orange",
+            "active_text": "orange",
+            "background_color": "#d0d0d0",
+            "text_color": "#222222"
+        }
+    },
     "digital_signature": {
         "font": {
             "family": "Helvetica",
