@@ -554,13 +554,16 @@ class PdfSigner:
         else:
             preview_page = self.reader.pages[self.page_var.get() - 1]
             preview_text = self.get_page_preview_text(preview_page)
+            font_preferences = self.ui_preferences.get("font", {})
+            font_family = font_preferences.get("family", "Courier")
+            font_size = font_preferences.get("size", 6)
             self.canvas.create_text(
                 x0 + 10,
                 y0 + 10,
                 text=preview_text,
                 anchor="nw",
                 fill="#222",
-                font=self.ui_preferences.get("font", ["Courier", 9]),
+                font=(font_family, font_size),
                 width=disp_w - 20,
             )
 

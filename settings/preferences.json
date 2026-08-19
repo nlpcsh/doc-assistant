@@ -14,7 +14,15 @@
         "entry_size": 11
     },
     "digital_signature": {
-        "font": ["Courier", 9],
-        "border_color": "#007bff"
+        "font": {
+            "family": "Helvetica",
+            "size": 6,
+            "name_font_family": "Helvetica-Bold"
+        },
+        "border": {
+            "color_RGB": [0.867, 0.894, 1.0],
+            "width_px": 1
+        },
+        "background_color_RGB": [0, 0, 0]
     }
 }
