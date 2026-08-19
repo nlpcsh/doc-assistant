@@ -5,6 +5,7 @@ from reportlab.pdfgen import canvas
 
 from classes.digisign.CertificateManager import CertificateManager
 from classes.digisign.DataClasses import SignaturePlacement
+from Helpers import Helpers
 from typing import Optional
 
 from reportlab.lib.units import inch
@@ -43,19 +44,21 @@ class SignatureOverlay:
 
     @staticmethod
     def _draw_border(c, placement: SignaturePlacement) -> None:
-        c.setStrokeColorRGB(0.867, 0.894, 1.0)
-        c.setFillColorRGB(0, 0, 0)
-        c.setLineWidth(1)
+        signature_preferences = Helpers.get_preferences().get("digital_signature", {})
+        border_preferences = signature_preferences.get("border", {})
+        c.setStrokeColorRGB(*border_preferences["color_RGB"])
+        c.setFillColorRGB(*signature_preferences["background_color_RGB"])
+        c.setLineWidth(border_preferences["width_px"])
         c.rect(placement.x, placement.y, placement.width, placement.height)
 
     @staticmethod
     def _build_text_lines(signer_name: str, signature_type: str):
-        size = 6
+        font_preference = Helpers.get_preferences().get("digital_signature", {}).get("font", {})
         return [
-            ("Digitally signed by:", "Helvetica", size),
-            (signer_name, "Helvetica-Bold", size),
-            (f"Reason: {signature_type}", "Helvetica", size),
-            (f"Date: {CertificateManager.get_current_time_iso()}", "Helvetica", size),
+            ("Digitally signed by:", font_preference["family"], font_preference["size"]),
+            (signer_name, font_preference["name_font_family"], font_preference["size"]),
+            (f"Reason: {signature_type}", font_preference["family"], font_preference["size"]),
+            (f"Date: {CertificateManager.get_current_time_iso()}", font_preference["family"], font_preference["size"]),
         ]
 
     @staticmethod

@@ -1,7 +1,7 @@
 from ui.WidgetFactory import WidgetFactory
 from ui.DocumentUIHelper import DocumentUIHelper
 from ui.SigningUIBuilder import SigningUIBuilder
-
+from Helpers import Helpers
 
 class UIMgr:
     def __init__(self, data_mgr):
@@ -12,6 +12,7 @@ class UIMgr:
         self.data_mgr = data_mgr
 
     def create_main_window(self, root):
+        tab_colors_preferences = Helpers.get_preferences().get("tabs", {})
         root.title(self.labels["app_title"])
         from tkinter import ttk
 
@@ -20,11 +21,11 @@ class UIMgr:
 
         style = ttk.Style(root)
         style.configure("TNotebook", background="#f0f0f0")
-        style.configure("TNotebook.Tab", padding=[5, 3], background="#d0d0d0", foreground="#222222")
+        style.configure("TNotebook.Tab", padding=[5, 3], background=tab_colors_preferences["colors"]["background_color"], foreground=tab_colors_preferences["colors"]["text_color"])
         style.map(
             "TNotebook.Tab",
-            background=[("selected", "#4a4a4a"), ("active", "#6b6b6b")],
-            foreground=[("selected", "orange"), ("active", "orange")],
+            background=[("selected", tab_colors_preferences["colors"]["selected"]), ("active", tab_colors_preferences["colors"]["active"])],
+            foreground=[("selected", tab_colors_preferences["colors"]["selected_text"]), ("active", tab_colors_preferences["colors"]["active_text"])],
         )
 
         return notebook

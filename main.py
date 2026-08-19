@@ -23,7 +23,6 @@ if __name__ == "__main__":
     root = Tk()
     base_dir = path.dirname(path.abspath(__file__))
     preferences_path = path.join(base_dir, "settings", "preferences.json")
-    preferences = Helpers.get_preferences(preferences_path)
     icon_image = Image.open(path.join(base_dir, "icon.ico"))
     icon = ImageTk.PhotoImage(icon_image, master=root)
     root.iconphoto(True, icon)
