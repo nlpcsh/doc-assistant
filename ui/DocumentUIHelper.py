@@ -5,6 +5,7 @@ import time
 from tkcalendar import Calendar
 from tkinterdnd2 import DND_FILES
 
+from ui.CountryCitySelector import CountryCitySelector
 from ui.WidgetFactory import WidgetFactory
 
 
@@ -37,7 +38,7 @@ class DocumentUIHelper:
         # Simulate a task that takes time to complete
         for i in range(101):
         # Simulate some work
-            time.sleep(0.01)
+            time.sleep(0.005)
             owner.progress['value'] = i
             # Update the GUI
             owner.update_idletasks()
@@ -203,6 +204,14 @@ class DocumentUIHelper:
         if options:
             combo.current(0)
         return combo
+
+    def add_destination_section(self, owner, container=None):
+        if container is None:
+            container = owner.container
+        self.factory.add_label(container, self.labels["fields"]["bt_destination"], anchor="w")
+        destination_section = CountryCitySelector(container)
+        #destination_section.pack(padx=10, pady=5, fill="x")
+        return destination_section
 
     def _create_file_upload_frame(self, container, label_text):
         frame = self.factory.add_frame(container, pack_kwargs={"fill": "x", "padx": 10, "pady": 5})

@@ -22,7 +22,6 @@ if __name__ == "__main__":
 
     root = Tk()
     base_dir = path.dirname(path.abspath(__file__))
-    preferences_path = path.join(base_dir, "settings", "preferences.json")
     icon_image = Image.open(path.join(base_dir, "icon.ico"))
     icon = ImageTk.PhotoImage(icon_image, master=root)
     root.iconphoto(True, icon)
@@ -30,6 +29,7 @@ if __name__ == "__main__":
     # Configure Tkinter for Unicode support
     root.tk.call('encoding', 'system', 'utf-8')  # Ensure UTF-8 encoding
 
+    preferences_path = path.join(base_dir, "settings", "preferences.json")
     default_font = Helpers.get_ui_font(preferences_file_path=preferences_path, size_key="body_size")
 
     app = MainApp(root, base_dir, default_font)
