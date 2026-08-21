@@ -205,12 +205,11 @@ class DocumentUIHelper:
             combo.current(0)
         return combo
 
-    def add_destination_section(self, owner, container=None):
+    def select_destination_section(self, owner, container=None, field_labels=None):
         if container is None:
             container = owner.container
         self.factory.add_label(container, self.labels["fields"]["bt_destination"], anchor="w")
-        destination_section = CountryCitySelector(container)
-        #destination_section.pack(padx=10, pady=5, fill="x")
+        destination_section = CountryCitySelector(container, field_labels=field_labels)
         return destination_section
 
     def _create_file_upload_frame(self, container, label_text):

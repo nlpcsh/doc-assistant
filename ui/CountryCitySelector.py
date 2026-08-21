@@ -3,12 +3,13 @@ from tkinter import ttk, StringVar, END
 
 
 class CountryCitySelector:
-    def __init__(self, root):
+    def __init__(self, root, field_labels={}):
         self.root = root
         # self.root.title("Countries and Cities")
         # self.root.geometry("900x350")
+        self.field_labels = field_labels.get("fields", {})
 
-        self.countries = self.load_countries()
+        self.countries = Helpers.get_countries(root=self.root)
 
         # All dropdown pairs are stored here.
         self.dropdown_pairs = []
@@ -46,13 +47,6 @@ class CountryCitySelector:
         # Second pair:
         # completely empty
         self.add_dropdown_pair(first=False)
-
-    # =========================================================
-    # JSON
-    # =========================================================
-
-    def load_countries(self):
-        return Helpers.get_countries(root=self.root)
 
     def get_default_country(self):
         for country, data in self.countries.items():
@@ -118,6 +112,22 @@ class CountryCitySelector:
         # -----------------------------
 
         country_var = StringVar()
+
+        if first is True:
+            label_text = self.field_labels["bt_depart_from"]
+        else:
+            label_text = self.field_labels["bt_arrive_to"]
+
+        label = ttk.Label(
+            pair_frame,
+            text=label_text,
+            width=18
+        )
+
+        label.pack(
+            padx=5,
+            pady=(5, 3)
+        )
 
         country_combo = ttk.Combobox(
             pair_frame,
