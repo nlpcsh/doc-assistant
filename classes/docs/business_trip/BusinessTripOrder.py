@@ -19,7 +19,7 @@ class BusinessTripOrder(BaseDoc):
         self.all_projects.bind("<<ComboboxSelected>>", self.on_project_selected)
         self.persons_multiselect = self.ui_mgr.add_multiselect(self, "select_person", [])
         self.bt_purpose_field = self.ui_mgr.add_text_field(self, "bt_purpose", height=5, width=50)
-        self.select_destination_section = self.ui_mgr.select_destination_section(self, field_labels=self.labels)
+        self.select_destination_section = self.ui_mgr.add_select_destination_section(self, field_labels=self.labels)
         self.bt_destination_field = self.ui_mgr.add_field(self, "bt_destination")
         self.date_from = self.ui_mgr.add_date_field(self, "bt_from", preselect_today=True, width=11)
         self.date_to = self.ui_mgr.add_date_field(self, "bt_to", min_date_from=self.date_from, width=11)

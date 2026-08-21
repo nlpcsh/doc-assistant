@@ -205,7 +205,7 @@ class DocumentUIHelper:
             combo.current(0)
         return combo
 
-    def select_destination_section(self, owner, container=None, field_labels=None):
+    def add_select_destination_section(self, owner, container=None, field_labels=None):
         if container is None:
             container = owner.container
         self.factory.add_label(container, self.labels["fields"]["bt_destination"], anchor="w")
