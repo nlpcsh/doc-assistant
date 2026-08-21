@@ -296,13 +296,13 @@ class CountryCitySelector:
         if current_cities:
             existing_cities = [
                 value.strip()
-                for value in current_cities.split(",")
+                for value in current_cities.split("-")
             ]
 
             if city not in existing_cities:
                 existing_cities.append(city)
 
-            current_cities = ", ".join(existing_cities)
+            current_cities = " - ".join(existing_cities)
         else:
             current_cities = city
 
