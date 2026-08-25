@@ -19,12 +19,26 @@ class BusinessTripOrder(BaseDoc):
         self.all_projects.bind("<<ComboboxSelected>>", self.on_project_selected)
         self.persons_multiselect = self.ui_mgr.add_multiselect(self, "select_person", [])
         self.bt_purpose_field = self.ui_mgr.add_text_field(self, "bt_purpose", height=5, width=50)
-        self.select_destination_section = self.ui_mgr.add_select_destination_section(self, field_labels=self.labels)
+        self.select_destination_section = self.ui_mgr.add_select_destination_section(
+            self, field_labels=self.labels, on_selection_change=self.on_destination_selection_changed
+        )
         self.bt_destination_field = self.ui_mgr.add_field(self, "bt_destination")
         self.date_from = self.ui_mgr.add_date_field(self, "bt_from", preselect_today=True, width=11)
         self.date_to = self.ui_mgr.add_date_field(self, "bt_to", min_date_from=self.date_from, width=11)
-        self.ui_mgr.add_checkbox_field(self, "bt_euro_per_day", self.labels["fields"]["bt_euro_per_day"], default_value=str(self.data_mgr.data['common'].get("euro_per_day", "")), width=5)
-        self.ui_mgr.add_checkbox_field(self, "bt_nights_max_value", self.labels["fields"]["bt_night_money"], width=5)
+        self.bt_euro_per_day_field = self.ui_mgr.add_checkbox_field(
+            self,
+            "bt_euro_per_day",
+            self.labels["fields"]["bt_euro_per_day"],
+            default_value=lambda: getattr(self.select_destination_section, "daily", ""),
+            width=5
+        )
+        self.bt_nights_max_value_field = self.ui_mgr.add_checkbox_field(
+            self,
+            "bt_nights_max_value",
+            self.labels["fields"]["bt_night_money"],
+            default_value=lambda: getattr(self.select_destination_section, "accommodation", ""),
+            width=5
+        )
         travel_row = self.ui_mgr.add_frame(self, show_by_default=False)
         travel_row.pack(fill='x', padx=0, pady=0)
 
@@ -68,6 +82,27 @@ class BusinessTripOrder(BaseDoc):
 
     def setup_additional_ui_components(self):
         """Hook for subclasses that need controls before the order fields."""
+
+    def on_destination_selection_changed(self, selector):
+        from_city = getattr(selector, "from_city", "")
+        to_city = getattr(selector, "to_city", "")
+        if from_city and to_city:
+            destination_text = f"{from_city} - {to_city} - {from_city}"
+            if hasattr(self, "bt_destination_field") and self.bt_destination_field:
+                try:
+                    self.bt_destination_field.delete(0, 'end')
+                    self.bt_destination_field.insert(0, destination_text)
+                except Exception:
+                    pass
+
+        daily = getattr(selector, "daily", "")
+        accommodation = getattr(selector, "accommodation", "")
+
+        if getattr(self, "bt_euro_per_day_var", None) and self.bt_euro_per_day_var.get():
+            self.ui_mgr.set_field_value(self, "bt_euro_per_day", str(daily) if daily != "" else "")
+
+        if getattr(self, "bt_nights_max_value_var", None) and self.bt_nights_max_value_var.get():
+            self.ui_mgr.set_field_value(self, "bt_nights_max_value", str(accommodation) if accommodation != "" else "")
 
     def preselect_latest_project(self):
         if self.projects_list:
@@ -377,6 +412,17 @@ class BusinessTripOrder(BaseDoc):
         self.bt_context["sub_folder"] = ""
         bt_start_date = self._get_date_value(self.date_from, date_format='%Y_%m_%d')
         self.bt_context["doc_date_and_ids_identifier"] = bt_start_date + "_" + self.all_projects.get() + "_" + "_".join(self.selected_person_ids)
+
+        if hasattr(self, "select_destination_section") and self.select_destination_section:
+            if hasattr(self.select_destination_section, "get_destination_obj"):
+                self.bt_context["bt_destination_obj"] = self.select_destination_section.get_destination_obj()
+            elif hasattr(self.select_destination_section, "destination_obj"):
+                self.bt_context["bt_destination_obj"] = self.select_destination_section.destination_obj
+            else:
+                self.bt_context["bt_destination_obj"] = {"from": ["", ""], "to": ["", ""]}
+        else:
+            self.bt_context["bt_destination_obj"] = {"from": ["", ""], "to": ["", ""]}
+
         return self.bt_context
 
     def final_action(self):

@@ -150,8 +150,15 @@ class BusinessTripReport(BaseDoc):
         return path.join(output_folders['common'], output_folders['business_trip'], doc_identifier, sub_folder)
 
     def final_action(self):
-        business_trip = self.current_bts_to_report.get(self.business_trips_dropdown.get())
-        business_trip['bt_order_number'] = self._field_value("bt_order_number")
+        bt_id = self.business_trips_dropdown.get()
+        business_trip = self.current_bts_to_report.get(bt_id)
+        if not business_trip:
+            return
+        order_number = self._field_value("bt_order_number")
+        business_trip['bt_order_number'] = order_number
+        if hasattr(self, "data_mgr") and hasattr(self.data_mgr, "data") and "business_trips" in self.data_mgr.data:
+            if bt_id in self.data_mgr.data["business_trips"]:
+                self.data_mgr.data["business_trips"][bt_id]['bt_order_number'] = order_number
         if self.bt_context['selected_person_id'] not in business_trip['reported_ids']:
             business_trip['reported_ids'].append(self.bt_context['selected_person_id'])
         is_all_persons_reported = len(business_trip['person_ids']) == len(business_trip['reported_ids'])

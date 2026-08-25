@@ -1,15 +1,26 @@
 from Helpers import Helpers
-from tkinter import ttk, StringVar, END
+from tkinter import ttk, StringVar
 
 
 class CountryCitySelector:
-    def __init__(self, root, field_labels={}):
+    def __init__(self, root, field_labels=None, on_selection_change=None):
         self.root = root
-        # self.root.title("Countries and Cities")
-        # self.root.geometry("900x350")
-        self.field_labels = field_labels.get("fields", {})
+        if field_labels is None:
+            field_labels = {}
+        self.field_labels = field_labels.get("fields", {}) if isinstance(field_labels, dict) else {}
+        self.on_selection_change = on_selection_change
 
         self.countries = Helpers.get_countries(root=self.root)
+
+        # Selection properties
+        self.from_country = ""
+        self.from_city = ""
+        self.to_country = ""
+        self.to_city = ""
+        self.selected_cities = ""
+        self.accommodation = ""
+        self.daily = ""
+        self.destination = ""
 
         # All dropdown pairs are stored here.
         self.dropdown_pairs = []
@@ -24,28 +35,10 @@ class CountryCitySelector:
             pady=10
         )
 
-        # -----------------------------
-        # Text fields area
-        # -----------------------------
-        self.text_frame = ttk.Frame(root)
-        self.text_frame.pack(
-            fill="x",
-            padx=10,
-            pady=10
-        )
-
-        self.text_fields = []
-
-        # Text fields MUST be created before
-        # initializing the first pair.
-        self.create_text_fields()
-
-        # First pair:
-        # default country + first city
+        # First pair: default country + first city
         self.add_dropdown_pair(first=True)
 
-        # Second pair:
-        # completely empty
+        # Second pair: completely empty
         self.add_dropdown_pair(first=False)
 
     def get_default_country(self):
@@ -55,39 +48,15 @@ class CountryCitySelector:
 
         return next(iter(self.countries), "")
 
-    # =========================================================
-    # Text fields
-    # =========================================================
+    @property
+    def destination_obj(self):
+        return {
+            "from": [self.from_country, self.from_city],
+            "to": [self.to_country, self.to_city]
+        }
 
-    def create_text_fields(self):
-        labels = [
-            "Selected cities:",
-            "Accommodation:",
-            "Daily:"
-        ]
-
-        for label_text in labels:
-            row = ttk.Frame(self.text_frame)
-            row.pack(
-                fill="x",
-                pady=3
-            )
-
-            label = ttk.Label(
-                row,
-                text=label_text,
-                width=18
-            )
-            label.pack(side="left")
-
-            entry = ttk.Entry(row)
-            entry.pack(
-                side="left",
-                fill="x",
-                expand=True
-            )
-
-            self.text_fields.append(entry)
+    def get_destination_obj(self):
+        return self.destination_obj
 
     # =========================================================
     # Dropdown pairs
@@ -114,9 +83,9 @@ class CountryCitySelector:
         country_var = StringVar()
 
         if first is True:
-            label_text = self.field_labels["bt_depart_from"]
+            label_text = self.field_labels.get("bt_depart_from", "От:")
         else:
-            label_text = self.field_labels["bt_arrive_to"]
+            label_text = self.field_labels.get("bt_arrive_to", "До:")
 
         label = ttk.Label(
             pair_frame,
@@ -161,6 +130,7 @@ class CountryCitySelector:
         )
 
         pair = {
+            "first": first,
             "frame": pair_frame,
             "country_var": country_var,
             "country_combo": country_combo,
@@ -173,15 +143,13 @@ class CountryCitySelector:
         # Country selection
         country_combo.bind(
             "<<ComboboxSelected>>",
-            lambda event, p=pair:
-                self.country_selected(p)
+            lambda event, p=pair: self.country_selected(p)
         )
 
         # City selection
         city_combo.bind(
             "<<ComboboxSelected>>",
-            lambda event, p=pair:
-                self.city_selected(p)
+            lambda event, p=pair: self.city_selected(p)
         )
 
         # Initialize the first pair.
@@ -190,7 +158,6 @@ class CountryCitySelector:
 
             if default_country:
                 country_var.set(default_country)
-
                 self.populate_cities(
                     pair,
                     default_country
@@ -202,14 +169,10 @@ class CountryCitySelector:
 
                 if cities:
                     city_var.set(cities[0])
+                    self.from_country = default_country
+                    self.from_city = cities[0]
 
-                    # Update text fields, but DON'T create
-                    # another pair because the second pair
-                    # already exists.
-                    self.process_city_selection(
-                        default_country,
-                        cities[0]
-                    )
+                self._update_properties()
 
     # =========================================================
     # Country selection
@@ -225,6 +188,11 @@ class CountryCitySelector:
             pair,
             country
         )
+
+        self._update_properties()
+
+        if self.on_selection_change:
+            self.on_selection_change(self)
 
     # =========================================================
     # Populate cities
@@ -243,13 +211,13 @@ class CountryCitySelector:
 
         pair["city_combo"]["values"] = cities
 
-        # Selecting a new country clears
-        # the previous city.
+        # Selecting a new country clears the previous city.
         pair["city_var"].set("")
 
     # =========================================================
     # City selection
     # =========================================================
+
     def city_selected(self, pair):
         country = pair["country_var"].get()
         city = pair["city_var"].get()
@@ -257,102 +225,64 @@ class CountryCitySelector:
         if not country or not city:
             return
 
-        # ALWAYS add/update the selected city first.
-        self.process_city_selection(
-            country,
-            city
-        )
+        self._update_properties()
 
-        # # Only add a new empty pair if this pair
-        # # is currently the last pair.
-        # pair_index = self.dropdown_pairs.index(pair)
+        if self.on_selection_change:
+            self.on_selection_change(self)
 
-        # if pair_index == len(self.dropdown_pairs) - 1:
-        #     self.add_dropdown_pair()
+    def _update_properties(self):
+        if len(self.dropdown_pairs) > 0:
+            self.from_country = self.dropdown_pairs[0]["country_var"].get()
+            self.from_city = self.dropdown_pairs[0]["city_var"].get()
 
+        if len(self.dropdown_pairs) > 1:
+            self.to_country = self.dropdown_pairs[1]["country_var"].get()
+            self.to_city = self.dropdown_pairs[1]["city_var"].get()
 
-    def process_city_selection(self, country, city):
-        data = self.countries.get(
-            country,
-            {}
-        )
+        # Rates are based on destination country if selected, otherwise departure country
+        target_country = self.to_country if self.to_country else self.from_country
+        data = self.countries.get(target_country, {})
 
-        accommodation = data.get(
-            "accommodation",
-            ""
-        )
+        accommodation_val = data.get("accommodation", "")
+        daily_val = data.get("daily", "")
+        self.accommodation = str(accommodation_val) if accommodation_val != "" else ""
+        self.daily = str(daily_val) if daily_val != "" else ""
 
-        daily = data.get(
-            "daily",
-            ""
-        )
-
-        # ----------------------------------
-        # Add city to Selected cities field
-        # ----------------------------------
-
-        current_cities = self.text_fields[0].get().strip()
-
-        if current_cities:
-            existing_cities = [
-                value.strip()
-                for value in current_cities.split("-")
-            ]
-
-            if city not in existing_cities:
-                existing_cities.append(city)
-
-            current_cities = " - ".join(existing_cities)
+        # Selected cities string
+        if self.from_city and self.to_city:
+            if self.from_city == self.to_city:
+                self.selected_cities = self.from_city
+            else:
+                self.selected_cities = f"{self.from_city} - {self.to_city}"
+        elif self.from_city:
+            self.selected_cities = self.from_city
+        elif self.to_city:
+            self.selected_cities = self.to_city
         else:
-            current_cities = city
+            self.selected_cities = ""
 
-        self.set_entry(
-            self.text_fields[0],
-            current_cities
-        )
+        # Destination string: "from city" - "to city" - "from city"
+        if self.from_city and self.to_city:
+            self.destination = f"{self.from_city} - {self.to_city} - {self.from_city}"
+        else:
+            self.destination = ""
 
-        # ----------------------------------
-        # Update accommodation
-        # ----------------------------------
+    def set_selection(self, from_country="", from_city="", to_country="", to_city=""):
+        if len(self.dropdown_pairs) > 0:
+            if from_country:
+                self.dropdown_pairs[0]["country_var"].set(from_country)
+                self.populate_cities(self.dropdown_pairs[0], from_country)
+            if from_city:
+                self.dropdown_pairs[0]["city_var"].set(from_city)
 
-        self.set_entry(
-            self.text_fields[1],
-            str(accommodation)
-        )
+        if len(self.dropdown_pairs) > 1:
+            if to_country:
+                self.dropdown_pairs[1]["country_var"].set(to_country)
+                self.populate_cities(self.dropdown_pairs[1], to_country)
+            if to_city:
+                self.dropdown_pairs[1]["city_var"].set(to_city)
 
-        # ----------------------------------
-        # Update daily
-        # ----------------------------------
+        self._update_properties()
 
-        self.set_entry(
-            self.text_fields[2],
-            str(daily)
-        )
-
-    # =========================================================
-    # Utility
-    # =========================================================
-
-    @staticmethod
-    def set_entry(entry, value):
-        entry.delete(
-            0,
-            END
-        )
-
-        entry.insert(
-            0,
-            value
-        )
-
-
-# =============================================================
-# Application
-# =============================================================
-
-# if __name__ == "__main__":
-#     root = tk.Tk()
-
-#     app = CountryCityApp(root)
-
-#     root.mainloop()
+        if self.on_selection_change:
+            self.on_selection_change(self)

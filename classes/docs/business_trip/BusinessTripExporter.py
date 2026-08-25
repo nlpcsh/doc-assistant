@@ -28,6 +28,7 @@ class BusinessTripExporter:
                 "bt_nights_money_from": context.get("bt_nights_money_from", ""),
                 "bt_travel_money_from": context.get("bt_travel_money_from", ""),
                 "bt_destination": context.get("bt_destination", ""),
+                "bt_destination_obj": context.get("bt_destination_obj", {}),
                 "bt_euro_per_day": context.get("bt_euro_per_day", ""),
                 "bt_nights_max_value": context.get("bt_nights_max_value", ""),
                 "bt_other_expences": context.get("bt_other_expences", ""),

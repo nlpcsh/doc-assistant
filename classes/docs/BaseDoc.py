@@ -4,7 +4,10 @@ import threading
 import subprocess
 import shutil
 from os import path, makedirs, unlink
-from docxtpl import DocxTemplate
+try:
+    from docxtpl import DocxTemplate
+except ImportError:
+    DocxTemplate = None
 
 from ui.UIMgr import UIMgr
 
