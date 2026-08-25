@@ -35,20 +35,20 @@ class ReportAttachmentTests(unittest.TestCase):
             (),
             {
                 "get_output_folders": lambda self: {
-                    "common": "/tmp/common/",
-                    "business_trip": "/trip/",
+                    "common": os.path.join("tmp", "common"),
+                    "business_trip": "trip",
                 }
             },
         )()
 
         context = {
             "doc_date_and_ids_identifier": "20240101",
-            "sub_folder": "/draft",
+            "sub_folder": "draft",
         }
 
         self.assertEqual(
             base_doc._build_output_path(context),
-            "/tmp/common//trip/20240101/draft",
+            os.path.join("tmp", "common", "trip", "20240101", "draft"),
         )
 
 

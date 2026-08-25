@@ -6,26 +6,6 @@ import unittest
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT)
 
-base_doc_stub = types.ModuleType("classes.docs.BaseDoc")
-class BaseDoc:
-    pass
-base_doc_stub.BaseDoc = BaseDoc
-sys.modules["classes.docs.BaseDoc"] = base_doc_stub
-
-exporter_stub = types.ModuleType("classes.docs.civil_contract.CivilContractExporter")
-class CivilContractExporter:
-    @staticmethod
-    def build_civil_contract_payload(*args, **kwargs):
-        return {}
-exporter_stub.CivilContractExporter = CivilContractExporter
-sys.modules["classes.docs.civil_contract.CivilContractExporter"] = exporter_stub
-
-enums_stub = types.ModuleType("enums.Enums")
-class CCStatus:
-    pass
-enums_stub.CCStatus = CCStatus
-sys.modules["enums.Enums"] = enums_stub
-
 from classes.docs.civil_contract.CivilContractCreate import CivilContractCreate
 
 class DummyWidget:

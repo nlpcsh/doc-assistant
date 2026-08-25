@@ -31,6 +31,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
             encoding="utf-8",
         )
         (base_dir / "settings" / "labels.json").write_text("{}", encoding="utf-8")
+        (base_dir / "settings" / "preferences.json").write_text("{}", encoding="utf-8")
         self.data_mgr = DataMgr(str(base_dir))
 
     def tearDown(self):
