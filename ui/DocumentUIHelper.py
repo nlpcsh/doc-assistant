@@ -2,9 +2,16 @@ from tkinter import END, ttk, MULTIPLE, filedialog, BooleanVar, Entry, Text, Fra
 from datetime import datetime
 from os import path
 import time
-from tkcalendar import Calendar
-from tkinterdnd2 import DND_FILES
+try:
+    from tkcalendar import Calendar
+except ImportError:
+    Calendar = None
+try:
+    from tkinterdnd2 import DND_FILES
+except ImportError:
+    DND_FILES = None
 
+from ui.CountryCitySelector import CountryCitySelector
 from ui.WidgetFactory import WidgetFactory
 
 
@@ -37,7 +44,7 @@ class DocumentUIHelper:
         # Simulate a task that takes time to complete
         for i in range(101):
         # Simulate some work
-            time.sleep(0.01)
+            time.sleep(0.005)
             owner.progress['value'] = i
             # Update the GUI
             owner.update_idletasks()
@@ -99,19 +106,27 @@ class DocumentUIHelper:
 
         entry = self.factory.add_entry(field_frame, width=width)
 
+        def get_default():
+            if callable(default_value):
+                val = default_value()
+                return "" if val is None else str(val)
+            return "" if default_value is None else str(default_value)
+
         def toggle_visibility():
             if checkbox_var.get():
                 entry.pack(side="left", padx=(5, 0))
                 entry.delete(0, END)
-                entry.insert(0, default_value)
+                entry.insert(0, get_default())
             else:
                 entry.pack_forget()
-                entry.insert(0, "")
+                entry.delete(0, END)
 
         checkbox_var.trace_add("write", lambda *args: toggle_visibility())
 
         if show_by_default:
             entry.pack(side="left", padx=(5, 0))
+            entry.delete(0, END)
+            entry.insert(0, get_default())
         else:
             entry.pack_forget()
 
@@ -148,6 +163,8 @@ class DocumentUIHelper:
             date_entry.insert(0, today.strftime("%d/%m/%Y"))
 
         def open_calendar():
+            if Calendar is None:
+                return
             cal_window = self.factory.create_toplevel(owner.winfo_toplevel(), title=self.labels["fields"][label_key])
 
             mindate = None
@@ -181,9 +198,16 @@ class DocumentUIHelper:
             self.factory.add_button(cal_window, text=self.labels["signing"]["select_date"], command=select_date, pack_kwargs={"pady": 5})
             cal_window.grab_set()
 
-        calendar_img = PhotoImage(file=path.join(self.data_mgr.get_base_dir(), "imgs", "calendar_small.png"))
-        cal_image_resized = calendar_img.subsample(3, 3)
-        self.factory.add_button(date_frame, image=cal_image_resized, command=open_calendar, widget_kwargs={"width": 3}, pack_kwargs={"side": "left", "padx": 1, "pady": 1})
+        cal_btn_kwargs = {"command": open_calendar, "widget_kwargs": {"width": 3}, "pack_kwargs": {"side": "left", "padx": 1, "pady": 1}}
+        cal_path = path.join(self.data_mgr.get_base_dir(), "imgs", "calendar_small.png")
+        if path.exists(cal_path):
+            try:
+                calendar_img = PhotoImage(file=cal_path)
+                cal_image_resized = calendar_img.subsample(3, 3)
+                cal_btn_kwargs["image"] = cal_image_resized
+            except Exception:
+                pass
+        self.factory.add_button(date_frame, **cal_btn_kwargs)
         return date_entry
 
     def add_common_buttons(self, owner, gen_label_key, container=None):
@@ -203,6 +227,13 @@ class DocumentUIHelper:
         if options:
             combo.current(0)
         return combo
+
+    def add_select_destination_section(self, owner, container=None, field_labels=None, on_selection_change=None):
+        if container is None:
+            container = owner.container
+        self.factory.add_label(container, self.labels["fields"]["bt_destination"], anchor="w")
+        destination_section = CountryCitySelector(container, field_labels=field_labels, on_selection_change=on_selection_change)
+        return destination_section
 
     def _create_file_upload_frame(self, container, label_text):
         frame = self.factory.add_frame(container, pack_kwargs={"fill": "x", "padx": 10, "pady": 5})

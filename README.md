@@ -20,15 +20,16 @@ A Tkinter-based desktop assistant for generating administrative documents such a
 - **Create new business trip**
 
   - Select a project and one or more coworkers.
-  - Fill in trip details such as purpose, destination, travel dates, and expense options.
+  - Select departure ("От:") and arrival ("До:") countries and cities using dropdown selectors. Per diem and accommodation rates are automatically loaded from `settings/countries.json` and synced to the daily (`bt_euro_per_day`) and accommodation (`bt_nights_max_value`) fields when enabled. Destination (`bt_destination`) is automatically formatted (e.g. `from city - to city - from city`).
+  - Fill in trip details such as purpose, travel dates, and expense options.
   - Generate business trip order and report documents from the configured templates.
-  - Save business trip context data in the data.json. The status related to the business trip is GENERATED.
-  - Save generated records and route outputs into the configured output folders. The output files and folders contains starting date, project and person(s) related ids.
+  - Save business trip context data in `data/data.json` (including structured `bt_destination_obj`). The status related to the business trip is `GENERATED`.
+  - Save generated records and route outputs into the configured output folders. The output files and folders contain starting date, project, and person(s) related IDs.
 - **Edit a previously generated business trip**
 
-  - On tab selected - checks all saved in data.json business trips and displays all that are not in status REPORTED.
-  - Based on business trip template and selected business trip - all data is pre-filled in the form fields.
-  - Generate new business trip order and report documents from the configured templates. Saved business trip data in data.json has an additional property *based_on* holding modified business trip id.
+  - On tab selected - checks all saved in `data/data.json` business trips and displays all that are not in status `REPORTED`.
+  - Based on business trip template and selected business trip - all data is pre-filled in the form fields (including restoring country/city dropdown selections).
+  - Generate new business trip order and report documents from the configured templates. Saved business trip data in `data/data.json` has an additional property *based_on* holding modified business trip id.
 - **Report a business trip**
 
   - Initially in the first dropdown are listed all business trips that are NOT with status REPORTED
@@ -61,11 +62,14 @@ A Tkinter-based desktop assistant for generating administrative documents such a
   - classes/docs/business_trip/ — business trip order/report logic and export helpers
   - classes/docs/civil_contract/ — civil contract create/report logic and export helpers
 - classes/tabs/ — tab container wiring for the UI
-- ui/ — UI management and widget creation helpers
+- ui/ — UI management, CountryCitySelector, and widget creation helpers
 - templates/ — DOCX templates used for document generation
-- data/ — input data files such as projects and coworkers
-- settings/ — labels and UI text configuration
-- tests/ — unit tests for document export and report helpers
+- data/ — input data files such as projects, coworkers, and saved records (`data.json`)
+- settings/ — configuration files:
+  - `labels.json` — UI text and field labels
+  - `preferences.json` — output folder paths, fonts, tab colors, digital signature styling
+  - `countries.json` — countries, cities, per diem (daily) rates, and accommodation caps
+- tests/ — unit tests for document export, selector, validation, and report helpers
 
 ## Requirements
 
@@ -187,7 +191,8 @@ This project expects a JSON data file at `data/data.json`. The file contains sev
   - `project_id`, `bt_heading`, `person_ids` (list), `start_date` (DD/MM/YYYY),
     `end_date` (DD/MM/YYYY), `doc_date_and_ids_identifier`, `bt_travel_with`,
     `bt_day_money_from`, `bt_nights_money_from`, `bt_travel_money_from`,
-    `bt_destination`, `bt_euro_per_day`, `bt_nights_max_value`, `bt_other_expences`, `bt_contract_info`,
+    `bt_destination`, `bt_destination_obj` (`{"from": ["country", "city"], "to": ["country", "city"]}`),
+    `bt_euro_per_day`, `bt_nights_max_value`, `bt_other_expences`, `bt_contract_info`,
     `leader_titles`, `leader_names`, `leader_full_name`, `leader_work_place`, `bt_all_persons`, `status`
 
 Notes on date formats:

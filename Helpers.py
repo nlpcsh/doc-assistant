@@ -2,6 +2,7 @@ import platform
 import shutil
 from os import path, makedirs
 from datetime import datetime
+from tkinter import messagebox
 
 class Helpers:
     @staticmethod
@@ -79,3 +80,20 @@ class Helpers:
         if bold:
             return (family, int(size), "bold")
         return (family, int(size), "normal")
+
+    @staticmethod
+    def get_countries(root, countries_file_path=None):
+        try:
+            import json
+            if countries_file_path is None:
+                countries_file_path = path.join(path.dirname(path.abspath(__file__)), "settings", "countries.json")
+
+            with open(countries_file_path, "r", encoding="utf-8") as file:
+                return json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            messagebox.showerror(
+                "Error",
+                "Error occurred while loading countries.json."
+            )
+            root.destroy()
+            return {}

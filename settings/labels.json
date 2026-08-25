@@ -34,6 +34,8 @@
     "full_name": "Пълно име:",
     "bt_purpose": "Цел на командировката:",
     "bt_destination": "Направление:",
+    "bt_depart_from": "От:",
+    "bt_arrive_to": "До:",
     "bt_from": "От:",
     "bt_to": "До:",
     "bt_day_money": "Дневни",

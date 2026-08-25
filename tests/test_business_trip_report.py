@@ -1,18 +1,9 @@
 import os
 import sys
-import types
 import unittest
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT)
-
-base_doc_stub = types.ModuleType("classes.docs.BaseDoc")
-
-class BaseDoc:
-    pass
-
-base_doc_stub.BaseDoc = BaseDoc
-sys.modules["classes.docs.BaseDoc"] = base_doc_stub
 
 from classes.docs.business_trip.BusinessTripReport import BusinessTripReport
 

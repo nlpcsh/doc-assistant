@@ -23,6 +23,7 @@ class BusinessTripExporterTests(unittest.TestCase):
                 "bt_nights_money_from": "night source",
                 "bt_travel_money_from": "travel source",
                 "bt_destination": "Sofia",
+                "bt_destination_obj": {"from": ["България", "София"], "to": ["Финландия", "Хелзинки"]},
                 "bt_euro_per_day": "1",
                 "bt_nights_max_value": "1",
                 "bt_other_expences": "1",
@@ -39,6 +40,7 @@ class BusinessTripExporterTests(unittest.TestCase):
 
         self.assertEqual(payload["project_id"], "proj-1")
         self.assertEqual(payload["bt_heading"], "Trip purpose")
+        self.assertEqual(payload["bt_destination_obj"], {"from": ["България", "София"], "to": ["Финландия", "Хелзинки"]})
         self.assertEqual(payload["person_ids"], ["p1", "p2"])
         self.assertEqual(payload["based_on"], "old-id")
         self.assertEqual(payload["status"], BTStatus.GENERATED.name)

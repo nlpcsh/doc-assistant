@@ -46,6 +46,17 @@ class BusinessTripOrderEdit(BusinessTripOrder):
         self._set_checkbox_field("bt_euro_per_day", business_trip.get("bt_euro_per_day", ""))
         self._set_checkbox_field("bt_nights_max_value", business_trip.get("bt_nights_max_value", ""))
         self._set_checkbox_field("bt_other_expences", business_trip.get("bt_other_expences", ""))
+        bt_dest_obj = business_trip.get("bt_destination_obj")
+        if bt_dest_obj and hasattr(self, "select_destination_section") and self.select_destination_section:
+            from_info = bt_dest_obj.get("from", ["", ""])
+            to_info = bt_dest_obj.get("to", ["", ""])
+            from_c = from_info[0] if len(from_info) > 0 else ""
+            from_ct = from_info[1] if len(from_info) > 1 else ""
+            to_c = to_info[0] if len(to_info) > 0 else ""
+            to_ct = to_info[1] if len(to_info) > 1 else ""
+            if hasattr(self.select_destination_section, "set_selection"):
+                self.select_destination_section.set_selection(from_c, from_ct, to_c, to_ct)
+
         self._set_entry_by_key("bt_destination", business_trip.get("bt_destination", ""))
         self._set_text_by_key("bt_purpose", business_trip.get("bt_heading", ""))
         self._set_entry_by_key("bt_euro_per_day", business_trip.get("bt_euro_per_day", ""))
