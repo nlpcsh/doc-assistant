@@ -79,9 +79,16 @@ class BaseManagementTab(ttk.Frame):
 
     def _clear_fields(self):
         for frame in self.form_field_frames.values():
+            try:
+                frame.configure(cursor="watch")
+            except Exception:
+                pass
             frame.destroy()
         self.form_field_frames = {}
         self.form_widgets = {}
+
+        if hasattr(self, "fields_frame"):
+            self.fields_frame.update_idletasks()
 
     def _flatten_record(self, record):
         result = {}
@@ -150,6 +157,8 @@ class BaseManagementTab(ttk.Frame):
 
     def _render_fields(self, record):
         self._clear_fields()
+        self.fields_frame.update_idletasks()
+
         flat_record = self._flatten_record(record)
         display_data = self._ensure_default_values(flat_record)
 
@@ -167,6 +176,9 @@ class BaseManagementTab(ttk.Frame):
             widget = self._create_field_widget(field_name, value, container=field_container)
             widget.pack(side="left", fill="x", expand=True)
             self.form_widgets[field_name] = widget
+
+        if hasattr(self, "fields_frame"):
+            self.fields_frame.update_idletasks()
 
     def _load_selected_record(self):
         record_id = self.selector_var.get()

@@ -17,11 +17,41 @@ class Helpers:
         return payload
 
     @staticmethod
-    def parse_date(value, dateformat="%d/%m/%Y"):
-        try:
-            return datetime.strptime(value or "", dateformat)
-        except ValueError:
+    def parse_date(value, dateformat=None):
+        if value is None:
             return datetime.min
+
+        if isinstance(value, datetime):
+            return value
+
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return datetime.min
+
+            candidates = []
+            if dateformat:
+                candidates.append(dateformat)
+            candidates.extend(["%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%Y/%m/%d"])
+            for candidate in candidates:
+                try:
+                    return datetime.strptime(value, candidate)
+                except ValueError:
+                    continue
+
+            try:
+                return datetime.fromisoformat(value)
+            except ValueError:
+                return datetime.min
+
+        return datetime.min
+
+    @staticmethod
+    def normalize_date(value, output_format="%d.%m.%Y"):
+        parsed = Helpers.parse_date(value)
+        if parsed == datetime.min:
+            return ""
+        return parsed.strftime(output_format)
 
     @staticmethod
     def get_current_date_str(dateformat="%d.%m.%Y"):

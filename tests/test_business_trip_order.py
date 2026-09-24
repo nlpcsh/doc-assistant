@@ -72,6 +72,15 @@ class BusinessTripOrderValidationTests(unittest.TestCase):
 
         self.assertIn("persons_multiselect", order.get_missing_required_fields())
 
+    def test_get_latest_project_id_accepts_day_month_year_dates(self):
+        order = BusinessTripOrder.__new__(BusinessTripOrder)
+        order.projects_list = ["P01"]
+        order.data_mgr = types.SimpleNamespace(
+            get_project_by_id=lambda pid: {"end_date": "15.09.2033"}
+        )
+
+        self.assertEqual(order.get_latest_project_id(), "P01")
+
     def test_get_context_includes_bt_destination_obj(self):
         order = BusinessTripOrder.__new__(BusinessTripOrder)
         order.bt_purpose_field = DummyTextWidget("Trip purpose")

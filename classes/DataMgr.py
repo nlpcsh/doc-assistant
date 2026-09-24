@@ -17,6 +17,7 @@ try:
 except ImportError:  # pragma: no cover - this project requires SQLCipher
     sqlcipher3 = None
 
+from Helpers import Helpers
 from enums.Enums import BTStatus
 
 
@@ -295,8 +296,8 @@ class DataMgr:
                 bt_to_update[key] = value
         for bt_id, bt in bt_to_update.items():
             current_date = datetime.now().date()
-            bt_start_date = datetime.strptime(bt.get('start_date'), '%d/%m/%Y').date()
-            bt_end_date = datetime.strptime(bt.get('end_date'), '%d/%m/%Y').date()
+            bt_start_date = Helpers.parse_date(bt.get('start_date')).date()
+            bt_end_date = Helpers.parse_date(bt.get('end_date')).date()
             if current_date > bt_start_date and current_date <= bt_end_date:
                 bt['status'] = BTStatus.ONGOING.name
             elif current_date > bt_end_date:
