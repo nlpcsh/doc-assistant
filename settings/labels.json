@@ -20,6 +20,44 @@
     "db_file_permission_error": "Грешка при достъп до файла на базата данни. Моля, проверете разрешенията и опитайте отново.",
     "db_file_not_found_error": "Файлът на базата данни не е намерен. Моля, проверете пътя и опитайте отново."
   },
+  "db_management": {
+    "select": "Избери:",
+    "add_new": "Добави нов",
+    "save": "Запази",
+    "co_workers": {
+      "full_name": "Пълно име",
+      "titles": "Титли",
+      "names": "Имена",
+      "position": "Позиция",
+      "department": "Отдел",
+      "work_place": "Работно място",
+      "email": "Имейл",
+      "egn": "ЕГН",
+      "address.main_line": "Адрес",
+      "address.city": "Град",
+      "address.zip": "Пощенски код",
+      "address.municipality": "Община",
+      "id.number": "Личен номер",
+      "id.issue_date": "Дата на издаване",
+      "id.issuer": "Издал",
+      "iban": "IBAN",
+      "car.brand": "Марка кола",
+      "car.model": "Модел кола",
+      "car.year": "Година на колата",
+      "car.plate": "Регистрационен номер",
+      "car.liters_per_100km": "Литри/100км",
+      "car.fuel_type": "Вид гориво"
+    },
+    "projects": {
+      "name": "Име",
+      "description": "Описание",
+      "start_date": "Начална дата",
+      "end_date": "Крайна дата",
+      "team": "Екип",
+      "project_lead": "Ръководител",
+      "number": "Номер"
+    }
+  },
   "tabs": {
     "civil_contract": "Граждански договор",
     "business_trip": "Командировка",

@@ -12,8 +12,24 @@ class BaseManagementTab(ttk.Frame):
         self.collection = self.data_mgr.data.get(self.collection_name, {})
         self.current_record_id = None
         self.form_widgets = {}
+        self.labels = self.data_mgr.get_labels()
 
         self._build_ui()
+
+    def _field_label(self, field_name):
+        db_management = self.labels.get("db_management", {})
+        collection_labels = db_management.get(self.collection_name, {})
+        if isinstance(collection_labels, dict) and field_name in collection_labels:
+            return collection_labels[field_name]
+
+        if field_name in self.labels.get("fields", {}):
+            return self.labels["fields"][field_name]
+
+        if field_name in db_management:
+            return db_management[field_name]
+
+        label = field_name.replace(".", " / ").replace("_", " ")
+        return label.title()
 
     def _build_ui(self):
         top_frame = ttk.Frame(self)
@@ -24,20 +40,21 @@ class BaseManagementTab(ttk.Frame):
         selector_frame = ttk.Frame(top_frame)
         selector_frame.pack(fill="x", pady=(5, 0))
 
-        ttk.Label(selector_frame, text="Select:").pack(side="left", padx=(0, 8))
+        db_management = self.labels.get("db_management", {})
+        ttk.Label(selector_frame, text=db_management.get("select", "Select:")).pack(side="left", padx=(0, 8))
 
         self.selector_var = tk.StringVar()
         self.selector = ttk.Combobox(selector_frame, textvariable=self.selector_var, state="readonly", width=40)
         self.selector.pack(side="left", fill="x", expand=True)
         self.selector.bind("<<ComboboxSelected>>", lambda _event: self._load_selected_record())
 
-        add_button = ttk.Button(selector_frame, text="Add new", command=self._add_new_record)
+        add_button = ttk.Button(selector_frame, text=db_management.get("add_new", "Add new"), command=self._add_new_record)
         add_button.pack(side="left", padx=(8, 0))
 
         self.fields_frame = ttk.Frame(self)
         self.fields_frame.pack(fill="both", expand=True, padx=10, pady=(5, 10))
 
-        self.save_button = ttk.Button(self, text="Save", command=self._save_current_record)
+        self.save_button = ttk.Button(self, text=db_management.get("save", "Save"), command=self._save_current_record)
         self.save_button.pack(fill="x", padx=10, pady=(0, 10))
 
         self._refresh_selector()
@@ -100,7 +117,7 @@ class BaseManagementTab(ttk.Frame):
         display_data = self._ensure_default_values(flat_record)
 
         for i, (field_name, value) in enumerate(sorted(display_data.items())):
-            label = ttk.Label(self.fields_frame, text=field_name)
+            label = ttk.Label(self.fields_frame, text=self._field_label(field_name))
             label.grid(row=i, column=0, sticky="w", padx=(0, 8), pady=3)
 
             var = ttk.Entry(self.fields_frame, width=80)
