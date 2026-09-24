@@ -1,5 +1,7 @@
-import tkinter as tk
-from tkinter import messagebox, simpledialog, ttk
+from tkinter import END, StringVar, messagebox, simpledialog, ttk
+
+from ui.DocumentUIHelper import DocumentUIHelper
+from ui.WidgetFactory import WidgetFactory
 
 
 class BaseManagementTab(ttk.Frame):
@@ -12,7 +14,9 @@ class BaseManagementTab(ttk.Frame):
         self.collection = self.data_mgr.data.get(self.collection_name, {})
         self.current_record_id = None
         self.form_widgets = {}
+        self.form_field_frames = {}
         self.labels = self.data_mgr.get_labels()
+        self.ui_helper = DocumentUIHelper(self.data_mgr, WidgetFactory())
 
         self._build_ui()
 
@@ -43,7 +47,7 @@ class BaseManagementTab(ttk.Frame):
         db_management = self.labels.get("db_management", {})
         ttk.Label(selector_frame, text=db_management.get("select", "Select:")).pack(side="left", padx=(0, 8))
 
-        self.selector_var = tk.StringVar()
+        self.selector_var = StringVar()
         self.selector = ttk.Combobox(selector_frame, textvariable=self.selector_var, state="readonly", width=40)
         self.selector.pack(side="left", fill="x", expand=True)
         self.selector.bind("<<ComboboxSelected>>", lambda _event: self._load_selected_record())
@@ -74,8 +78,9 @@ class BaseManagementTab(ttk.Frame):
         self._load_selected_record()
 
     def _clear_fields(self):
-        for widget in self.form_widgets.values():
-            widget.destroy()
+        for frame in self.form_field_frames.values():
+            frame.destroy()
+        self.form_field_frames = {}
         self.form_widgets = {}
 
     def _flatten_record(self, record):
@@ -111,21 +116,57 @@ class BaseManagementTab(ttk.Frame):
             merged[key] = value
         return merged
 
+    def _is_date_field(self, field_name):
+        normalized = field_name.lower()
+        return normalized.endswith("date") or normalized in {"start_date", "end_date", "issue_date"}
+
+    def _create_field_widget(self, field_name, value, container=None):
+        if container is None:
+            container = self.fields_frame
+
+        if self._is_date_field(field_name):
+            self.ui_helper.labels["fields"].setdefault(field_name, self._field_label(field_name))
+
+            class _DateFieldOwner:
+                container = None
+
+                @staticmethod
+                def winfo_toplevel():
+                    return self.winfo_toplevel()
+
+            owner = _DateFieldOwner()
+            owner.container = container
+            owner.input_fields = []
+
+            widget = self.ui_helper.add_date_field(owner, field_name, width=30)
+            if value:
+                widget.delete(0, END)
+                widget.insert(0, self._format_field_value(value))
+            return widget
+
+        widget = ttk.Entry(container, width=80)
+        widget.insert(0, self._format_field_value(value))
+        return widget
+
     def _render_fields(self, record):
         self._clear_fields()
         flat_record = self._flatten_record(record)
         display_data = self._ensure_default_values(flat_record)
 
-        for i, (field_name, value) in enumerate(sorted(display_data.items())):
-            label = ttk.Label(self.fields_frame, text=self._field_label(field_name))
-            label.grid(row=i, column=0, sticky="w", padx=(0, 8), pady=3)
+        for field_name, value in sorted(display_data.items()):
+            field_container = ttk.Frame(self.fields_frame)
+            field_container.pack(fill="x", pady=3)
+            self.form_field_frames[field_name] = field_container
 
-            var = ttk.Entry(self.fields_frame, width=80)
-            var.insert(0, self._format_field_value(value))
-            var.grid(row=i, column=1, sticky="ew", pady=3)
-            self.form_widgets[field_name] = var
+            if self._is_date_field(field_name):
+                widget = self._create_field_widget(field_name, value, container=field_container)
+                self.form_widgets[field_name] = widget
+                continue
 
-        self.fields_frame.columnconfigure(1, weight=1)
+            ttk.Label(field_container, text=self._field_label(field_name)).pack(side="left", padx=(0, 8), anchor="w")
+            widget = self._create_field_widget(field_name, value, container=field_container)
+            widget.pack(side="left", fill="x", expand=True)
+            self.form_widgets[field_name] = widget
 
     def _load_selected_record(self):
         record_id = self.selector_var.get()
@@ -202,7 +243,7 @@ class BaseManagementTab(ttk.Frame):
 
         original_flat = self._flatten_record(current_record)
         for field_name, widget in self.form_widgets.items():
-            value = widget.get()
+            value = widget.get() if hasattr(widget, "get") else widget.get()
             original_value = original_flat.get(field_name)
             converted = self._coerce_value(field_name, value, original_value)
             self._set_nested_value(current_record, field_name, converted)
