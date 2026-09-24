@@ -83,11 +83,29 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         self.data_mgr.save_new_bussiness_trip({"trip-1": {"status": "GENERATED"}})
         self.data_mgr.save_new_civil_contract({"contract-1": {"status": "GENERATED"}})
 
-        data_file = Path(self.data_mgr.base_dir) / "data" / "data.json"
-        saved_data = json.loads(data_file.read_text(encoding="utf-8"))
+        self.assertTrue(Path(self.data_mgr.db_path).exists())
+        self.assertIn("trip-1", self.data_mgr.data["business_trips"])
+        self.assertIn("contract-1", self.data_mgr.data["civil_contracts"])
 
-        self.assertIn("trip-1", saved_data["business_trips"])
-        self.assertIn("contract-1", saved_data["civil_contracts"])
+    def test_missing_data_file_initializes_empty_database_state(self):
+        temp_dir = tempfile.TemporaryDirectory()
+        try:
+            base_dir = Path(temp_dir.name)
+            (base_dir / "settings").mkdir()
+            (base_dir / "settings" / "labels.json").write_text("{}", encoding="utf-8")
+            (base_dir / "settings" / "preferences.json").write_text(
+                json.dumps({"output_folders": {"common": "out/"}}),
+                encoding="utf-8",
+            )
+
+            data_mgr = DataMgr(str(base_dir))
+            self.assertEqual(data_mgr.data["projects"], {})
+            self.assertEqual(data_mgr.data["co_workers"], {})
+            self.assertEqual(data_mgr.get_all_projects(), [])
+            self.assertEqual(data_mgr.get_output_folders(), {"common": "out/"})
+            self.assertTrue(Path(data_mgr.db_path).exists())
+        finally:
+            temp_dir.cleanup()
 
 
 if __name__ == "__main__":

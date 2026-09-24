@@ -1,7 +1,6 @@
 from os import path
 import locale
 from PIL import Image, ImageTk
-#from tkinter import font
 from tkinterdnd2 import Tk
 
 from classes.MainApp import MainApp
