@@ -32,7 +32,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         )
         (base_dir / "settings" / "labels.json").write_text("{}", encoding="utf-8")
         (base_dir / "settings" / "preferences.json").write_text("{}", encoding="utf-8")
-        self.data_mgr = DataMgr(str(base_dir))
+        self.data_mgr = DataMgr(str(base_dir), password="test-password")
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -98,7 +98,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            data_mgr = DataMgr(str(base_dir))
+            data_mgr = DataMgr(str(base_dir), password="test-password")
             self.assertEqual(data_mgr.data["projects"], {})
             self.assertEqual(data_mgr.data["co_workers"], {})
             self.assertEqual(data_mgr.get_all_projects(), [])

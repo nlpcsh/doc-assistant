@@ -2,8 +2,6 @@ import base64
 import hashlib
 import json
 import os
-import secrets
-import sqlite3
 from datetime import datetime
 from os import path
 
@@ -16,7 +14,7 @@ except ImportError:  # pragma: no cover - optional dependency
 
 try:
     import sqlcipher3
-except ImportError:  # pragma: no cover - fallback for environments without SQLCipher
+except ImportError:  # pragma: no cover - this project requires SQLCipher
     sqlcipher3 = None
 
 from enums.Enums import BTStatus
@@ -30,7 +28,7 @@ class DataMgr:
     KEYCHAIN_SERVICE = "doc-assistant"
     KEYCHAIN_KEY = "db-password"
 
-    def __init__(self, base_dir=None):
+    def __init__(self, base_dir=None, password=None):
         self.base_dir = base_dir or os.getcwd()
         self.data_dir = path.join(self.base_dir, "data")
         self.db_path = path.join(self.data_dir, self.DB_FILE_NAME)
@@ -38,7 +36,7 @@ class DataMgr:
         self.preferences_path = path.join(self.base_dir, "settings", "preferences.json")
 
         self._ensure_directories()
-        self.app_password = self._get_or_create_app_password()
+        self.app_password = self._resolve_password(password)
         self.db_key = self._derive_db_key(self.app_password)
 
         self.labels = self._load_json(path.join(self.base_dir, "settings", "labels.json"), default={})
@@ -64,31 +62,50 @@ class DataMgr:
         except (TypeError, ValueError):
             return default if default is not None else {}
 
-    def _get_or_create_app_password(self):
+    @classmethod
+    def _prompt_for_password(cls, is_new_db):
+        try:
+            import tkinter as tk
+            from tkinter import simpledialog
+        except Exception:
+            raise ValueError("Database password is required.")
+
+        root = tk.Tk()
+        root.withdraw()
+        if is_new_db:
+            while True:
+                password = simpledialog.askstring("Create database password", "Set a password for the encrypted database:", show='*', parent=root)
+                if not password:
+                    raise ValueError("Database password is required.")
+                confirm = simpledialog.askstring("Confirm database password", "Re-enter the database password:", show='*', parent=root)
+                if password == confirm:
+                    root.destroy()
+                    return password
+                root.update_idletasks()
+                from tkinter import messagebox
+                messagebox.showerror("Password mismatch", "The passwords do not match. Please try again.")
+        password = simpledialog.askstring("Unlock database", "Enter the database password:", show='*', parent=root)
+        root.destroy()
+        if not password:
+            raise ValueError("Database password is required.")
+        return password
+
+    def _resolve_password(self, password):
+        if password and password.strip():
+            return password.strip()
+
+        if path.exists(self.db_path):
+            return self._prompt_for_password(is_new_db=False)
+
+        return self._prompt_for_password(is_new_db=True)
+
+    def _store_password_in_keychain(self, password):
         if keyring is not None:
             try:
-                stored = keyring.get_password(self.KEYCHAIN_SERVICE, self.KEYCHAIN_KEY)
-                if stored:
-                    return stored
+                keyring.set_password(self.KEYCHAIN_SERVICE, self.KEYCHAIN_KEY, password)
+                return
             except Exception:
                 pass
-
-        env_value = os.environ.get("DOC_ASSISTANT_APP_PASSWORD") or os.environ.get("DOC_ASSISTANT_DB_PASSWORD")
-        if env_value:
-            if keyring is not None:
-                try:
-                    keyring.set_password(self.KEYCHAIN_SERVICE, self.KEYCHAIN_KEY, env_value)
-                except Exception:
-                    pass
-            return env_value
-
-        generated = secrets.token_urlsafe(32)
-        if keyring is not None:
-            try:
-                keyring.set_password(self.KEYCHAIN_SERVICE, self.KEYCHAIN_KEY, generated)
-            except Exception:
-                pass
-        return generated
 
     def _derive_db_key(self, password):
         salt = hashlib.sha256(self.data_dir.encode("utf-8")).digest()
@@ -105,7 +122,7 @@ class DataMgr:
 
     def _connect_db(self):
         if sqlcipher3 is None:
-            return sqlite3.connect(self.db_path)
+            raise RuntimeError("SQLCipher is required for encrypted database access.")
 
         connection = sqlcipher3.connect(self.db_path)
         connection.execute("PRAGMA key = '{}';".format(self.db_key.replace("'", "''")))
@@ -119,12 +136,10 @@ class DataMgr:
 
         try:
             with self._connect_db() as connection:
-                connection.execute(
-                    "CREATE TABLE IF NOT EXISTS app_data (collection TEXT PRIMARY KEY, payload TEXT NOT NULL)"
-                )
+                connection.execute("SELECT count(*) FROM sqlite_master")
                 rows = connection.execute("SELECT collection, payload FROM app_data").fetchall()
-        except sqlite3.DatabaseError:
-            return {}
+        except Exception as exc:
+            raise ValueError("Incorrect database password or corrupted database.") from exc
 
         data = {}
         for collection, payload in rows:
@@ -138,6 +153,7 @@ class DataMgr:
 
     def _write_database_data(self, source_data):
         self._ensure_directories()
+        self._store_password_in_keychain(self.app_password)
         with self._connect_db() as connection:
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS app_data (collection TEXT PRIMARY KEY, payload TEXT NOT NULL)"
@@ -167,9 +183,7 @@ class DataMgr:
         else:
             legacy_data = self._read_legacy_json_data()
             if legacy_data:
-                data = {
-                    key: legacy_data.get(key, {}) for key in self.PERSISTED_COLLECTIONS
-                }
+                data = {key: legacy_data.get(key, {}) for key in self.PERSISTED_COLLECTIONS}
                 self._write_database_data(data)
             else:
                 data = {key: {} for key in self.PERSISTED_COLLECTIONS}
