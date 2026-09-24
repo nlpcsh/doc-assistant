@@ -30,9 +30,21 @@
             "name_font_family": "Helvetica-Bold"
         },
         "border": {
-            "color_RGB": [0.867, 0.894, 1.0],
+            "color_RGB": [
+                0.867,
+                0.894,
+                1.0
+            ],
             "width_px": 1
         },
-        "background_color_RGB": [0, 0, 0]
+        "background_color_RGB": [
+            0,
+            0,
+            0
+        ]
+    },
+    "common": {
+        "euro_per_day": 45,
+        "other_expences": "медицинска застраховка "
     }
 }
