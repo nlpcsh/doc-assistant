@@ -35,11 +35,12 @@ class DataMgr:
         self.legacy_data_path = path.join(self.data_dir, "data.json")
         self.preferences_path = path.join(self.base_dir, "settings", "preferences.json")
 
+        self.labels = self._load_json(path.join(self.base_dir, "settings", "labels.json"), default={})
+
         self._ensure_directories()
         self.app_password = self._resolve_password(password)
         self.db_key = self._derive_db_key(self.app_password)
 
-        self.labels = self._load_json(path.join(self.base_dir, "settings", "labels.json"), default={})
         self.preferences = self._load_json(self.preferences_path, default={})
         self.preferences.setdefault("common", {})
         self.preferences.setdefault("output_folders", {})
@@ -62,32 +63,39 @@ class DataMgr:
         except (TypeError, ValueError):
             return default if default is not None else {}
 
-    @classmethod
-    def _prompt_for_password(cls, is_new_db):
+    def _label(self, section, key, default=""):
+        return self.labels.get(section, {}).get(key, default)
+
+    def _prompt_for_password(self, is_new_db):
+        required_message = self._label("database", "pass_required", "Database password is required.")
+        prompt_message = self._label("database", "pass_prompt", "Enter the database password:")
+        prompt_description = self._label("database", "pass_prompt_description", "Enter the database password:")
+        invalid_message = self._label("database", "invalid_pass", "Invalid password. Please try again.")
+
         try:
             import tkinter as tk
             from tkinter import simpledialog
         except Exception:
-            raise ValueError("Database password is required.")
+            raise ValueError(required_message)
 
         root = tk.Tk()
         root.withdraw()
         if is_new_db:
             while True:
-                password = simpledialog.askstring("Create database password", "Set a password for the encrypted database:", show='*', parent=root)
+                password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
                 if not password:
-                    raise ValueError("Database password is required.")
-                confirm = simpledialog.askstring("Confirm database password", "Re-enter the database password:", show='*', parent=root)
+                    raise ValueError(required_message)
+                confirm = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
                 if password == confirm:
                     root.destroy()
                     return password
                 root.update_idletasks()
                 from tkinter import messagebox
-                messagebox.showerror("Password mismatch", "The passwords do not match. Please try again.")
-        password = simpledialog.askstring("Unlock database", "Enter the database password:", show='*', parent=root)
+                messagebox.showerror(self._label("messages", "error_title", "Error"), invalid_message)
+        password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
         root.destroy()
         if not password:
-            raise ValueError("Database password is required.")
+            raise ValueError(required_message)
         return password
 
     def _resolve_password(self, password):
@@ -139,7 +147,8 @@ class DataMgr:
                 connection.execute("SELECT count(*) FROM sqlite_master")
                 rows = connection.execute("SELECT collection, payload FROM app_data").fetchall()
         except Exception as exc:
-            raise ValueError("Incorrect database password or corrupted database.") from exc
+            message = self._label("database", "db_file_encryption_error", "Incorrect database password or corrupted database.")
+            raise ValueError(message) from exc
 
         data = {}
         for collection, payload in rows:
