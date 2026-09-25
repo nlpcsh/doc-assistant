@@ -58,8 +58,14 @@ class BaseManagementTab(ttk.Frame):
         self.fields_frame = ttk.Frame(self)
         self.fields_frame.pack(fill="both", expand=True, padx=10, pady=(5, 10))
 
-        self.save_button = ttk.Button(self, text=db_management.get("save", "Save"), command=self._save_current_record)
-        self.save_button.pack(fill="x", padx=10, pady=(0, 10))
+        actions_frame = ttk.Frame(self)
+        actions_frame.pack(fill="x", padx=10, pady=(0, 10))
+
+        self.save_button = ttk.Button(actions_frame, text=db_management.get("save", "Save"), command=self._save_current_record)
+        self.save_button.pack(side="left", fill="x", expand=True, padx=(0, 6))
+
+        self.remove_button = ttk.Button(actions_frame, text=db_management.get("remove", "Remove"), command=self._remove_current_record)
+        self.remove_button.pack(side="left", fill="x", expand=True, padx=(6, 0))
 
         self._refresh_selector()
 
@@ -265,6 +271,28 @@ class BaseManagementTab(ttk.Frame):
         self.data_mgr.save_data()
         self._render_fields(current_record)
         messagebox.showinfo("Saved", f"{self.title} saved successfully.")
+
+    def _remove_current_record(self):
+        record_id = self.selector_var.get().strip()
+        if not record_id:
+            messagebox.showwarning("Missing selection", "Select an item before removing.")
+            return
+
+        confirm = messagebox.askyesno(
+            "Confirm removal",
+            f"Are you sure you want to remove '{record_id}' from {self.title}?",
+        )
+        if not confirm:
+            return
+
+        collection = self.data_mgr.data.setdefault(self.collection_name, {})
+        if record_id in collection:
+            del collection[record_id]
+            self.data_mgr.data[self.collection_name] = collection
+            self.data_mgr.save_data()
+            self.current_record_id = None
+            self._refresh_selector()
+            messagebox.showinfo("Removed", f"{self.title} removed successfully.")
 
     def get_collection(self):
         return self.data_mgr.data.get(self.collection_name, {})
