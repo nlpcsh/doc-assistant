@@ -117,6 +117,33 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         self.assertFalse(data_mgr._validate_password("Abcdefgh!"))
         self.assertFalse(data_mgr._validate_password("Abcdefg1"))
 
+    def test_existing_db_prompts_until_correct_password_is_entered(self):
+        temp_dir = tempfile.TemporaryDirectory()
+        try:
+            base_dir = Path(temp_dir.name)
+            (base_dir / "data").mkdir()
+            (base_dir / "settings").mkdir()
+            (base_dir / "settings" / "labels.json").write_text("{}", encoding="utf-8")
+            (base_dir / "settings" / "preferences.json").write_text("{}", encoding="utf-8")
+
+            data_mgr = DataMgr(str(base_dir), password="Correct-pass1!")
+            data_mgr.data["projects"] = {"p1": {"name": "Alpha"}}
+            data_mgr.save_data()
+
+            import tkinter
+            import tkinter.messagebox
+            import tkinter.simpledialog
+            from unittest.mock import patch
+
+            with patch.object(
+                tkinter.simpledialog,
+                "askstring",
+                side_effect=["Wrong-pass1!", "Correct-pass1!"],
+            ), patch.object(tkinter.messagebox, "showerror"):
+                self.assertEqual(data_mgr._prompt_for_password(is_new_db=False), "Correct-pass1!")
+        finally:
+            temp_dir.cleanup()
+
     def test_change_password_rekeys_database_and_updates_runtime_state(self):
         initial_password = "Test-pass1!"
         new_password = "New-pass2@"

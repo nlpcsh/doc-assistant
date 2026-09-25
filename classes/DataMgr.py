@@ -168,6 +168,24 @@ class DataMgr:
                     pass
             raise
 
+    def _password_matches_database(self, password):
+        if not isinstance(password, str) or not password:
+            return False
+        try:
+            connection = sqlcipher3.connect(self.db_path)
+        except Exception:
+            return False
+
+        try:
+            connection.execute("PRAGMA key = '{}';".format(self._derive_db_key(password).replace("'", "''")))
+            connection.execute("PRAGMA cipher_compatibility = 4")
+            connection.execute("SELECT count(*) FROM sqlite_master")
+            return True
+        except Exception:
+            return False
+        finally:
+            connection.close()
+
     def _prompt_for_password(self, is_new_db):
         required_message = self._label("database", "pass_required", "Database password is required.")
         prompt_message = self._label("database", "pass_prompt", "Enter the database password:")
@@ -182,28 +200,35 @@ class DataMgr:
 
         root = tk.Tk()
         root.withdraw()
-        if is_new_db:
+        try:
+            if is_new_db:
+                while True:
+                    password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
+                    if not password:
+                        raise ValueError(required_message)
+                    if not self._validate_password(password):
+                        root.update_idletasks()
+                        from tkinter import messagebox
+                        messagebox.showerror(self._label("messages", "error_title", "Error"), self._password_error_message())
+                        continue
+                    confirm = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
+                    if password == confirm:
+                        return password
+                    root.update_idletasks()
+                    from tkinter import messagebox
+                    messagebox.showerror(self._label("messages", "error_title", "Error"), invalid_message)
+
             while True:
                 password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
                 if not password:
                     raise ValueError(required_message)
-                if not self._validate_password(password):
-                    root.update_idletasks()
-                    from tkinter import messagebox
-                    messagebox.showerror(self._label("messages", "error_title", "Error"), self._password_error_message())
-                    continue
-                confirm = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
-                if password == confirm:
-                    root.destroy()
+                if self._password_matches_database(password):
                     return password
                 root.update_idletasks()
                 from tkinter import messagebox
                 messagebox.showerror(self._label("messages", "error_title", "Error"), invalid_message)
-        password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
-        root.destroy()
-        if not password:
-            raise ValueError(required_message)
-        return password
+        finally:
+            root.destroy()
 
     def _resolve_password(self, password):
         if password and password.strip():
