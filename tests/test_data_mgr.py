@@ -32,7 +32,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         )
         (base_dir / "settings" / "labels.json").write_text("{}", encoding="utf-8")
         (base_dir / "settings" / "preferences.json").write_text("{}", encoding="utf-8")
-        self.data_mgr = DataMgr(str(base_dir), password="test-password")
+        self.data_mgr = DataMgr(str(base_dir), password="Test-pass1!")
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -98,7 +98,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            data_mgr = DataMgr(str(base_dir), password="test-password")
+            data_mgr = DataMgr(str(base_dir), password="Test-pass1!")
             self.assertEqual(data_mgr.data["projects"], {})
             self.assertEqual(data_mgr.data["co_workers"], {})
             self.assertEqual(data_mgr.get_all_projects(), [])
@@ -106,6 +106,16 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
             self.assertTrue(Path(data_mgr.db_path).exists())
         finally:
             temp_dir.cleanup()
+
+    def test_password_validation_requires_complexity_rules(self):
+        data_mgr = DataMgr.__new__(DataMgr)
+
+        self.assertTrue(data_mgr._validate_password("Abcdef1!"))
+        self.assertFalse(data_mgr._validate_password("short"))
+        self.assertFalse(data_mgr._validate_password("abcdef1!"))
+        self.assertFalse(data_mgr._validate_password("ABCDEF1!"))
+        self.assertFalse(data_mgr._validate_password("Abcdefgh!"))
+        self.assertFalse(data_mgr._validate_password("Abcdefg1"))
 
 
 if __name__ == "__main__":

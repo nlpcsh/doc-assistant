@@ -2,6 +2,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 from datetime import datetime
 from os import path
 
@@ -67,6 +68,28 @@ class DataMgr:
     def _label(self, section, key, default=""):
         return self.labels.get(section, {}).get(key, default)
 
+    def _validate_password(self, password):
+        if not isinstance(password, str):
+            return False
+
+        password = password.strip()
+        if len(password) < 6:
+            return False
+
+        return bool(
+            re.search(r"[A-Z]", password)
+            and re.search(r"[a-z]", password)
+            and re.search(r"\d", password)
+            and re.search(r"[^A-Za-z0-9]", password)
+        )
+
+    def _password_error_message(self):
+        return self._label(
+            "database",
+            "pass_rules",
+            "Password must be at least 6 characters long and contain an uppercase letter, lowercase letter, number, and special character.",
+        )
+
     def _prompt_for_password(self, is_new_db):
         required_message = self._label("database", "pass_required", "Database password is required.")
         prompt_message = self._label("database", "pass_prompt", "Enter the database password:")
@@ -86,6 +109,11 @@ class DataMgr:
                 password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
                 if not password:
                     raise ValueError(required_message)
+                if not self._validate_password(password):
+                    root.update_idletasks()
+                    from tkinter import messagebox
+                    messagebox.showerror(self._label("messages", "error_title", "Error"), self._password_error_message())
+                    continue
                 confirm = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
                 if password == confirm:
                     root.destroy()
@@ -101,7 +129,10 @@ class DataMgr:
 
     def _resolve_password(self, password):
         if password and password.strip():
-            return password.strip()
+            normalized_password = password.strip()
+            if not path.exists(self.db_path) and not self._validate_password(normalized_password):
+                raise ValueError(self._password_error_message())
+            return normalized_password
 
         if path.exists(self.db_path):
             return self._prompt_for_password(is_new_db=False)
