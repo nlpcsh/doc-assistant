@@ -144,6 +144,30 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_removing_coworker_updates_project_team_and_lead(self):
+        from classes.docs.db_management.BaseManagementTab import BaseManagementTab
+
+        self.data_mgr.data["co_workers"] = {
+            "cw-1": {"full_name": "John Doe"},
+            "cw-2": {"full_name": "Jane Smith"},
+        }
+        self.data_mgr.data["projects"] = {
+            "proj-1": {"team": ["cw-1", "cw-2"], "project_lead": "cw-1"},
+            "proj-2": {"team": ["cw-2"], "project_lead": "cw-2"},
+            "proj-3": {"team": ["cw-3"], "project_lead": "cw-3"},
+        }
+
+        tab = BaseManagementTab.__new__(BaseManagementTab)
+        tab.data_mgr = self.data_mgr
+        tab.collection_name = "co_workers"
+
+        tab._remove_coworker_from_projects("cw-1")
+
+        self.assertEqual(self.data_mgr.data["projects"]["proj-1"]["team"], ["cw-2"])
+        self.assertEqual(self.data_mgr.data["projects"]["proj-1"]["project_lead"], "")
+        self.assertEqual(self.data_mgr.data["projects"]["proj-2"]["team"], ["cw-2"])
+        self.assertEqual(self.data_mgr.data["projects"]["proj-3"]["team"], ["cw-3"])
+
     def test_change_password_rekeys_database_and_updates_runtime_state(self):
         initial_password = "Test-pass1!"
         new_password = "New-pass2@"

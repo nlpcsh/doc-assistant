@@ -272,6 +272,22 @@ class BaseManagementTab(ttk.Frame):
         self._render_fields(current_record)
         messagebox.showinfo("Saved", f"{self.title} saved successfully.")
 
+    def _remove_coworker_from_projects(self, coworker_id):
+        projects = self.data_mgr.data.get("projects", {})
+        if not isinstance(projects, dict):
+            return
+
+        for project in projects.values():
+            if not isinstance(project, dict):
+                continue
+
+            team = project.get("team", [])
+            if isinstance(team, list):
+                project["team"] = [member for member in team if member != coworker_id]
+
+            if project.get("project_lead") == coworker_id:
+                project["project_lead"] = ""
+
     def _remove_current_record(self):
         record_id = self.selector_var.get().strip()
         if not record_id:
@@ -284,6 +300,9 @@ class BaseManagementTab(ttk.Frame):
         )
         if not confirm:
             return
+
+        if self.collection_name == "co_workers":
+            self._remove_coworker_from_projects(record_id)
 
         collection = self.data_mgr.data.setdefault(self.collection_name, {})
         if record_id in collection:
