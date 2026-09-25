@@ -2,7 +2,9 @@ from classes.docs.BaseDoc import BaseDoc
 from classes.docs.business_trip.BusinessTripExporter import BusinessTripExporter
 from datetime import datetime
 
-DATE_FORMAT = "%d/%m/%Y"
+from Helpers import Helpers
+
+DATE_FORMAT = "%d.%m.%Y"
 
 class BusinessTripOrder(BaseDoc):
     def __init__(self, parent, data_mgr):
@@ -113,9 +115,8 @@ class BusinessTripOrder(BaseDoc):
     def get_latest_project_id(self):
         return max(
             self.projects_list,
-            key=lambda pid: datetime.strptime(
-                self.data_mgr.get_project_by_id(pid).get('end_date', '2001-01-01'),
-                '%Y-%m-%d'
+            key=lambda pid: Helpers.parse_date(
+                self.data_mgr.get_project_by_id(pid).get('end_date', '2001-01-01')
             )
         )
 
@@ -286,7 +287,9 @@ class BusinessTripOrder(BaseDoc):
                 continue
 
             try:
-                datetime.strptime(value, DATE_FORMAT)
+                parsed_date = Helpers.parse_date(value, DATE_FORMAT)
+                if parsed_date == datetime.min:
+                    raise ValueError
             except ValueError:
                 missing_fields.append(field_name)
 
@@ -307,8 +310,10 @@ class BusinessTripOrder(BaseDoc):
         bt_to_str = self.date_to.get()
         if bt_from_str and bt_to_str:
             try:
-                bt_from = datetime.strptime(bt_from_str, DATE_FORMAT)
-                bt_to = datetime.strptime(bt_to_str, DATE_FORMAT)
+                bt_from = Helpers.parse_date(bt_from_str, DATE_FORMAT)
+                bt_to = Helpers.parse_date(bt_to_str, DATE_FORMAT)
+                if bt_from == datetime.min or bt_to == datetime.min:
+                    raise ValueError
                 total_days = (bt_to - bt_from).days + 1
                 self.bt_context.update({
                     "bt_from": bt_from_str,
@@ -395,10 +400,9 @@ class BusinessTripOrder(BaseDoc):
     def _get_date_value(self, widget, date_format="%d.%m.%Y"):
         value = widget.get()
         if value:
-            try:
-                return datetime.strptime(value, DATE_FORMAT).strftime(date_format)
-            except ValueError:
-                pass
+            parsed_date = Helpers.parse_date(value, DATE_FORMAT)
+            if parsed_date != datetime.min:
+                return parsed_date.strftime(date_format)
         return ""
 
     def get_context(self):

@@ -1,6 +1,7 @@
 
 from datetime import datetime
 
+from Helpers import Helpers
 from classes.docs.BaseDoc import BaseDoc
 from classes.docs.civil_contract.CivilContractExporter import CivilContractExporter
 
@@ -39,9 +40,8 @@ class CivilContractCreate(BaseDoc):
     def get_latest_project_id(self):
         return max(
             self.projects_list,
-            key=lambda pid: datetime.strptime(
-                self.data_mgr.get_project_by_id(pid).get('end_date', '2001-01-01'),
-                '%Y-%m-%d'
+            key=lambda pid: Helpers.parse_date(
+                self.data_mgr.get_project_by_id(pid).get('end_date', '2001-01-01')
             )
         )
 
@@ -149,7 +149,9 @@ class CivilContractCreate(BaseDoc):
 
             if field_name.startswith("cc_") and "date" in field_name:
                 try:
-                    datetime.strptime(value, "%d/%m/%Y")
+                    parsed_date = Helpers.parse_date(value)
+                    if parsed_date == datetime.min:
+                        raise ValueError
                 except ValueError:
                     missing_fields.append(field_name)
 
@@ -168,10 +170,9 @@ class CivilContractCreate(BaseDoc):
     def _get_date_value(self, widget, date_format="%d.%m.%Y"):
         value = widget.get()
         if value:
-            try:
-                return datetime.strptime(value, '%d/%m/%Y').strftime(date_format)
-            except ValueError:
-                pass
+            parsed_date = Helpers.parse_date(value)
+            if parsed_date != datetime.min:
+                return parsed_date.strftime(date_format)
         return ""
 
     def _build_doc_identifier(self):

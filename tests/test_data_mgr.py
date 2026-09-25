@@ -32,7 +32,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         )
         (base_dir / "settings" / "labels.json").write_text("{}", encoding="utf-8")
         (base_dir / "settings" / "preferences.json").write_text("{}", encoding="utf-8")
-        self.data_mgr = DataMgr(str(base_dir), password="test-password")
+        self.data_mgr = DataMgr(str(base_dir), password="Test-pass1!")
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -98,7 +98,7 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            data_mgr = DataMgr(str(base_dir), password="test-password")
+            data_mgr = DataMgr(str(base_dir), password="Test-pass1!")
             self.assertEqual(data_mgr.data["projects"], {})
             self.assertEqual(data_mgr.data["co_workers"], {})
             self.assertEqual(data_mgr.get_all_projects(), [])
@@ -106,6 +106,83 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
             self.assertTrue(Path(data_mgr.db_path).exists())
         finally:
             temp_dir.cleanup()
+
+    def test_password_validation_requires_complexity_rules(self):
+        data_mgr = DataMgr.__new__(DataMgr)
+
+        self.assertTrue(data_mgr._validate_password("Abcdef1!"))
+        self.assertFalse(data_mgr._validate_password("short"))
+        self.assertFalse(data_mgr._validate_password("abcdef1!"))
+        self.assertFalse(data_mgr._validate_password("ABCDEF1!"))
+        self.assertFalse(data_mgr._validate_password("Abcdefgh!"))
+        self.assertFalse(data_mgr._validate_password("Abcdefg1"))
+
+    def test_existing_db_prompts_until_correct_password_is_entered(self):
+        temp_dir = tempfile.TemporaryDirectory()
+        try:
+            base_dir = Path(temp_dir.name)
+            (base_dir / "data").mkdir()
+            (base_dir / "settings").mkdir()
+            (base_dir / "settings" / "labels.json").write_text("{}", encoding="utf-8")
+            (base_dir / "settings" / "preferences.json").write_text("{}", encoding="utf-8")
+
+            data_mgr = DataMgr(str(base_dir), password="Correct-pass1!")
+            data_mgr.data["projects"] = {"p1": {"name": "Alpha"}}
+            data_mgr.save_data()
+
+            import tkinter
+            import tkinter.messagebox
+            import tkinter.simpledialog
+            from unittest.mock import patch
+
+            with patch.object(
+                tkinter.simpledialog,
+                "askstring",
+                side_effect=["Wrong-pass1!", "Correct-pass1!"],
+            ), patch.object(tkinter.messagebox, "showerror"):
+                self.assertEqual(data_mgr._prompt_for_password(is_new_db=False), "Correct-pass1!")
+        finally:
+            temp_dir.cleanup()
+
+    def test_removing_coworker_updates_project_team_and_lead(self):
+        from classes.docs.db_management.BaseManagementTab import BaseManagementTab
+
+        self.data_mgr.data["co_workers"] = {
+            "cw-1": {"full_name": "John Doe"},
+            "cw-2": {"full_name": "Jane Smith"},
+        }
+        self.data_mgr.data["projects"] = {
+            "proj-1": {"team": ["cw-1", "cw-2"], "project_lead": "cw-1"},
+            "proj-2": {"team": ["cw-2"], "project_lead": "cw-2"},
+            "proj-3": {"team": ["cw-3"], "project_lead": "cw-3"},
+        }
+
+        tab = BaseManagementTab.__new__(BaseManagementTab)
+        tab.data_mgr = self.data_mgr
+        tab.collection_name = "co_workers"
+
+        tab._remove_coworker_from_projects("cw-1")
+
+        self.assertEqual(self.data_mgr.data["projects"]["proj-1"]["team"], ["cw-2"])
+        self.assertEqual(self.data_mgr.data["projects"]["proj-1"]["project_lead"], "")
+        self.assertEqual(self.data_mgr.data["projects"]["proj-2"]["team"], ["cw-2"])
+        self.assertEqual(self.data_mgr.data["projects"]["proj-3"]["team"], ["cw-3"])
+
+    def test_change_password_rekeys_database_and_updates_runtime_state(self):
+        initial_password = "Test-pass1!"
+        new_password = "New-pass2@"
+        self.data_mgr.app_password = initial_password
+        self.data_mgr.db_key = self.data_mgr._derive_db_key(initial_password)
+
+        self.assertTrue(self.data_mgr.change_database_password(initial_password, new_password, new_password))
+        self.assertEqual(self.data_mgr.app_password, new_password)
+        self.assertEqual(self.data_mgr.db_key, self.data_mgr._derive_db_key(new_password))
+
+        with self.assertRaises(ValueError):
+            self.data_mgr.change_database_password("wrong-pass", "Another-pass3!", "Another-pass3!")
+
+        with self.assertRaises(ValueError):
+            self.data_mgr.change_database_password(new_password, "weak", "weak")
 
 
 if __name__ == "__main__":

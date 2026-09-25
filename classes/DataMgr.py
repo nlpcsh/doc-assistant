@@ -2,6 +2,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 from datetime import datetime
 from os import path
 
@@ -17,6 +18,7 @@ try:
 except ImportError:  # pragma: no cover - this project requires SQLCipher
     sqlcipher3 = None
 
+from Helpers import Helpers
 from enums.Enums import BTStatus
 
 
@@ -66,6 +68,124 @@ class DataMgr:
     def _label(self, section, key, default=""):
         return self.labels.get(section, {}).get(key, default)
 
+    def _validate_password(self, password):
+        if not isinstance(password, str):
+            return False
+
+        password = password.strip()
+        if len(password) < 6:
+            return False
+
+        return bool(
+            re.search(r"[A-Z]", password)
+            and re.search(r"[a-z]", password)
+            and re.search(r"\d", password)
+            and re.search(r"[^A-Za-z0-9]", password)
+        )
+
+    def _password_error_message(self):
+        return self._label(
+            "database",
+            "pass_rules",
+            "Password must be at least 6 characters long and contain an uppercase letter, lowercase letter, number, and special character.",
+        )
+
+    def change_database_password(self, current_password, new_password, confirm_password):
+        if current_password is None or str(current_password).strip() == "":
+            raise ValueError(self._label("database", "pass_required", "Database password is required."))
+
+        if str(current_password).strip() != self.app_password:
+            raise ValueError(self._label("database", "invalid_pass", "Invalid password. Please try again."))
+
+        normalized_new_password = str(new_password).strip() if new_password is not None else ""
+        if normalized_new_password == "":
+            raise ValueError(self._label("database", "pass_required", "Database password is required."))
+
+        if not self._validate_password(normalized_new_password):
+            raise ValueError(self._password_error_message())
+
+        if normalized_new_password != str(confirm_password).strip():
+            raise ValueError(self._label("database", "password_mismatch", "New passwords do not match."))
+
+        if normalized_new_password == self.app_password:
+            raise ValueError(self._label("database", "password_same", "The new password must be different from the current one."))
+
+        data_snapshot = self.data.copy()
+        persisted_data = {
+            key: data_snapshot.get(key, {})
+            for key in self.PERSISTED_COLLECTIONS
+        }
+
+        temp_db_path = path.join(self.data_dir, f".{self.DB_FILE_NAME}.tmp")
+        try:
+            new_db_key = self._derive_db_key(normalized_new_password)
+            with self._connect_db() as connection:
+                connection.execute("SELECT count(*) FROM sqlite_master")
+                current_rows = connection.execute("SELECT collection, payload FROM app_data").fetchall()
+                data_snapshot = {}
+                for collection, payload in current_rows:
+                    if not isinstance(collection, str):
+                        continue
+                    try:
+                        data_snapshot[collection] = json.loads(payload)
+                    except (TypeError, ValueError):
+                        data_snapshot[collection] = {}
+
+            os.remove(temp_db_path) if path.exists(temp_db_path) else None
+            connection = sqlcipher3.connect(temp_db_path)
+            try:
+                connection.execute("PRAGMA key = '{}';".format(new_db_key.replace("'", "''")))
+                connection.execute("PRAGMA cipher_compatibility = 4")
+                connection.execute("PRAGMA journal_mode = WAL")
+                connection.execute(
+                    "CREATE TABLE IF NOT EXISTS app_data (collection TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+                )
+                for collection in self.PERSISTED_COLLECTIONS:
+                    payload = json.dumps(data_snapshot.get(collection, {}), ensure_ascii=False)
+                    connection.execute(
+                        "INSERT INTO app_data (collection, payload) VALUES (?, ?) "
+                        "ON CONFLICT(collection) DO UPDATE SET payload = excluded.payload",
+                        (collection, payload),
+                    )
+                connection.commit()
+            finally:
+                connection.close()
+
+            os.replace(temp_db_path, self.db_path)
+            self.app_password = normalized_new_password
+            self.db_key = new_db_key
+            self._store_password_in_keychain(self.app_password)
+            self.data = {key: data_snapshot.get(key, {}) for key in self.PERSISTED_COLLECTIONS}
+            self.data.setdefault("common", self.preferences.get("common", {}))
+            self.data.setdefault("output_folders", self.preferences.get("output_folders", {}))
+            self._sync_preferences_from_data()
+            return True
+        except Exception:
+            if path.exists(temp_db_path):
+                try:
+                    os.remove(temp_db_path)
+                except OSError:
+                    pass
+            raise
+
+    def _password_matches_database(self, password):
+        if not isinstance(password, str) or not password:
+            return False
+        try:
+            connection = sqlcipher3.connect(self.db_path)
+        except Exception:
+            return False
+
+        try:
+            connection.execute("PRAGMA key = '{}';".format(self._derive_db_key(password).replace("'", "''")))
+            connection.execute("PRAGMA cipher_compatibility = 4")
+            connection.execute("SELECT count(*) FROM sqlite_master")
+            return True
+        except Exception:
+            return False
+        finally:
+            connection.close()
+
     def _prompt_for_password(self, is_new_db):
         required_message = self._label("database", "pass_required", "Database password is required.")
         prompt_message = self._label("database", "pass_prompt", "Enter the database password:")
@@ -80,27 +200,42 @@ class DataMgr:
 
         root = tk.Tk()
         root.withdraw()
-        if is_new_db:
+        try:
+            if is_new_db:
+                while True:
+                    password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
+                    if not password:
+                        raise ValueError(required_message)
+                    if not self._validate_password(password):
+                        root.update_idletasks()
+                        from tkinter import messagebox
+                        messagebox.showerror(self._label("messages", "error_title", "Error"), self._password_error_message())
+                        continue
+                    confirm = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
+                    if password == confirm:
+                        return password
+                    root.update_idletasks()
+                    from tkinter import messagebox
+                    messagebox.showerror(self._label("messages", "error_title", "Error"), invalid_message)
+
             while True:
                 password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
                 if not password:
                     raise ValueError(required_message)
-                confirm = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
-                if password == confirm:
-                    root.destroy()
+                if self._password_matches_database(password):
                     return password
                 root.update_idletasks()
                 from tkinter import messagebox
                 messagebox.showerror(self._label("messages", "error_title", "Error"), invalid_message)
-        password = simpledialog.askstring(prompt_message, prompt_description, show='*', parent=root)
-        root.destroy()
-        if not password:
-            raise ValueError(required_message)
-        return password
+        finally:
+            root.destroy()
 
     def _resolve_password(self, password):
         if password and password.strip():
-            return password.strip()
+            normalized_password = password.strip()
+            if not path.exists(self.db_path) and not self._validate_password(normalized_password):
+                raise ValueError(self._password_error_message())
+            return normalized_password
 
         if path.exists(self.db_path):
             return self._prompt_for_password(is_new_db=False)
@@ -295,8 +430,8 @@ class DataMgr:
                 bt_to_update[key] = value
         for bt_id, bt in bt_to_update.items():
             current_date = datetime.now().date()
-            bt_start_date = datetime.strptime(bt.get('start_date'), '%d/%m/%Y').date()
-            bt_end_date = datetime.strptime(bt.get('end_date'), '%d/%m/%Y').date()
+            bt_start_date = Helpers.parse_date(bt.get('start_date')).date()
+            bt_end_date = Helpers.parse_date(bt.get('end_date')).date()
             if current_date > bt_start_date and current_date <= bt_end_date:
                 bt['status'] = BTStatus.ONGOING.name
             elif current_date > bt_end_date:

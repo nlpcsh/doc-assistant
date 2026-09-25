@@ -33,6 +33,7 @@ class UIMgr:
     def build_app_tabs(self, notebook):
         from classes.tabs.BusinessTripTab import BusinessTripTab
         from classes.tabs.CivilContractTab import CivilContractTab
+        from classes.tabs.DBManagementTab import DBManagementTab
 
         notebook.add(
             BusinessTripTab(notebook, self.data_mgr),
@@ -41,6 +42,10 @@ class UIMgr:
         notebook.add(
             CivilContractTab(notebook, self.data_mgr),
             text=self.labels["tabs"]["civil_contract"],
+        )
+        notebook.add(
+            DBManagementTab(notebook, self.data_mgr),
+            text=self.labels["tabs"].get("db_management", "DB Management"),
         )
 
     def __getattr__(self, name):

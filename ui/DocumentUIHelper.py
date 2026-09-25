@@ -2,6 +2,8 @@ from tkinter import END, ttk, MULTIPLE, filedialog, BooleanVar, Entry, Text, Fra
 from datetime import datetime
 from os import path
 import time
+
+from Helpers import Helpers
 try:
     from tkcalendar import Calendar
 except ImportError:
@@ -160,7 +162,7 @@ class DocumentUIHelper:
 
         if preselect_today:
             today = datetime.today()
-            date_entry.insert(0, today.strftime("%d/%m/%Y"))
+            date_entry.insert(0, today.strftime("%d.%m.%Y"))
 
         def open_calendar():
             if Calendar is None:
@@ -172,7 +174,9 @@ class DocumentUIHelper:
                 try:
                     min_date_str = min_date_from.get()
                     if min_date_str:
-                        mindate = datetime.strptime(min_date_str, "%d/%m/%Y").date()
+                        parsed_min_date = Helpers.parse_date(min_date_str)
+                        if parsed_min_date != datetime.min:
+                            mindate = parsed_min_date.date()
                 except (ValueError, AttributeError):
                     pass
 
@@ -191,7 +195,7 @@ class DocumentUIHelper:
                 day=today.day,
                 background="darkblue",
                 foreground="white",
-                date_pattern="dd/mm/yyyy",
+                date_pattern="dd.mm.yyyy",
                 mindate=mindate,
             )
             calendar.pack(pady=10, padx=10)
