@@ -28,7 +28,8 @@ if __name__ == "__main__":
     # Configure Tkinter for Unicode support
     root.tk.call('encoding', 'system', 'utf-8')  # Ensure UTF-8 encoding
 
-    preferences_path = path.join(base_dir, "settings", "preferences.json")
+    preferences_path = Helpers.ensure_preferences_file(base_dir)
+    Helpers.ensure_output_folder_preference(preferences_path, parent=root)
     default_font = Helpers.get_ui_font(preferences_file_path=preferences_path, size_key="body_size")
 
     app = MainApp(root, base_dir, default_font)
