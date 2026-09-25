@@ -117,6 +117,22 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         self.assertFalse(data_mgr._validate_password("Abcdefgh!"))
         self.assertFalse(data_mgr._validate_password("Abcdefg1"))
 
+    def test_change_password_rekeys_database_and_updates_runtime_state(self):
+        initial_password = "Test-pass1!"
+        new_password = "New-pass2@"
+        self.data_mgr.app_password = initial_password
+        self.data_mgr.db_key = self.data_mgr._derive_db_key(initial_password)
+
+        self.assertTrue(self.data_mgr.change_database_password(initial_password, new_password, new_password))
+        self.assertEqual(self.data_mgr.app_password, new_password)
+        self.assertEqual(self.data_mgr.db_key, self.data_mgr._derive_db_key(new_password))
+
+        with self.assertRaises(ValueError):
+            self.data_mgr.change_database_password("wrong-pass", "Another-pass3!", "Another-pass3!")
+
+        with self.assertRaises(ValueError):
+            self.data_mgr.change_database_password(new_password, "weak", "weak")
+
 
 if __name__ == "__main__":
     unittest.main()

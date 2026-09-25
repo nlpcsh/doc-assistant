@@ -90,6 +90,84 @@ class DataMgr:
             "Password must be at least 6 characters long and contain an uppercase letter, lowercase letter, number, and special character.",
         )
 
+    def change_database_password(self, current_password, new_password, confirm_password):
+        if current_password is None or str(current_password).strip() == "":
+            raise ValueError(self._label("database", "pass_required", "Database password is required."))
+
+        if str(current_password).strip() != self.app_password:
+            raise ValueError(self._label("database", "invalid_pass", "Invalid password. Please try again."))
+
+        normalized_new_password = str(new_password).strip() if new_password is not None else ""
+        if normalized_new_password == "":
+            raise ValueError(self._label("database", "pass_required", "Database password is required."))
+
+        if not self._validate_password(normalized_new_password):
+            raise ValueError(self._password_error_message())
+
+        if normalized_new_password != str(confirm_password).strip():
+            raise ValueError(self._label("database", "password_mismatch", "New passwords do not match."))
+
+        if normalized_new_password == self.app_password:
+            raise ValueError(self._label("database", "password_same", "The new password must be different from the current one."))
+
+        data_snapshot = self.data.copy()
+        persisted_data = {
+            key: data_snapshot.get(key, {})
+            for key in self.PERSISTED_COLLECTIONS
+        }
+
+        temp_db_path = path.join(self.data_dir, f".{self.DB_FILE_NAME}.tmp")
+        try:
+            new_db_key = self._derive_db_key(normalized_new_password)
+            with self._connect_db() as connection:
+                connection.execute("SELECT count(*) FROM sqlite_master")
+                current_rows = connection.execute("SELECT collection, payload FROM app_data").fetchall()
+                data_snapshot = {}
+                for collection, payload in current_rows:
+                    if not isinstance(collection, str):
+                        continue
+                    try:
+                        data_snapshot[collection] = json.loads(payload)
+                    except (TypeError, ValueError):
+                        data_snapshot[collection] = {}
+
+            os.remove(temp_db_path) if path.exists(temp_db_path) else None
+            connection = sqlcipher3.connect(temp_db_path)
+            try:
+                connection.execute("PRAGMA key = '{}';".format(new_db_key.replace("'", "''")))
+                connection.execute("PRAGMA cipher_compatibility = 4")
+                connection.execute("PRAGMA journal_mode = WAL")
+                connection.execute(
+                    "CREATE TABLE IF NOT EXISTS app_data (collection TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+                )
+                for collection in self.PERSISTED_COLLECTIONS:
+                    payload = json.dumps(data_snapshot.get(collection, {}), ensure_ascii=False)
+                    connection.execute(
+                        "INSERT INTO app_data (collection, payload) VALUES (?, ?) "
+                        "ON CONFLICT(collection) DO UPDATE SET payload = excluded.payload",
+                        (collection, payload),
+                    )
+                connection.commit()
+            finally:
+                connection.close()
+
+            os.replace(temp_db_path, self.db_path)
+            self.app_password = normalized_new_password
+            self.db_key = new_db_key
+            self._store_password_in_keychain(self.app_password)
+            self.data = {key: data_snapshot.get(key, {}) for key in self.PERSISTED_COLLECTIONS}
+            self.data.setdefault("common", self.preferences.get("common", {}))
+            self.data.setdefault("output_folders", self.preferences.get("output_folders", {}))
+            self._sync_preferences_from_data()
+            return True
+        except Exception:
+            if path.exists(temp_db_path):
+                try:
+                    os.remove(temp_db_path)
+                except OSError:
+                    pass
+            raise
+
     def _prompt_for_password(self, is_new_db):
         required_message = self._label("database", "pass_required", "Database password is required.")
         prompt_message = self._label("database", "pass_prompt", "Enter the database password:")

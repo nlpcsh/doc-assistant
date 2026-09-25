@@ -25,6 +25,15 @@
     "select": "Избери:",
     "add_new": "Добави нов",
     "save": "Запази",
+    "password_change": {
+      "current_password": "Текуща парола",
+      "new_password": "Нова парола",
+      "confirm_password": "Потвърди новата парола",
+      "apply": "Приложи",
+      "error_title": "Грешка",
+      "success_title": "Успешно",
+      "password_changed": "Паролата на базата данни е сменена успешно."
+    },
     "co_workers": {
       "full_name": "Пълно име",
       "titles": "Титли",
@@ -65,6 +74,7 @@
     "db_management": "Управление на данни",
     "db_management_co_workers": "Служители",
     "db_management_projects": "Проекти",
+    "db_management_password_change": "Смяна на парола",
     "bt_report": "Отчет на командировка",
     "bt_order": "Командировка",
     "bt_order_edit": "Редактиране на командировка",
