@@ -1,10 +1,94 @@
+import json
 import platform
 import shutil
 from os import path, makedirs
 from datetime import datetime
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 
 class Helpers:
+    @staticmethod
+    def ensure_preferences_file(base_dir=None, example_file_path=None):
+        if base_dir is None:
+            base_dir = path.dirname(path.abspath(__file__))
+
+        settings_dir = path.join(base_dir, "settings")
+        makedirs(settings_dir, exist_ok=True)
+
+        preferences_path = path.join(settings_dir, "preferences.json")
+        if example_file_path is None:
+            example_file_path = path.join(settings_dir, "preferences.example.json")
+
+        if path.exists(preferences_path):
+            return preferences_path
+
+        preferences = {}
+        if path.exists(example_file_path):
+            try:
+                with open(example_file_path, "r", encoding="utf-8") as file:
+                    preferences = json.load(file)
+            except (TypeError, ValueError):
+                preferences = {}
+
+        if not isinstance(preferences, dict):
+            preferences = {}
+
+        with open(preferences_path, "w", encoding="utf-8") as file:
+            json.dump(preferences, file, indent=4, ensure_ascii=False)
+
+        return preferences_path
+
+    @staticmethod
+    def ensure_output_folder_preference(preferences_file_path, parent=None):
+        if not path.exists(preferences_file_path):
+            example_file_path = path.join(path.dirname(preferences_file_path), "preferences.example.json")
+            if path.exists(example_file_path):
+                try:
+                    with open(example_file_path, "r", encoding="utf-8") as file:
+                        preferences = json.load(file)
+                except (TypeError, ValueError):
+                    preferences = {}
+            else:
+                preferences = {}
+
+            if not isinstance(preferences, dict):
+                preferences = {}
+
+            with open(preferences_file_path, "w", encoding="utf-8") as file:
+                json.dump(preferences, file, indent=4, ensure_ascii=False)
+
+        with open(preferences_file_path, "r", encoding="utf-8") as file:
+            preferences = json.load(file)
+
+        output_folders = preferences.setdefault("output_folders", {})
+
+        def is_placeholder_value(value):
+            if not value or not isinstance(value, str):
+                return True
+            normalized = value.strip()
+            return normalized in {"", "/home/USER/Docs"} or "USER" in normalized.upper()
+
+        selected_path = output_folders.get("common")
+        if not is_placeholder_value(selected_path):
+            output_folders["common"] = selected_path
+            with open(preferences_file_path, "w", encoding="utf-8") as file:
+                json.dump(preferences, file, indent=4, ensure_ascii=False)
+            return selected_path
+
+        default_path = path.join(path.expanduser("~"), "Documents", "doc-assistant-exports")
+        selected_path = filedialog.askdirectory(
+            title="Select the folder where generated documents should be saved",
+            initialdir=default_path,
+            parent=parent,
+        )
+        if not selected_path:
+            selected_path = default_path
+
+        output_folders["common"] = selected_path
+        with open(preferences_file_path, "w", encoding="utf-8") as file:
+            json.dump(preferences, file, indent=4, ensure_ascii=False)
+
+        return selected_path
+
     @staticmethod
     def build_common_export_payload(document_id, project_id, status, extra_fields=None):
         payload = {

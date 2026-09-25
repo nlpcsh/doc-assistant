@@ -10,6 +10,7 @@ sys.path.insert(0, ROOT)
 
 from classes.DataMgr import DataMgr
 from enums.Enums import BTStatus
+from Helpers import Helpers
 
 
 class DataMgrBusinessTripStatusTests(unittest.TestCase):
@@ -167,6 +168,58 @@ class DataMgrBusinessTripStatusTests(unittest.TestCase):
         self.assertEqual(self.data_mgr.data["projects"]["proj-1"]["project_lead"], "")
         self.assertEqual(self.data_mgr.data["projects"]["proj-2"]["team"], ["cw-2"])
         self.assertEqual(self.data_mgr.data["projects"]["proj-3"]["team"], ["cw-3"])
+
+    def test_ensure_preferences_creates_missing_file_and_sets_output_folder(self):
+        temp_dir = tempfile.TemporaryDirectory()
+        try:
+            base_dir = Path(temp_dir.name)
+            settings_dir = base_dir / "settings"
+            settings_dir.mkdir()
+            example_path = settings_dir / "preferences.example.json"
+            example_path.write_text(
+                json.dumps({"output_folders": {"common": ""}, "font": {"body_size": 12}}),
+                encoding="utf-8",
+            )
+
+            from unittest.mock import patch
+
+            with patch("Helpers.filedialog.askdirectory", return_value="/tmp/export-docs"):
+                preferences_path = Helpers.ensure_preferences_file(str(base_dir), str(example_path))
+                selected = Helpers.ensure_output_folder_preference(preferences_path)
+
+            self.assertTrue(Path(preferences_path).exists())
+            saved = json.loads(Path(preferences_path).read_text(encoding="utf-8"))
+            self.assertEqual(selected, "/tmp/export-docs")
+            self.assertEqual(saved["output_folders"]["common"], "/tmp/export-docs")
+        finally:
+            temp_dir.cleanup()
+
+    def test_placeholder_example_output_folder_still_prompts_for_selection(self):
+        temp_dir = tempfile.TemporaryDirectory()
+        try:
+            base_dir = Path(temp_dir.name)
+            settings_dir = base_dir / "settings"
+            settings_dir.mkdir()
+            example_path = settings_dir / "preferences.example.json"
+            example_path.write_text(
+                json.dumps({
+                    "output_folders": {"common": "/home/USER/Docs"},
+                    "font": {"body_size": 12}
+                }),
+                encoding="utf-8",
+            )
+
+            from unittest.mock import patch
+
+            target_path = settings_dir / "preferences.json"
+            with patch("Helpers.filedialog.askdirectory", return_value="/tmp/export-docs"):
+                result = Helpers.ensure_output_folder_preference(str(target_path))
+
+            self.assertEqual(result, "/tmp/export-docs")
+            saved = json.loads(target_path.read_text(encoding="utf-8"))
+            self.assertEqual(saved["output_folders"]["common"], "/tmp/export-docs")
+        finally:
+            temp_dir.cleanup()
 
     def test_change_password_rekeys_database_and_updates_runtime_state(self):
         initial_password = "Test-pass1!"
