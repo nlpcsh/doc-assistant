@@ -4,7 +4,7 @@ from tkinter import END, StringVar, messagebox, simpledialog, ttk
 from ui.DocumentUIHelper import DocumentUIHelper
 from ui.WidgetFactory import WidgetFactory
 
-RECORD_ID_PATTERN = re.compile(r"[A-Za-z0-9_]{6}")
+RECORD_ID_PATTERN = re.compile(r"[A-Za-z0-9_]{1,6}")
 
 
 class BaseManagementTab(ttk.Frame):
@@ -215,8 +215,18 @@ class BaseManagementTab(ttk.Frame):
                     db_management.get("invalid_id_title", "Invalid ID"),
                     db_management.get(
                         "invalid_id_message",
-                        "The ID must be exactly 6 characters long and contain only letters, digits or underscore.",
+                        "The ID must be at most 6 characters long and contain only Latin letters, digits or underscore.",
                     ),
+                )
+                continue
+            if record_id in self.data_mgr.data.get(self.collection_name, {}):
+                db_management = self.labels.get("db_management", {})
+                messagebox.showwarning(
+                    db_management.get("duplicate_id_title", "Duplicate ID"),
+                    db_management.get(
+                        "duplicate_id_message",
+                        "A record with ID '{record_id}' already exists. Please enter a different ID.",
+                    ).format(record_id=record_id),
                 )
                 continue
             return record_id
