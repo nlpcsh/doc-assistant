@@ -1,7 +1,10 @@
+import re
 from tkinter import END, StringVar, messagebox, simpledialog, ttk
 
 from ui.DocumentUIHelper import DocumentUIHelper
 from ui.WidgetFactory import WidgetFactory
+
+RECORD_ID_PATTERN = re.compile(r"[A-Za-z0-9_]{6}")
 
 
 class BaseManagementTab(ttk.Frame):
@@ -198,14 +201,25 @@ class BaseManagementTab(ttk.Frame):
         self._render_fields(current_record)
 
     def _get_record_id_for_new_item(self):
-        record_id = simpledialog.askstring("New item", f"Enter the new {self.title.lower()} ID:")
-        if record_id is None:
-            return None
-        record_id = record_id.strip()
-        if not record_id:
-            messagebox.showwarning("Missing ID", "An ID is required before saving a new item.")
-            return None
-        return record_id
+        while True:
+            record_id = simpledialog.askstring("New item", f"Enter the new {self.title.lower()} ID:")
+            if record_id is None:
+                return None
+            record_id = record_id.strip()
+            if not record_id:
+                messagebox.showwarning("Missing ID", "An ID is required before saving a new item.")
+                continue
+            if not RECORD_ID_PATTERN.fullmatch(record_id):
+                db_management = self.labels.get("db_management", {})
+                messagebox.showwarning(
+                    db_management.get("invalid_id_title", "Invalid ID"),
+                    db_management.get(
+                        "invalid_id_message",
+                        "The ID must be exactly 6 characters long and contain only letters, digits or underscore.",
+                    ),
+                )
+                continue
+            return record_id
 
     def _add_new_record(self):
         item_id = self._get_record_id_for_new_item()
