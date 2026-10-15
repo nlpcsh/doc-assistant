@@ -12,4 +12,5 @@ class ProjectsManagementTab(BaseManagementTab):
             "project_lead": "",
             "number": "",
         }
-        super().__init__(parent, data_mgr, "projects", "Projects", default_fields)
+        field_order = ["name", "description", "number", "project_lead", "start_date", "end_date", "team"]
+        super().__init__(parent, data_mgr, "projects", "Projects", default_fields, field_order=field_order)

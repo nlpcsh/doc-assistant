@@ -1,16 +1,24 @@
+import re
 from tkinter import END, StringVar, messagebox, simpledialog, ttk
 
 from ui.DocumentUIHelper import DocumentUIHelper
 from ui.WidgetFactory import WidgetFactory
 
+RECORD_ID_PATTERN = re.compile(r"[A-Za-z0-9_]{1,6}")
+
 
 class BaseManagementTab(ttk.Frame):
-    def __init__(self, parent, data_mgr, collection_name, title, default_fields=None):
+    def __init__(self, parent, data_mgr, collection_name, title, default_fields=None, field_groups=None, field_order=None):
         super().__init__(parent)
         self.data_mgr = data_mgr
         self.collection_name = collection_name
         self.title = title
         self.default_fields = default_fields or {}
+        # list of (group_key, default_title, [field names in display order])
+        self.field_groups = field_groups or []
+        # ungrouped fields listed here are shown first in this order, the rest alphabetically
+        self.field_order = field_order or []
+        self.group_frames = []
         self.collection = self.data_mgr.data.get(self.collection_name, {})
         self.current_record_id = None
         self.form_widgets = {}
@@ -90,7 +98,10 @@ class BaseManagementTab(ttk.Frame):
             except Exception:
                 pass
             frame.destroy()
+        for frame in self.group_frames:
+            frame.destroy()
         self.form_field_frames = {}
+        self.group_frames = []
         self.form_widgets = {}
 
         if hasattr(self, "fields_frame"):
@@ -161,6 +172,26 @@ class BaseManagementTab(ttk.Frame):
         widget.insert(0, self._format_field_value(value))
         return widget
 
+    def _group_label(self, group_key, default_title):
+        collection_labels = self.labels.get("db_management", {}).get(self.collection_name, {})
+        groups = collection_labels.get("groups", {}) if isinstance(collection_labels, dict) else {}
+        return groups.get(group_key, default_title)
+
+    def _render_field(self, field_name, value, parent):
+        field_container = ttk.Frame(parent)
+        field_container.pack(fill="x", pady=3)
+        self.form_field_frames[field_name] = field_container
+
+        if self._is_date_field(field_name):
+            widget = self._create_field_widget(field_name, value, container=field_container)
+            self.form_widgets[field_name] = widget
+            return
+
+        ttk.Label(field_container, text=self._field_label(field_name)).pack(side="left", padx=(0, 8), anchor="w")
+        widget = self._create_field_widget(field_name, value, container=field_container)
+        widget.pack(side="left", fill="x", expand=True)
+        self.form_widgets[field_name] = widget
+
     def _render_fields(self, record):
         self._clear_fields()
         self.fields_frame.update_idletasks()
@@ -168,20 +199,21 @@ class BaseManagementTab(ttk.Frame):
         flat_record = self._flatten_record(record)
         display_data = self._ensure_default_values(flat_record)
 
-        for field_name, value in sorted(display_data.items()):
-            field_container = ttk.Frame(self.fields_frame)
-            field_container.pack(fill="x", pady=3)
-            self.form_field_frames[field_name] = field_container
+        grouped_fields = set()
+        for group_key, default_title, field_names in self.field_groups:
+            group_frame = ttk.LabelFrame(self.fields_frame, text=self._group_label(group_key, default_title))
+            group_frame.pack(fill="x", pady=(0, 8), ipadx=5, ipady=3)
+            self.group_frames.append(group_frame)
+            for field_name in field_names:
+                grouped_fields.add(field_name)
+                self._render_field(field_name, display_data.get(field_name, ""), group_frame)
 
-            if self._is_date_field(field_name):
-                widget = self._create_field_widget(field_name, value, container=field_container)
-                self.form_widgets[field_name] = widget
-                continue
-
-            ttk.Label(field_container, text=self._field_label(field_name)).pack(side="left", padx=(0, 8), anchor="w")
-            widget = self._create_field_widget(field_name, value, container=field_container)
-            widget.pack(side="left", fill="x", expand=True)
-            self.form_widgets[field_name] = widget
+        ordered_fields = [name for name in self.field_order if name not in grouped_fields]
+        ordered_fields += sorted(
+            name for name in display_data if name not in grouped_fields and name not in ordered_fields
+        )
+        for field_name in ordered_fields:
+            self._render_field(field_name, display_data.get(field_name, ""), self.fields_frame)
 
         if hasattr(self, "fields_frame"):
             self.fields_frame.update_idletasks()
@@ -198,14 +230,35 @@ class BaseManagementTab(ttk.Frame):
         self._render_fields(current_record)
 
     def _get_record_id_for_new_item(self):
-        record_id = simpledialog.askstring("New item", f"Enter the new {self.title.lower()} ID:")
-        if record_id is None:
-            return None
-        record_id = record_id.strip()
-        if not record_id:
-            messagebox.showwarning("Missing ID", "An ID is required before saving a new item.")
-            return None
-        return record_id
+        while True:
+            record_id = simpledialog.askstring("New item", f"Enter the new {self.title.lower()} ID:")
+            if record_id is None:
+                return None
+            record_id = record_id.strip()
+            if not record_id:
+                messagebox.showwarning("Missing ID", "An ID is required before saving a new item.")
+                continue
+            if not RECORD_ID_PATTERN.fullmatch(record_id):
+                db_management = self.labels.get("db_management", {})
+                messagebox.showwarning(
+                    db_management.get("invalid_id_title", "Invalid ID"),
+                    db_management.get(
+                        "invalid_id_message",
+                        "The ID must be at most 6 characters long and contain only Latin letters, digits or underscore.",
+                    ),
+                )
+                continue
+            if record_id in self.data_mgr.data.get(self.collection_name, {}):
+                db_management = self.labels.get("db_management", {})
+                messagebox.showwarning(
+                    db_management.get("duplicate_id_title", "Duplicate ID"),
+                    db_management.get(
+                        "duplicate_id_message",
+                        "A record with ID '{record_id}' already exists. Please enter a different ID.",
+                    ).format(record_id=record_id),
+                )
+                continue
+            return record_id
 
     def _add_new_record(self):
         item_id = self._get_record_id_for_new_item()

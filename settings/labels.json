@@ -26,6 +26,10 @@
     "add_new": "Добави нов",
     "save": "Запази",
     "remove": "Премахни",
+    "invalid_id_title": "Невалиден идентификатор",
+    "invalid_id_message": "Идентификаторът трябва да е до 6 символа и да съдържа само латински букви, цифри или долна черта.",
+    "duplicate_id_title": "Съществуващ идентификатор",
+    "duplicate_id_message": "Запис с идентификатор '{record_id}' вече съществува. Моля, въведете друг идентификатор.",
     "password_change": {
       "current_password": "Текуща парола",
       "new_password": "Нова парола",
@@ -48,7 +52,7 @@
       "address.city": "Град",
       "address.zip": "Пощенски код",
       "address.municipality": "Община",
-      "id.number": "Личен номер",
+      "id.number": "Лична карта",
       "id.issue_date": "Дата на издаване",
       "id.issuer": "Издал",
       "iban": "IBAN",
@@ -57,7 +61,13 @@
       "car.year": "Година на колата",
       "car.plate": "Регистрационен номер",
       "car.liters_per_100km": "Литри/100км",
-      "car.fuel_type": "Вид гориво"
+      "car.fuel_type": "Вид гориво",
+      "groups": {
+        "personal": "Лични данни",
+        "work_place": "Месторабота",
+        "address": "Адрес",
+        "car": "Автомобил"
+      }
     },
     "projects": {
       "name": "Име",
