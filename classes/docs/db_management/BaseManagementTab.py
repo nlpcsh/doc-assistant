@@ -8,7 +8,7 @@ RECORD_ID_PATTERN = re.compile(r"[A-Za-z0-9_]{1,6}")
 
 
 class BaseManagementTab(ttk.Frame):
-    def __init__(self, parent, data_mgr, collection_name, title, default_fields=None, field_groups=None):
+    def __init__(self, parent, data_mgr, collection_name, title, default_fields=None, field_groups=None, field_order=None):
         super().__init__(parent)
         self.data_mgr = data_mgr
         self.collection_name = collection_name
@@ -16,6 +16,8 @@ class BaseManagementTab(ttk.Frame):
         self.default_fields = default_fields or {}
         # list of (group_key, default_title, [field names in display order])
         self.field_groups = field_groups or []
+        # ungrouped fields listed here are shown first in this order, the rest alphabetically
+        self.field_order = field_order or []
         self.group_frames = []
         self.collection = self.data_mgr.data.get(self.collection_name, {})
         self.current_record_id = None
@@ -206,9 +208,12 @@ class BaseManagementTab(ttk.Frame):
                 grouped_fields.add(field_name)
                 self._render_field(field_name, display_data.get(field_name, ""), group_frame)
 
-        for field_name, value in sorted(display_data.items()):
-            if field_name not in grouped_fields:
-                self._render_field(field_name, value, self.fields_frame)
+        ordered_fields = [name for name in self.field_order if name not in grouped_fields]
+        ordered_fields += sorted(
+            name for name in display_data if name not in grouped_fields and name not in ordered_fields
+        )
+        for field_name in ordered_fields:
+            self._render_field(field_name, display_data.get(field_name, ""), self.fields_frame)
 
         if hasattr(self, "fields_frame"):
             self.fields_frame.update_idletasks()
