@@ -61,7 +61,13 @@
       "car.year": "Година на колата",
       "car.plate": "Регистрационен номер",
       "car.liters_per_100km": "Литри/100км",
-      "car.fuel_type": "Вид гориво"
+      "car.fuel_type": "Вид гориво",
+      "groups": {
+        "personal": "Лични данни",
+        "work_place": "Месторабота",
+        "address": "Адрес",
+        "car": "Автомобил"
+      }
     },
     "projects": {
       "name": "Име",

@@ -27,4 +27,18 @@ class CoWorkersManagementTab(BaseManagementTab):
             "car.liters_per_100km": "",
             "car.fuel_type": "",
         }
-        super().__init__(parent, data_mgr, "co_workers", "Co-workers", default_fields)
+        field_groups = [
+            ("personal", "Personal", [
+                "full_name", "names", "titles", "egn",
+                "id.number", "id.issuer", "id.issue_date", "iban", "email",
+            ]),
+            ("work_place", "Work place", ["work_place", "department", "position"]),
+            ("address", "Address", [
+                "address.main_line", "address.municipality", "address.city", "address.zip",
+            ]),
+            ("car", "Car", [
+                "car.brand", "car.model", "car.year", "car.plate",
+                "car.liters_per_100km", "car.fuel_type",
+            ]),
+        ]
+        super().__init__(parent, data_mgr, "co_workers", "Co-workers", default_fields, field_groups)
