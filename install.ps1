@@ -38,6 +38,14 @@ if (-not (Test-Path $activateScript)) {
 python -m pip install --upgrade pip
 python -m pip install -r (Join-Path $PSScriptRoot 'requirements.txt')
 
+$templatesArchive = Join-Path $PSScriptRoot 'templates_folder.zip'
+if (Test-Path $templatesArchive) {
+    Write-Host "Extracting templates from $templatesArchive"
+    Expand-Archive -Path $templatesArchive -DestinationPath $PSScriptRoot -Force
+} else {
+    Write-Host "Templates archive not found at $templatesArchive. Skipping template extraction."
+}
+
 $desktopPath = [Environment]::GetFolderPath('Desktop')
 if ($desktopPath) {
     $shortcutPath = Join-Path $desktopPath 'Doc Assistant.lnk'
