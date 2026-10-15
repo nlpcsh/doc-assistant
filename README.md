@@ -103,7 +103,7 @@ The most important runtime packages include:
 - pyhanko
 - cryptography
 - tkcalendar
-- sqlcipher3-binary
+- sqlcipher3-binary (Linux) / sqlcipher3-wheels (Windows, macOS)
 - argon2-cffi
 - keyring
 - docx2pdf (optional, for Word-based DOCX-to-PDF conversion on Windows/macOS)

@@ -31,6 +31,18 @@ source "$VENV_DIR/bin/activate"
 python -m pip install --upgrade pip
 python -m pip install -r "$ROOT_DIR/requirements.txt"
 
+TEMPLATES_ARCHIVE="$ROOT_DIR/templates_folder.zip"
+if [ -f "$TEMPLATES_ARCHIVE" ]; then
+  echo "Extracting templates from $TEMPLATES_ARCHIVE"
+  if command -v unzip >/dev/null 2>&1; then
+    unzip -o -q "$TEMPLATES_ARCHIVE" -d "$ROOT_DIR"
+  else
+    python -c "import sys, zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "$TEMPLATES_ARCHIVE" "$ROOT_DIR"
+  fi
+else
+  echo "Templates archive not found at $TEMPLATES_ARCHIVE. Skipping template extraction."
+fi
+
 ENTRY_FILE="$(mktemp)"
 cat > "$ENTRY_FILE" <<EOF
 [Desktop Entry]
