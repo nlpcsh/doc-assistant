@@ -7,7 +7,9 @@ reportlab>=3.6.0
 cryptography>=38.0.0
 python-docx>=1.1.0
 docxtpl>=0.16.0
-sqlcipher3-binary>=0.6.0
+# SQLCipher: sqlcipher3-binary only ships Linux wheels; sqlcipher3-wheels covers Windows/macOS (same `import sqlcipher3`)
+sqlcipher3-binary>=0.6.0; sys_platform == "linux"
+sqlcipher3-wheels>=0.5.7; sys_platform != "linux"
 argon2-cffi>=25.1.0
 keyring>=25.0.0
 
