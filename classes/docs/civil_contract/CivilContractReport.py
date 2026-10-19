@@ -10,20 +10,36 @@ class CivilContractReport(BaseDoc):
             parent,
             data_mgr,
             "civil_contract",
-            ["civil_contract_person_report.docx", "cc_report_of_findings.docx"],
+            ["civil_contract_person_report.docx", "cc_report_of_findings.docx", "civil_contract_report_payment.docx"],
             output_folder="civil_contracts",
         )
-        self.current_contracts_to_report = {
-            contract_id: contract
-            for contract_id, contract in data_mgr.data.get("civil_contracts", {}).items()
-            if contract.get("status") != CCStatus.REPORTED.name
-        }
+        self._load_contracts_to_report()
         self.setup_ui_components()
         self.preselect_latest_contract()
 
+    def _load_contracts_to_report(self):
+        self.current_contracts_to_report = {
+            contract_id: contract
+            for contract_id, contract in self.data_mgr.data.get("civil_contracts", {}).items()
+            if contract.get("status") != CCStatus.REPORTED.name
+        }
+        self.contract_ids = list(self.current_contracts_to_report)
+
+    def refresh_contracts(self):
+        """Reload the not-yet-reported contracts into the dropdown, keeping the selection if possible."""
+        selected_contract_id = self.contracts_dropdown.get()
+        self._load_contracts_to_report()
+        self.contracts_dropdown['values'] = self.contract_ids
+        if selected_contract_id in self.contract_ids:
+            self.contracts_dropdown.set(selected_contract_id)
+            self.on_contract_selected(None)
+        elif self.contract_ids:
+            self.preselect_latest_contract()
+        else:
+            self.contracts_dropdown.set('')
+
     def setup_ui_components(self):
         self.ui_mgr.add_tab_title(self, "civil_contract_report")
-        self.contract_ids = list(self.current_contracts_to_report)
         self.contracts_dropdown = self.ui_mgr.add_dropdown(self, "civil_contracts", self.contract_ids)
         self.contracts_dropdown.bind("<<ComboboxSelected>>", self.on_contract_selected)
 
@@ -67,9 +83,14 @@ class CivilContractReport(BaseDoc):
             "cc_person_names": person.get("full_name", person.get("names", "")),
             "person_titles": person.get("titles", ""),
             "person_names": person.get("names", ""),
+            "cc_person_work_place": person.get("work_place", "") + ", " + person.get("department", ""),
+            "person_bank_account": person.get('iban', 'Unknown'),
+            "cc_task_amount": contract.get("cc_task_amount", ""),
             "personal_report": self._field_value("personal_report"),
             "completed_task_description": self._field_value("completed_task_description"),
             "cc_report_date": Helpers.get_current_date_str(dateformat="%d.%m.%Y"),
+            "cc_task_start_date": contract.get("cc_task_start_date", ""),
+            "cc_task_end_date": contract.get("cc_task_end_date", ""),
             "doc_date_and_ids_identifier": contract.get(
                 "doc_date_and_ids_identifier", contract_id
             ),

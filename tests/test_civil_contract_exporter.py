@@ -19,11 +19,13 @@ class CivilContractExporterTests(unittest.TestCase):
                 "cc_task": "Task description",
                 "cc_task_start_date": "01.01.2024",
                 "cc_task_end_date": "02.01.2024",
+                "cc_task_amount": "1000",
             },
         )
 
         self.assertEqual(payload["project_id"], "proj-1")
         self.assertEqual(payload["cc_task"], "Task description")
+        self.assertEqual(payload["cc_task_amount"], "1000")
         self.assertEqual(payload["person_id"], "person-1")
         self.assertEqual(payload["status"], CCStatus.GENERATED.name)
         self.assertEqual(payload["doc_date_and_ids_identifier"], "20240101_proj_123")
