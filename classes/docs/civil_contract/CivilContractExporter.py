@@ -15,5 +15,6 @@ class CivilContractExporter:
                 "person_id": person_id,
                 "cc_task_start_date": context.get("cc_task_start_date", ""),
                 "cc_task_end_date": context.get("cc_task_end_date", ""),
+                "cc_task_amount": context.get("cc_task_amount", ""),
             },
         )
