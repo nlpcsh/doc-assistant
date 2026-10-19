@@ -10,7 +10,7 @@ class CivilContractReport(BaseDoc):
             parent,
             data_mgr,
             "civil_contract",
-            ["civil_contract_person_report.docx", "cc_report_of_findings.docx"],
+            ["civil_contract_person_report.docx", "cc_report_of_findings.docx", "civil_contract_report_payment.docx"],
             output_folder="civil_contracts",
         )
         self.current_contracts_to_report = {
@@ -67,13 +67,14 @@ class CivilContractReport(BaseDoc):
             "cc_person_names": person.get("full_name", person.get("names", "")),
             "person_titles": person.get("titles", ""),
             "person_names": person.get("names", ""),
+            "cc_person_work_place": person.get("work_place", "") + ", " + person.get("department", ""),
             "person_bank_account": person.get('iban', 'Unknown'),
-            # TODO: "cc_task_amount": contract.get("task_amount", ""),
+            "cc_task_amount": contract.get("cc_task_amount", ""),
             "personal_report": self._field_value("personal_report"),
             "completed_task_description": self._field_value("completed_task_description"),
             "cc_report_date": Helpers.get_current_date_str(dateformat="%d.%m.%Y"),
-            "cc_task_start_date": contract.get("task_start_date", ""),
-            "cc_task_end_date": contract.get("task_end_date", ""),
+            "cc_task_start_date": contract.get("cc_task_start_date", ""),
+            "cc_task_end_date": contract.get("cc_task_end_date", ""),
             "doc_date_and_ids_identifier": contract.get(
                 "doc_date_and_ids_identifier", contract_id
             ),
